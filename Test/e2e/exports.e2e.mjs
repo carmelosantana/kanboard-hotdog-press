@@ -15,7 +15,7 @@ import { randomBytes } from 'node:crypto';
 import assert from 'node:assert/strict';
 import {
   PLUGIN, PROJECT_ID, php, problems, watch, CSP_PROBE, cspCheck, login, state, serverCopy,
-  createZine, removeZine,
+  createZine, removeZine, addText, texts, untilSaved, download, pngSize, latin1,
 } from './lib.mjs';
 import { readZip } from '../js/helpers/zip-reader.mjs';
 
@@ -25,42 +25,6 @@ mkdirSync(SHOTS, { recursive: true });
 const MUSTARD = readFileSync(join(PLUGIN, 'Test/fixtures/mustard/example.mustard.md'), 'utf8');
 /** The 409s this run causes on purpose (the stale tab's saves). */
 const conflict409 = (r) => r.status() === 409 && /\/save$/.test(new URL(r.url()).pathname);
-
-/** Types `text` into a new text box at (fx, fy) of the page canvas. */
-async function addText(page, text, fx = 0.15, fy = 0.15) {
-  const b = await page.locator('.hdp-overlay').boundingBox();
-  await page.click('[data-tool="text"]');
-  await page.mouse.click(b.x + fx * b.width, b.y + fy * b.height);
-  await page.waitForSelector('.hdp-text-edit:not([hidden])');
-  await page.keyboard.type(text);
-  await page.keyboard.press('Escape');
-  await page.click('[data-tool="select"]');
-}
-const texts = (doc) => doc.pages.flatMap((p) => p.items).filter((i) => i.type === 'text').map((i) => i.runs.map((r) => r.text).join(''));
-
-/** Waits until the server's copy is exactly the tab's zine. */
-async function untilSaved(page, what) {
-  const end = Date.now() + 20000;
-  for (;;) {
-    const s = await state(page);
-    if (s.saveState === 'saved' && JSON.stringify((await serverCopy(page)).document) === JSON.stringify(s.doc)) return s;
-    assert.ok(Date.now() < end, `timed out waiting for ${what} to be saved`);
-    await page.waitForTimeout(250);
-  }
-}
-
-/** Clicks an export button and returns the download's name and bytes. */
-async function download(page, selector) {
-  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 120000 }), page.click(selector)]);
-  return { name: dl.suggestedFilename(), bytes: new Uint8Array(readFileSync(await dl.path())) };
-}
-/** Width and height from a PNG's IHDR. */
-function pngSize(bytes) {
-  assert.deepEqual([...bytes.subarray(0, 8)], [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 'a PNG');
-  const v = new DataView(bytes.buffer, bytes.byteOffset);
-  return [v.getUint32(16), v.getUint32(20)];
-}
-const latin1 = (bytes) => Buffer.from(bytes).toString('latin1');
 
 const browser = await chromium.launch();
 let zineId = null;
