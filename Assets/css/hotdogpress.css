@@ -1,5 +1,25 @@
 /* Hot Dog Press: loaded only on the plugin's pages (Controller/PluginPage.php). Kanboard/ShadcnTheme classes style
-   the chrome; the brand colours appear only in the empty state, the mark and (Task 11) the zine canvas. */
+   the chrome; the brand colours appear only in the empty state, the mark and the zine canvas. */
+
+/* Self-hosted OFL fonts (PROVENANCE.md); the looks' font roles name these families (Assets/js/core/looks.js). */
+@font-face {
+  font-family: "Anton";
+  src: url("../fonts/anton/Anton-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Courier Prime";
+  src: url("../fonts/courier-prime/CourierPrime-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("../fonts/atkinson-hyperlegible/AtkinsonHyperlegible-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
 
 .hotdogpress {
   --hdp-mustard: #E8B517;

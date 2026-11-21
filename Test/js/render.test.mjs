@@ -73,6 +73,7 @@ test('the looks use the brand colours: kraft paper, copy-shop copy paper, night 
   }
   assert.match(LOOKS.kraft.fonts.display, /^"Anton"/);
   assert.match(LOOKS.kraft.fonts.mono, /^"Courier Prime"/);
+  assert.match(LOOKS.kraft.fonts.body, /^"Atkinson Hyperlegible"/);
 });
 
 test('colorOf resolves a token by look, falls back to the look\'s text colour, and maps to gray in bw', () => {

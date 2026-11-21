@@ -15,7 +15,7 @@ const BRAND = Object.freeze({
 /** Font roles to CSS font-family stacks; the font files themselves are loaded by the browser code. */
 const FONTS = Object.freeze({
   display: '"Anton", "Arial Narrow", sans-serif',
-  body: '"Archivo", "Helvetica Neue", Arial, sans-serif',
+  body: '"Atkinson Hyperlegible", "Helvetica Neue", Arial, sans-serif',
   mono: '"Courier Prime", "Courier New", monospace',
 });
 
