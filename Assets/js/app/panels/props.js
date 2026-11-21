@@ -26,15 +26,17 @@ export function createProps(app) {
 
   const choice = (label, on, onclick) => h('button', { type: 'button', class: 'btn', 'aria-pressed': String(on), onclick }, label);
 
+  /** Adds the sticker (and its inline asset, the first time) as one undo step. */
   async function addSticker(s) {
     const id = `sticker_${s.name.replace(/-/g, '_')}`;
+    let asset = null;
     if (!store.doc.assets[id]) {
       const svg = await (await fetch(stickerUrl(s.name))).text();
       const data = `data:image/svg+xml;base64,${btoa(String.fromCharCode(...new TextEncoder().encode(svg)))}`;
-      store.update((d) => addAsset(d, id, { kind: 'sticker', name: s.name, data, w: s.w, h: s.h }));
+      asset = { kind: 'sticker', name: s.name, data, w: s.w, h: s.h };
     }
     const item = stickerItem(id);
-    store.update((d) => addItem(d, store.page, item));
+    store.update((d) => addItem(asset && !d.assets[id] ? addAsset(d, id, asset) : d, store.page, item));
     store.select([item.id]);
     app.setTool('select');
   }
