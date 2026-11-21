@@ -50,6 +50,7 @@ for (const name of FIXTURES) {
     assert.deepEqual(second.errors, []);
     assert.deepEqual(shape(second.dog), shape(first));
     assert.equal(second.dog.title, first.title);
+    assert.equal(second.dog.issue, first.issue);
     first.pages.forEach((p, n) => p.items.forEach((item, i) => {
       const again = second.dog.pages[n].items[i];
       for (const k of ['x', 'y', 'w', 'h']) assert.ok(Math.abs(again[k] - item[k]) < EPS, `${item.id}.${k}`);
@@ -63,6 +64,7 @@ for (const name of FIXTURES) {
 test('the Plant Medicine sample: eight pages from the draft plan, Spanish first, placeholders for photos', () => {
   const { dog, warnings } = compileMustard(read('plant-medicine.mustard.md'));
   assert.equal(dog.title, 'Medicina de plantas en Puerto Rico');
+  assert.equal(dog.issue, 1);
   assert.equal(dog.paper, 'letter');
   assert.deepEqual(dog.pages.map((p) => p.layout), [
     'cover', 'headline-body', 'photo-caption', 'quote', 'headline-body', 'list', 'headline-body', 'back-cover',
@@ -92,6 +94,7 @@ test('front matter: version, title, paper, look and margin; opts.paper is only t
   assert.equal(plain.dog.paper, 'a4');
   assert.equal(plain.dog.title, '');
   assert.equal(plain.dog.look, 'kraft');
+  assert.equal(Object.hasOwn(plain.dog, 'issue'), false);
   assert.ok(plain.warnings.some((w) => w.path === 'mustard'));
   assert.equal(compileMustard(pageOf('freeform', '')).dog.paper, 'letter');
 });
@@ -108,6 +111,14 @@ test('front matter: scalars, quoted strings, comments and a flow list', () => {
   assert.ok(warnings.some((w) => w.path === 'colour' && /unknown/.test(w.message)));
   assert.ok(warnings.some((w) => w.path === 'kept'));
   assert.equal(compileMustard('---\ntitle: "a\\"b\\\\c"\n---\n').dog.title, 'a"b\\c');
+  // issue is a string or a whole number, and round-trips either way.
+  for (const issue of ['"Spring 2027"', '12', '"12"']) {
+    const one = compileMustard(`---\nmustard: 1\nissue: ${issue}\n---\n`);
+    assert.deepEqual(one.errors, []);
+    assert.equal(compileMustard(exportMustard(one.dog).text).dog.issue, one.dog.issue);
+  }
+  assert.equal(compileMustard('---\nissue: "12"\n---\n').dog.issue, '12');
+  assert.deepEqual(compileMustard('---\nissue: -1\n---\n').errors.map((e) => e.path), ['issue']);
 });
 
 test('front matter errors: another Mustard version, an unknown paper, a margin out of range', () => {

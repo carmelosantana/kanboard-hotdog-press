@@ -13,6 +13,8 @@ class DogValidator
     public const MAX_BYTES = 2 * 1024 * 1024;
     public const MAX_INK_POINTS = 5000;
     public const MAX_TEXT_CHARS = 2000;
+    // An optional issue label: a string of at most this many characters, or a whole number of 0 or more.
+    public const MAX_ISSUE_CHARS = 32;
     public const MAX_MARGIN_MM = 10;
     // Item geometry in panel units may reach a panel beyond either edge (bleed, drag-off).
     public const MIN_UNIT = -1;
@@ -28,7 +30,7 @@ class DogValidator
 
     // Allowed fields per object, for strict mode: an item may carry 'item' plus its own type's fields.
     public const FIELDS = [
-        'dog' => ['hotdog', 'id', 'title', 'paper', 'margin_mm', 'look', 'assets', 'pages'],
+        'dog' => ['hotdog', 'id', 'title', 'issue', 'paper', 'margin_mm', 'look', 'assets', 'pages'],
         'page' => ['id', 'layout', 'bg', 'items'],
         'item' => ['id', 'type', 'x', 'y', 'w', 'h', 'rot', 'by', 'locked', 'slot', 'attrs'],
         'types' => [
@@ -103,6 +105,9 @@ class DogValidator
         $hotdog = $dog['hotdog'] ?? null;
         if ($hotdog !== self::VERSION && $hotdog !== (float) self::VERSION) {
             $this->error(['hotdog'], 'must be the integer 1');
+        }
+        if (array_key_exists('issue', $dog) && ! self::validIssue($dog['issue'])) {
+            $this->error(['issue'], 'must be a string of at most '.self::MAX_ISSUE_CHARS.' characters or an integer of 0 or more');
         }
         if (! in_array($dog['paper'] ?? null, self::PAPERS, true)) {
             $this->error(['paper'], 'must be one of '.implode(', ', self::PAPERS));
@@ -287,6 +292,11 @@ class DogValidator
     private static function isList(mixed $v): bool
     {
         return is_array($v) && array_is_list($v);
+    }
+
+    private static function validIssue(mixed $v): bool
+    {
+        return is_string($v) ? mb_strlen($v, 'UTF-8') <= self::MAX_ISSUE_CHARS : self::isInteger($v) && $v >= 0;
     }
 
     private static function isInteger(mixed $v): bool

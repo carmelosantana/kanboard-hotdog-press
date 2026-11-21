@@ -1,0 +1,60 @@
+{
+  "hotdog": 1,
+  "id": "z_fixture3",
+  "title": "Untitled",
+  "issue": "Nº 3 · primavera 2027 · 32 chars",
+  "paper": "letter",
+  "margin_mm": 6,
+  "look": "kraft",
+  "assets": {},
+  "pages": [
+    {
+      "id": "p1",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p2",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p3",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p4",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p5",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p6",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p7",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p8",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    }
+  ]
+}

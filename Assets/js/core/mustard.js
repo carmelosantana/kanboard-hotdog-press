@@ -54,6 +54,7 @@ export function compileMustard(text, { paper, assets = {}, from } = {}) {
   const dog = newDog({ title: fm.title, paper: fm.paper });
   dog.margin_mm = fm.margin_mm;
   dog.look = fm.look;
+  if (fm.issue !== undefined) dog.issue = fm.issue;
 
   const sources = readPages(lines, start, warn);
   if (sources.length > PAGE_COUNT) {
@@ -102,7 +103,9 @@ function readMeta(meta, paperDefault, warn, fail) {
   }
   const title = value('title');
   const look = value('look');
+  const issue = value('issue');
   return {
+    issue: issue ?? undefined,
     paper,
     margin_mm: margin,
     title: title == null ? '' : String(title),
@@ -591,7 +594,9 @@ export function exportMustard(dog) {
   const pages = (dog.pages ?? []).map((page, p) => exportPage(page, p, dog, kept));
   const front = ['---'];
   if (kept.length) front.push(KEPT_NOTE);
-  front.push(`mustard: ${MUSTARD_VERSION}`, `title: ${yamlScalar(dog.title ?? '')}`, `paper: ${yamlScalar(dog.paper)}`);
+  front.push(`mustard: ${MUSTARD_VERSION}`, `title: ${yamlScalar(dog.title ?? '')}`);
+  if (dog.issue !== undefined) front.push(`issue: ${yamlScalar(dog.issue)}`);
+  front.push(`paper: ${yamlScalar(dog.paper)}`);
   if (dog.margin_mm !== DEFAULT_MARGIN_MM) front.push(`margin_mm: ${dog.margin_mm}`);
   front.push(`look: ${yamlScalar(dog.look ?? 'kraft')}`);
   if (kept.length) front.push(`kept: [${kept.map(yamlScalar).join(', ')}]`);

@@ -10,6 +10,8 @@ export const DOG_VERSION = 1;
 export const MAX_DOG_BYTES = 2 * 1024 * 1024;
 export const MAX_INK_POINTS = 5000;
 export const MAX_TEXT_CHARS = 2000;
+/** An optional issue label: a string of at most this many characters, or a whole number of 0 or more. */
+export const MAX_ISSUE_CHARS = 32;
 /** Item geometry in panel units may reach a panel beyond either edge (bleed, drag-off). */
 export const MIN_UNIT = -1;
 export const MAX_UNIT = 2;
@@ -23,7 +25,7 @@ export const BY_VALUES = Object.freeze(['hand', 'ai', 'import']);
 
 /** Allowed fields per object, for strict mode: an item may carry `item` plus its own type's fields. */
 export const FIELDS = Object.freeze({
-  dog: Object.freeze(['hotdog', 'id', 'title', 'paper', 'margin_mm', 'look', 'assets', 'pages']),
+  dog: Object.freeze(['hotdog', 'id', 'title', 'issue', 'paper', 'margin_mm', 'look', 'assets', 'pages']),
   page: Object.freeze(['id', 'layout', 'bg', 'items']),
   item: Object.freeze(['id', 'type', 'x', 'y', 'w', 'h', 'rot', 'by', 'locked', 'slot', 'attrs']),
   types: Object.freeze({
@@ -115,6 +117,9 @@ export function validateDog(input, { mode = 'lenient' } = {}) {
 
   unknown(dog, FIELDS.dog, []);
   if (dog.hotdog !== DOG_VERSION) err(['hotdog'], 'must be the integer 1');
+  if (dog.issue !== undefined && !validIssue(dog.issue)) {
+    err(['issue'], `must be a string of at most ${MAX_ISSUE_CHARS} characters or an integer of 0 or more`);
+  }
   if (!PAPER_IDS.includes(dog.paper)) err(['paper'], `must be one of ${PAPER_IDS.join(', ')}`);
   if (!inRange(dog.margin_mm, 0, MAX_MARGIN_MM)) err(['margin_mm'], `must be a number from 0 to ${MAX_MARGIN_MM}`);
 
@@ -190,6 +195,7 @@ function checkId(id, seen, path, duplicate, err) {
   seen.add(id);
 }
 
+const validIssue = (v) => (typeof v === 'string' ? codePoints(v) <= MAX_ISSUE_CHARS : Number.isInteger(v) && v >= 0);
 const fail = (path, message) => ({ ok: false, errors: [{ path, message }] });
 const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const inRange = (v, min, max) => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
