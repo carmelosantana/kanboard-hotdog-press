@@ -186,6 +186,23 @@ export function sheetPage(dog, rasterPanels, { guides = true } = {}) {
     throw new Error('exportPdf needs 8 panels, pages 1..8 in order');
   }
   const paper = resolvePaper(dog.paper);
+  const images = rasterPanels.map(({ jpeg, px_w, px_h }, i) => {
+    const r = panelRect(paper, i + 1);
+    return { jpeg, px_w, px_h, x_pt: mm(r.x), y_pt: mm(paper.h_mm - r.y - r.h), w_pt: mm(r.w), h_pt: mm(r.h),
+      rotate: r.rotate };
+  });
+  const lines = guides ? guideLines(dog) : [];
+  return { w_pt: mm(paper.w_mm), h_pt: mm(paper.h_mm), images, lines, rects: [] };
+}
+
+/**
+ * The guide layer of the print sheet in PDF points (origin bottom-left): the folds, the cut, the page ticks and
+ * the check square, styled by GUIDE_STYLES. The on-screen sheet preview draws these same lines.
+ * @param {{paper: import('./paper.js').PaperId|import('./paper.js').PaperSize, margin_mm?: number}} dog
+ * @returns {PdfLine[]}
+ */
+export function guideLines(dog) {
+  const paper = resolvePaper(dog.paper);
   const H = paper.h_mm;
   const margin = clampMargin(dog.margin_mm);
   /** Sheet mm (origin top-left, y down) to PDF points (origin bottom-left, y up): the one conversion. */
@@ -195,34 +212,23 @@ export function sheetPage(dog, rasterPanels, { guides = true } = {}) {
     const [c, d] = toPt(x2, y2);
     return { x1: a, y1: b, x2: c, y2: d, ...style };
   };
-
-  const images = rasterPanels.map(({ jpeg, px_w, px_h }, i) => {
-    const r = panelRect(paper, i + 1);
-    const [x_pt, y_pt] = toPt(r.x, r.y + r.h);
-    return { jpeg, px_w, px_h, x_pt, y_pt, w_pt: mm(r.w), h_pt: mm(r.h), rotate: r.rotate };
-  });
-
-  const lines = [];
-  if (guides) {
-    const { cut, folds: [centre, ...verticals] } = sheetGuides(paper);
-    const [cx1, cy, cx2] = cut;
-    lines.push(
-      line(centre[0], cy, cx1, cy, GUIDE_STYLES.fold),
-      line(cx2, cy, centre[2], cy, GUIDE_STYLES.fold),
-      ...verticals.map(([x1, y1, x2, y2]) => line(x1, y1, x2, y2, GUIDE_STYLES.fold)),
-      line(...cut, GUIDE_STYLES.cut),
-    );
-    for (let page = 1; page <= 8; page++) lines.push(...pageTicks(paper, margin, page, line));
-    const [x0, y0, s] = [margin, H - margin, CHECK_MM];
-    lines.push(
-      line(x0, y0, x0 + s, y0, GUIDE_STYLES.check),
-      line(x0 + s, y0, x0 + s, y0 - s, GUIDE_STYLES.check),
-      line(x0 + s, y0 - s, x0, y0 - s, GUIDE_STYLES.check),
-      line(x0, y0 - s, x0, y0, GUIDE_STYLES.check),
-    );
-  }
-
-  return { w_pt: mm(paper.w_mm), h_pt: mm(H), images, lines, rects: [] };
+  const { cut, folds: [centre, ...verticals] } = sheetGuides(paper);
+  const [cx1, cy, cx2] = cut;
+  const lines = [
+    line(centre[0], cy, cx1, cy, GUIDE_STYLES.fold),
+    line(cx2, cy, centre[2], cy, GUIDE_STYLES.fold),
+    ...verticals.map(([x1, y1, x2, y2]) => line(x1, y1, x2, y2, GUIDE_STYLES.fold)),
+    line(...cut, GUIDE_STYLES.cut),
+  ];
+  for (let page = 1; page <= 8; page++) lines.push(...pageTicks(paper, margin, page, line));
+  const [x0, y0, s] = [margin, H - margin, CHECK_MM];
+  lines.push(
+    line(x0, y0, x0 + s, y0, GUIDE_STYLES.check),
+    line(x0 + s, y0, x0 + s, y0 - s, GUIDE_STYLES.check),
+    line(x0 + s, y0 - s, x0, y0 - s, GUIDE_STYLES.check),
+    line(x0, y0 - s, x0, y0, GUIDE_STYLES.check),
+  );
+  return lines;
 }
 
 /** N strokes for page N, at the reading bottom-right of its safe area, mapped onto the sheet. */

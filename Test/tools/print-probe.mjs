@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildPdf, sheetPage, PT_PER_MM } from '../../Assets/js/core/pdf.js';
+import { buildPdf, guideLines, PT_PER_MM } from '../../Assets/js/core/pdf.js';
 import { panelRect, safeArea } from '../../Assets/js/core/impose.js';
 import { DEFAULT_MARGIN_MM, paperSize } from '../../Assets/js/core/paper.js';
 
@@ -37,12 +37,10 @@ const HATCH_COUNT = 40;
  * @param {import('../../Assets/js/core/paper.js').PaperId} paper
  */
 export function probePage(paper) {
-  // The real sheet with guides on: placeholder panels, then the images dropped, so guides come from one code path.
-  const placeholder = Array.from({ length: 8 }, () => ({ jpeg: new Uint8Array(), px_w: 1, px_h: 1 }));
-  const page = sheetPage({ paper, margin_mm: DEFAULT_MARGIN_MM }, placeholder, { guides: true });
+  // The real sheet's guide layer, so the probe's guides come from the same code path as the print export.
   const H = paperSize(paper).h_mm;
-  const lines = [...page.lines];
-  const rects = [...page.rects];
+  const lines = guideLines({ paper, margin_mm: DEFAULT_MARGIN_MM });
+  const rects = [];
 
   for (let n = 1; n <= 8; n++) {
     const r = panelRect(paper, n);
@@ -76,7 +74,8 @@ export function probePage(paper) {
       lines.push(line(x, PATCH.y, x, PATCH.y + PATCH.h, HATCH_MM));
     }
   }
-  return { ...page, images: [], lines, rects };
+  const { w_mm, h_mm } = paperSize(paper);
+  return { w_pt: w_mm * PT_PER_MM, h_pt: h_mm * PT_PER_MM, images: [], lines, rects };
 }
 
 /**

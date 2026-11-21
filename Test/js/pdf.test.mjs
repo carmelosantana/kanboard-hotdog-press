@@ -5,7 +5,7 @@ import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { buildPdf, exportPdf, sheetPage, PT_PER_MM, GUIDE_STYLES, CHECK_MM } from '../../Assets/js/core/pdf.js';
+import { buildPdf, exportPdf, sheetPage, guideLines, PT_PER_MM, GUIDE_STYLES, CHECK_MM } from '../../Assets/js/core/pdf.js';
 import { panelRect, guides } from '../../Assets/js/core/impose.js';
 import { paperSize } from '../../Assets/js/core/paper.js';
 import { readPdf } from './helpers/pdf-reader.mjs';
@@ -212,6 +212,12 @@ test('guides off is a clean sheet: no cut, fold, tick or check-square lines, onl
   assert.equal(linesWith(page, GUIDE_STYLES.check).length, 0);
   assert.equal(page.lines.length, 0);
   assert.equal(page.images.length, 8);
+});
+
+test('guideLines is the sheet\'s guide layer on its own, for the on-screen sheet preview', () => {
+  for (const d of [dog(), { paper: 'a4', margin_mm: 9 }]) {
+    assert.deepEqual(guideLines(d), sheetPage(d, panels()).lines);
+  }
 });
 
 test('guides default to on', () => {
