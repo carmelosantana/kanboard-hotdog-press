@@ -176,6 +176,8 @@ try {
   assert.ok(!items(s).some((i) => i.type === 'sticker') && !(sticker.asset in s.doc.assets), 'one undo removes sticker and asset');
   await page.click('.hdp-toolbar button:has-text("Redo")');
   s = await state(page);
+  assert.ok(items(s).some((i) => i.id === sticker.id), 'redo brings the sticker back');
+  assert.match(s.doc.assets[sticker.asset]?.data ?? '', /^data:image\/svg\+xml;base64,/, 'and its asset');
 
 
   // Select, move, resize, rotate the shape; undo and redo; lock.
