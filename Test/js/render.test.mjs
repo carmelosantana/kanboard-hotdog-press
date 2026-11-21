@@ -204,6 +204,16 @@ test('every drawn line, accents and descenders included, sits inside its box in 
   }
 });
 
+test('a box shorter than one line still draws its first line, clipped to the box, and reports overflow', () => {
+  const item = text({ font: 'display', h: 0.05, runs: [{ text: 'Hola\nmundo' }] }); // 30px box, Anton line ≈ 46px
+  const out = layoutText(fakeContext(), item, PX_W, PX_H);
+  assert.equal(out.visible, 0, 'no line fits whole');
+  assert.equal(out.overflow, true);
+  const ctx = render([item]);
+  assert.deepEqual(callsOf(ctx, 'fillText').map((c) => c[0]), ['Hola'], 'the first line is drawn');
+  assert.deepEqual(callsOf(ctx, 'rect').at(-1), [40, 60, 200, 30], 'clipped to the box');
+});
+
 test('text tolerates missing runs', () => {
   const ctx = render([text({ runs: undefined })]);
   assert.equal(callsOf(ctx, 'fillText').length, 0);

@@ -105,7 +105,8 @@ export function renderSheet(ctx, dog, { px_per_mm: k, images = {}, guides = true
  * Wrap a text item's runs to its box: greedy by words, measured with ctx.measureText at the item's font (it sets
  * ctx.font), breaking at newlines and between the runs of a list item (runs.js), and splitting words wider than the box.
  * `visible` counts the lines that fit the box height by textfit.js's rule (the first line needs the font's accent
- * ascent + descent, each further one LINE_HEIGHT); the rest are not drawn, and `overflow` says so. Lines are drawn on
+ * ascent + descent, each further one LINE_HEIGHT); the rest are not drawn (except a first line in a box too short for
+ * it, drawn clipped), and `overflow` says so. Lines are drawn on
  * alphabetic baselines, the first `ascent_px` below the box top.
  * @param {CanvasRenderingContext2D|any} ctx
  * @param {any} item
@@ -146,7 +147,9 @@ const DRAW = {
     ctx.fillStyle = color(item.color);
     const x = align === 'center' ? b.x + b.w / 2 : align === 'right' ? b.x + b.w : b.x;
     const top = b.y + layout.ascent_px;
-    for (let i = 0; i < layout.visible; i++) ctx.fillText(layout.lines[i], x, top + i * layout.line_px);
+    // A box too short for one whole line still shows its first line, cut by the clip, so text never vanishes.
+    const drawn = Math.max(layout.visible, Math.min(1, layout.lines.length));
+    for (let i = 0; i < drawn; i++) ctx.fillText(layout.lines[i], x, top + i * layout.line_px);
   },
 
   image(item, env) {
