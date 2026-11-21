@@ -19,6 +19,16 @@ export const FONT_METRICS = Object.freeze({
   mono: Object.freeze({ ascent: 0.907, descent: 0.235, glyph: 0.6 }), // Courier Prime
 });
 
+/**
+ * The font file each role's metrics were measured from (under Assets/fonts) and its sha256; a test fails when a file
+ * changes, so the metrics are re-measured with it.
+ */
+export const FONT_SOURCES = Object.freeze({
+  display: Object.freeze({ family: 'Anton', file: 'anton/Anton-Regular.ttf', sha256: 'a4ba3a92350ebb031da0cb47630ac49eb265082ca1bc0450442f4a83ab947cab' }),
+  body: Object.freeze({ family: 'Atkinson Hyperlegible', file: 'atkinson-hyperlegible/AtkinsonHyperlegible-Regular.ttf', sha256: '7fb917c89019896d0b52ee84b7cbb3304c18cb90b19a62f5e32712bd23e97669' }),
+  mono: Object.freeze({ family: 'Courier Prime', file: 'courier-prime/CourierPrime-Regular.ttf', sha256: '72f793376f8e2841656bf21d77a5de010f2929bd6956a22ee848ad0c7eb978af' }),
+});
+
 /** A role's metrics; an unknown role is body, as the renderer's font fallback is. @param {unknown} role */
 export const metricsOf = (role) => (typeof role === 'string' && Object.hasOwn(FONT_METRICS, role)
   ? FONT_METRICS[/** @type {'display'|'body'|'mono'} */ (role)] : FONT_METRICS.body);

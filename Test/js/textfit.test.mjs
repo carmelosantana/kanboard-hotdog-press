@@ -1,9 +1,11 @@
 // Text fitting shared by the renderer and the layout budgets: the bundled fonts' measured metrics, how many lines a
 // box holds, and greedy word wrapping.
 import { test } from 'node:test';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import {
-  FONT_METRICS, LINE_HEIGHT, metricsOf, linesThatFit, blockHeight, wrapText,
+  FONT_METRICS, FONT_SOURCES, LINE_HEIGHT, metricsOf, linesThatFit, blockHeight, wrapText,
 } from '../../Assets/js/core/textfit.js';
 import { LINE_HEIGHT as LAYOUT_LINE_HEIGHT } from '../../Assets/js/core/layouts.js';
 
@@ -37,4 +39,12 @@ test('wrapText wraps greedily by words, breaks newlines, splits over-long words,
   assert.deepEqual(wrapText('abcdefghijklmnopqrstuvwxyz ok', fits), ['abcdefghijklm', 'nopqrstuvwxyz', 'ok']);
   assert.deepEqual(wrapText('', fits), []);
   assert.ok(wrapText('ab cd', () => false).length > 0);
+});
+
+test('the metrics were measured from exactly the bundled font files (re-run font-metrics.mjs when one changes)', () => {
+  assert.deepEqual(Object.keys(FONT_SOURCES).sort(), Object.keys(FONT_METRICS).sort());
+  for (const [role, { file, sha256 }] of Object.entries(FONT_SOURCES)) {
+    const bytes = readFileSync(new URL(`../../Assets/fonts/${file}`, import.meta.url));
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), sha256, `${role}: ${file} changed since its metrics were measured`);
+  }
 });
