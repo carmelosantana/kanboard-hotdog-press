@@ -1,0 +1,81 @@
+{
+  "hotdog": 1,
+  "id": "z_fixture2",
+  "title": "Placeholder photo",
+  "paper": "letter",
+  "margin_mm": 6,
+  "look": "kraft",
+  "assets": {
+    "z_ph000001": {
+      "kind": "placeholder",
+      "name": "cohoba.jpg"
+    }
+  },
+  "pages": [
+    {
+      "id": "p1",
+      "layout": "photo-full",
+      "bg": "paper",
+      "items": [
+        {
+          "id": "photo_z_00000001",
+          "type": "image",
+          "slot": "photo",
+          "asset": "z_ph000001",
+          "x": 0.05,
+          "y": 0.05,
+          "w": 0.9,
+          "h": 0.8,
+          "fit": "cover",
+          "focus": [
+            0.5,
+            0.5
+          ],
+          "by": "import"
+        }
+      ]
+    },
+    {
+      "id": "p2",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p3",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p4",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p5",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p6",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p7",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    },
+    {
+      "id": "p8",
+      "layout": "freeform",
+      "bg": "paper",
+      "items": []
+    }
+  ]
+}
