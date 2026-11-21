@@ -29,8 +29,8 @@ export const SOCIAL_PADDING = 0.06;
 
 /** A story caption's band at the foot of the frame, as a fraction of the frame height. */
 export const STORY_CAPTION_BAND = 0.18;
-/** The caption's font size as a fraction of its box height (two lines fit). */
-const CAPTION_SIZE = 0.4;
+/** The caption's font size as a fraction of its box height: two lines of the display font fit (textfit.js). */
+export const CAPTION_SIZE = 0.36;
 
 const SLUG_MAX = 40;
 
@@ -164,13 +164,13 @@ export function renderFrame(ctx, dog, frame, { images = {}, bw = false } = {}) {
 function drawCaption(ctx, dog, { text, rect }, bw) {
   const item = { font: 'display', size: CAPTION_SIZE, w: 1, h: 1, runs: [{ text }] };
   const layout = layoutText(ctx, item, rect.w, rect.h, dog.look);
-  const block = layout.size_px + (layout.visible - 1) * layout.line_px;
-  const top = rect.y + (rect.h - block) / 2;
+  const block = layout.visible > 0 ? layout.ascent_px + layout.descent_px + (layout.visible - 1) * layout.line_px : 0;
+  const top = rect.y + (rect.h - block) / 2 + layout.ascent_px;
   ctx.save();
   ctx.beginPath();
   ctx.rect(rect.x, rect.y, rect.w, rect.h);
   ctx.clip();
-  ctx.textBaseline = 'top';
+  ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'center';
   ctx.fillStyle = colorOf(dog.look, lookOf(dog.look).text, bw);
   for (let i = 0; i < layout.visible; i++) ctx.fillText(layout.lines[i], rect.x + rect.w / 2, top + i * layout.line_px);

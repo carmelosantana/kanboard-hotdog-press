@@ -9,6 +9,7 @@ import { panelSize, paperSize } from '../../Assets/js/core/paper.js';
 import { panelRect } from '../../Assets/js/core/impose.js';
 import { colorOf, grayHex, LOOKS } from '../../Assets/js/core/looks.js';
 import { LINE_HEIGHT } from '../../Assets/js/core/layouts.js';
+import { FONT_METRICS } from '../../Assets/js/core/textfit.js';
 import { PT_PER_MM } from '../../Assets/js/core/pdf.js';
 import { newDog } from '../../Assets/js/core/dog.js';
 import { readPdf } from './helpers/pdf-reader.mjs';
@@ -244,7 +245,8 @@ test('renderFrame draws the story caption centred in its band, display font, the
   assert.equal(line, 'Fold your own');
   assert.equal(x, c.x + c.w / 2, 'centred across the band');
   const size = Number(/^(\d+(?:\.\d+)?)px/.exec(setsOf(ctx, 'font').at(-1))[1]);
-  close(y, c.y + (c.h - size) / 2, 'one line centred down the band', 0.51);
+  const { ascent, descent } = FONT_METRICS.display;
+  close(y, c.y + (c.h - (ascent + descent) * size) / 2 + ascent * size, 'one line, accents to descenders, centred down the band', 0.6);
   assert.ok(setsOf(ctx, 'font').at(-1).includes(LOOKS.night.fonts.display), 'display font');
   assert.equal(setsOf(ctx, 'textAlign').at(-1), 'center');
   assert.equal(setsOf(ctx, 'fillStyle').at(-1), colorOf('night', LOOKS.night.text), 'look text colour');
@@ -263,7 +265,8 @@ test('renderFrame wraps a long caption to the band width and keeps it inside the
   const size = Number(/^(\d+(?:\.\d+)?)px/.exec(font)[1]);
   for (const [line, , y] of texts) {
     assert.ok([...line].length * FAKE_EM * size <= c.w, `"${line}" fits the width`);
-    assert.ok(y >= c.y - 0.5 && y + size <= c.y + c.h + 0.5, `"${line}" inside the band`);
+    const { ascent, descent } = FONT_METRICS.display;
+    assert.ok(y - ascent * size >= c.y - 0.5 && y + descent * size <= c.y + c.h + 0.5, `"${line}" inside the band`);
   }
   assert.ok(texts[1][2] - texts[0][2] > size * (LINE_HEIGHT - 0.01), 'line spacing');
   assert.equal(setsOf(ctx, 'fillStyle').at(-1), grayHex(colorOf('kraft', LOOKS.kraft.text)), 'bw caption is gray');

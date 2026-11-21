@@ -8,6 +8,7 @@ import { panelRect } from '../../Assets/js/core/impose.js';
 import { paperSize } from '../../Assets/js/core/paper.js';
 import { newDog } from '../../Assets/js/core/dog.js';
 import { LINE_HEIGHT } from '../../Assets/js/core/layouts.js';
+import { FONT_METRICS } from '../../Assets/js/core/textfit.js';
 import { fakeContext, callsOf, setsOf, drawable, FAKE_EM } from './helpers/fake-ctx.mjs';
 
 const BRAND = {
@@ -121,11 +122,13 @@ test('items draw in array order', () => {
 
 // ---------------------------------------------------------------- text
 
-test('text sets the font from its role and size in panel-height units, top baseline, colour token', () => {
+test('text sets the font from its role and size in panel-height units, alphabetic baseline, colour token', () => {
   const ctx = render([text({ font: 'display', size: 0.05 })]);
   assert.deepEqual(setsOf(ctx, 'font'), [`30px ${LOOKS.kraft.fonts.display}`]);
-  assert.deepEqual(setsOf(ctx, 'textBaseline'), ['top']);
-  assert.deepEqual(callsOf(ctx, 'fillText'), [['Hi', 40, 60]]);
+  assert.deepEqual(setsOf(ctx, 'textBaseline'), ['alphabetic']);
+  const [[t, x, y]] = callsOf(ctx, 'fillText');
+  assert.deepEqual([t, x], ['Hi', 40]);
+  close(y, 60 + FONT_METRICS.display.ascent * 30, 'first baseline one accent ascent below the box top');
   assert.equal(setsOf(ctx, 'fillStyle').at(-1), BRAND.toner);
 });
 
@@ -156,7 +159,8 @@ test('layoutText breaks a word longer than the box into pieces', () => {
 });
 
 test('layoutText counts only lines that fit the box height and flags overflow', () => {
-  // Box 300px high, 30px font, 36px lines: a last line needs only its font size, so 8 fit (7 × 36 + 30 = 282).
+  // Box 300px high, 30px body font, 36px lines: the first line needs (ascent + descent) × 30 ≈ 32.4px, so 8 fit
+  // (32.4 + 7 × 36 = 284.4).
   const words = Array.from({ length: 12 }, (_, i) => `w${String(i).padStart(10, '0')}`).join(' ');
   const out = layoutText(fakeContext(), text({ runs: [{ text: words }] }), PX_W, PX_H);
   assert.equal(out.lines.length, 12);
@@ -177,7 +181,27 @@ test('text aligns left, center and right within its box', () => {
 test('lines stack at the line height', () => {
   const ctx = render([text({ runs: [{ text: 'a\nb\nc' }] })]);
   const ys = callsOf(ctx, 'fillText').map((c) => c[2]);
-  ys.forEach((y, i) => close(y, 60 + i * 30 * LINE_HEIGHT, `line ${i}`));
+  ys.forEach((y, i) => close(y, 60 + FONT_METRICS.body.ascent * 30 + i * 30 * LINE_HEIGHT, `line ${i}`));
+});
+
+test('every drawn line, accents and descenders included, sits inside its box in each font', () => {
+  // Alphabetic baselines: the first one sits the font's accent ascent below the box top (Á, ¿ and Ñ need it),
+  // and no drawn line's descent passes the box bottom.
+  const words = 'ÁÉÍ ¿Qué? Ñu gjpq '.repeat(8);
+  for (const font of ['display', 'body', 'mono']) {
+    const item = text({ font, runs: [{ text: words }] });
+    const ctx = render([item]);
+    assert.deepEqual(setsOf(ctx, 'textBaseline'), ['alphabetic'], font);
+    const { ascent, descent } = FONT_METRICS[font];
+    const size = item.size * PX_H;
+    const top = item.y * PX_H;
+    const bottom = top + item.h * PX_H;
+    const ys = callsOf(ctx, 'fillText').map((c) => c[2]);
+    assert.ok(ys.length > 1, `${font}: several lines`);
+    close(ys[0] - ascent * size, top, `${font}: the tallest glyph touches the box top`);
+    for (const y of ys) assert.ok(y + descent * size <= bottom + 1e-9, `${font}: line at ${y} inside the box`);
+    ys.forEach((y, i) => close(y, ys[0] + i * size * LINE_HEIGHT, `${font} line ${i}`));
+  }
 });
 
 test('text tolerates missing runs', () => {

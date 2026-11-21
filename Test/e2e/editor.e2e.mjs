@@ -59,6 +59,46 @@ try {
   await page.waitForFunction(() => document.fonts.check('20px "Anton"') && document.fonts.check('20px "Atkinson Hyperlegible"'));
   await shot(page, 'desktop-01-empty');
 
+  // Accents above capitals are drawn whole: "ÁÉÑ¿" in Anton through the renderer (clipped to its text box) inks as many
+  // pixels as the same string drawn freely, and its top ink sits inside the box, above the capitals' cap line.
+  const accents = await page.evaluate(async () => {
+    const base = document.querySelector('script[type=module][src*="HotDogPress/Assets/js/app/main.js"]').src;
+    const render = await import(new URL('../core/render.js', base).href);
+    const { newDog } = await import(new URL('../core/dog.js', base).href);
+    const W = 400;
+    const H = 600;
+    const ink = (draw) => {
+      const c = new OffscreenCanvas(W, H);
+      const g = c.getContext('2d');
+      g.fillStyle = '#FFFFFF';
+      g.fillRect(0, 0, W, H);
+      draw(g);
+      const d = g.getImageData(0, 0, W, H).data;
+      let n = 0;
+      let top = -1;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i] < 128) { n++; if (top < 0) top = Math.floor(i / 4 / W); }
+      }
+      return { n, top };
+    };
+    const item = (t) => ({ id: 't', type: 'text', by: 'hand', x: 0.1, y: 0.2, w: 0.85, h: 0.5, font: 'display', size: 0.2, align: 'left', color: 'toner', runs: [{ text: t }] });
+    const page = (t) => ink((g) => {
+      const dog = newDog();
+      dog.look = 'copy-shop';
+      dog.pages[0].items = [item(t)];
+      render.renderPage(g, dog, 0, { px_w: W, px_h: H });
+    });
+    const free = ink((g) => {
+      g.font = render.layoutText(g, item('ÁÉÑ¿'), W, H, 'copy-shop').font;
+      g.textBaseline = 'alphabetic';
+      g.fillStyle = '#1B1A17';
+      g.fillText('ÁÉÑ¿', 40, 400);
+    });
+    return { boxTop: 0.2 * H, accents: page('ÁÉÑ¿'), caps: page('AEN'), free };
+  });
+  assert.ok(accents.accents.top >= accents.boxTop && accents.accents.top < accents.caps.top - 6, `accents inside the box, above the caps: ${JSON.stringify(accents)}`);
+  assert.ok(Math.abs(accents.accents.n - accents.free.n) <= accents.free.n * 0.01, `every accent pixel drawn: ${JSON.stringify(accents)}`);
+
   // Text: tap the page with the Text tool and type.
   let box = await overlayBox(page);
   await page.click('[data-tool="text"]');

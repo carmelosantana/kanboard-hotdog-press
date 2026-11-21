@@ -2,7 +2,7 @@
 // the PDF rasteriser and the social frames all draw through here. Pure, no DOM: the caller hands in the context and
 // the decoded images; nothing here loads fonts or files.
 import { panelRect } from './impose.js';
-import { LINE_HEIGHT } from './layouts.js';
+import { LINE_HEIGHT, linesThatFit, metricsOf, wrapText } from './textfit.js';
 import { joinRuns } from './runs.js';
 import { colorOf, grayHex, grayLevelHex, lookOf } from './looks.js';
 import { resolvePaper } from './paper.js';
@@ -20,8 +20,8 @@ const ALIGNS = ['left', 'center', 'right'];
 /**
  * @typedef {{width: number, height: number}} Drawable anything ctx.drawImage accepts (ImageBitmap, canvas, img)
  * @typedef {Record<string, Drawable>} Images decoded images by asset id
- * @typedef {{font: string, size_px: number, line_px: number, lines: string[], visible: number,
- *   overflow: boolean}} TextLayout
+ * @typedef {{font: string, size_px: number, line_px: number, ascent_px: number, descent_px: number,
+ *   lines: string[], visible: number, overflow: boolean}} TextLayout
  */
 
 /**
@@ -104,8 +104,9 @@ export function renderSheet(ctx, dog, { px_per_mm: k, images = {}, guides = true
 /**
  * Wrap a text item's runs to its box: greedy by words, measured with ctx.measureText at the item's font (it sets
  * ctx.font), breaking at newlines and between the runs of a list item (runs.js), and splitting words wider than the box.
- * `visible` counts the lines that fit the box height (a last line needs only the font size); the rest are not drawn,
- * and `overflow` says so.
+ * `visible` counts the lines that fit the box height by textfit.js's rule (the first line needs the font's accent
+ * ascent + descent, each further one LINE_HEIGHT); the rest are not drawn, and `overflow` says so. Lines are drawn on
+ * alphabetic baselines, the first `ascent_px` below the box top.
  * @param {CanvasRenderingContext2D|any} ctx
  * @param {any} item
  * @param {number} px_w
@@ -123,33 +124,13 @@ export function layoutText(ctx, item, px_w, px_h, lookName = 'kraft') {
   ctx.font = font;
   const fits = (s) => ctx.measureText(s).width <= box_w;
 
-  const text = joinRuns(item);
-  const lines = [];
-  if (text !== '') {
-    for (const para of text.split('\n')) {
-      let line = '';
-      for (const word of para.split(/\s+/).filter(Boolean)) {
-        const joined = line ? `${line} ${word}` : word;
-        if (fits(joined)) { line = joined; continue; }
-        if (line) lines.push(line);
-        line = '';
-        let rest = word;
-        while (rest && !fits(rest)) {
-          const chars = [...rest];
-          let n = 1;
-          while (n < chars.length && fits(chars.slice(0, n + 1).join(''))) n++;
-          lines.push(chars.slice(0, n).join(''));
-          rest = chars.slice(n).join('');
-        }
-        line = rest;
-      }
-      if (line || para.trim() === '') lines.push(line);
-    }
-  }
-  const visible = size_px > 0 && box_h >= size_px
-    ? Math.min(lines.length, Math.floor((box_h - size_px) / line_px + 1e-9) + 1)
-    : 0;
-  return { font, size_px, line_px, lines, visible, overflow: visible < lines.length };
+  const lines = wrapText(joinRuns(item), fits);
+  const visible = Math.min(lines.length, linesThatFit(box_h, size_px, item.font));
+  const { ascent, descent } = metricsOf(item.font);
+  return {
+    font, size_px, line_px, ascent_px: ascent * size_px, descent_px: descent * size_px, lines, visible,
+    overflow: visible < lines.length,
+  };
 }
 
 // ---------------------------------------------------------------- items
@@ -160,11 +141,12 @@ const DRAW = {
     const layout = layoutText(ctx, item, px_w, px_h, dog.look);
     const align = ALIGNS.includes(item.align) ? item.align : 'left';
     clipTo(ctx, b);
-    ctx.textBaseline = 'top';
+    ctx.textBaseline = 'alphabetic';
     ctx.textAlign = align;
     ctx.fillStyle = color(item.color);
     const x = align === 'center' ? b.x + b.w / 2 : align === 'right' ? b.x + b.w : b.x;
-    for (let i = 0; i < layout.visible; i++) ctx.fillText(layout.lines[i], x, b.y + i * layout.line_px);
+    const top = b.y + layout.ascent_px;
+    for (let i = 0; i < layout.visible; i++) ctx.fillText(layout.lines[i], x, top + i * layout.line_px);
   },
 
   image(item, env) {
