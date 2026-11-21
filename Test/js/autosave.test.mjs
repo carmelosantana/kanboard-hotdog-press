@@ -197,6 +197,31 @@ test('pagehide sends unsaved edits with sendBeacon, and nothing when all is save
   assert.equal(buffered(t.storage).doc.title, 'b', 'the buffer stays until a load sees the change');
 });
 
+test('a beacon sent when the tab was hidden, then more edits: the 409 against the beaconed copy is re-sent, not a conflict', async () => {
+  let server = { revision: 3, text: null };
+  const t = setup({
+    reply: (req) => {
+      if (req.method === 'GET') return json(200, { revision: server.revision, document: JSON.parse(server.text) });
+      if (req.revision !== String(server.revision)) return json(409, { error: 'conflict', revision: server.revision });
+      server = { revision: server.revision + 1, text: req.document };
+      return json(200, { ok: true, revision: server.revision });
+    },
+  });
+  t.store.update((d) => titled(d, 'b'));
+  t.autosave.pagehide();
+  t.autosave.pagehide();
+  assert.equal(t.beacons.length, 1, 'the same copy is beaconed once');
+  // The beacon lands on the server.
+  server = { revision: 4, text: t.beacons[0].body.get('document') };
+  t.store.update((d) => titled(d, 'c'));
+  await t.timers.advance(AUTOSAVE_DELAY_MS);
+  assert.deepEqual(t.conflicts, []);
+  assert.deepEqual(t.server.requests.filter((r) => r.method === 'POST').map((r) => r.revision), ['3', '4']);
+  assert.equal(JSON.parse(server.text).title, 'c');
+  assert.equal(t.config.revision, 5);
+  assert.equal(t.states.at(-1), 'saved');
+});
+
 test('discard drops the buffer and stops saving (before a reload)', async () => {
   const t = setup();
   t.store.update((d) => titled(d, 'b'));

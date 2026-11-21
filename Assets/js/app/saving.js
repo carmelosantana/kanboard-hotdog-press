@@ -57,6 +57,7 @@ export function startSaving(app, { dirty = false } = {}) {
   });
 
   window.addEventListener('pagehide', () => autosave.pagehide());
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') autosave.flush(); });
+  // A phone may never fire pagehide for a tab it closes in the background: hidden is the last reliable moment.
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') autosave.pagehide(); });
   return { el: h('div', { class: 'hdp-saving' }, line, dialog), autosave };
 }

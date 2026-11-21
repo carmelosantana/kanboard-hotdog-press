@@ -71,6 +71,8 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
   let inFlight = null;
   let timer = null;
   let retry = RETRY_MS;
+  /** The text last sent by beacon on the current revision: if it landed, a 409 shows exactly this copy. */
+  let beaconed = null;
 
   const storage = (fn) => {
     try {
@@ -103,12 +105,12 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
   store.on('change', onChange);
   if (recovered) onChange();
 
-  /** The server copy, when it is exactly `text` (so a 409 is our own earlier save); else null. */
-  async function sameOnServer(text) {
+  /** The server's copy as {revision, text}, or null when it cannot be read. */
+  async function serverCopy() {
     try {
       const res = await env.fetch(config.routes.load, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
       const body = res.ok ? await res.json() : null;
-      return body && JSON.stringify(body.document) === text ? body.revision : null;
+      return body && Number.isInteger(body.revision) ? { revision: body.revision, text: JSON.stringify(body.document) } : null;
     } catch {
       return null;
     }
@@ -116,6 +118,7 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
 
   function acknowledged(revision) {
     config.revision = revision;
+    beaconed = null;
     retry = RETRY_MS;
     if (dirty) {
       writeBuffer();
@@ -136,9 +139,16 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
       const body = await res.json().catch(() => null);
       if (res.ok && body?.ok === true && Number.isInteger(body.revision)) return acknowledged(body.revision);
       if (res.status === 409 && Number.isInteger(body?.revision)) {
-        const same = await sameOnServer(text);
-        if (same !== null) return acknowledged(same);
+        // Not a conflict when the newer server copy is this tab's own: this very text (an earlier request landed),
+        // or the copy it beaconed when the tab was hidden (then this one goes again on top of it).
+        const copy = await serverCopy();
+        if (copy?.text === text) return acknowledged(copy.revision);
         dirty = true;
+        if (beaconed !== null && copy?.text === beaconed) {
+          config.revision = copy.revision;
+          beaconed = null;
+          return send();
+        }
         conflict = true;
         writeBuffer();
         onState('conflict');
@@ -169,11 +179,13 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
     get dirty() { return dirty; },
     flush,
 
-    /** The tab is going away: send unsaved edits with a beacon. */
+    /** The tab is hidden or going away: send unsaved edits with a beacon, once per copy. */
     pagehide() {
       if (stopped || conflict || !dirty) return;
+      const text = JSON.stringify(store.doc);
+      if (text === beaconed) return;
       writeBuffer();
-      env.sendBeacon(config.routes.save, form(JSON.stringify(store.doc)));
+      beaconed = env.sendBeacon(config.routes.save, form(text)) ? text : null;
     },
 
     /** "Keep mine" in the conflict prompt: save this tab's zine over the server's revision. */
