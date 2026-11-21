@@ -290,7 +290,7 @@ try {
   assert.equal(s.page, 1);
   await page.click('.hdp-tab[data-view="booklet"]');
   await page.click('.hdp-flip[aria-label="Next page"]');
-  assert.equal(await page.textContent('.hdp-booklet-label'), 'Page 2–3');
+  await page.waitForFunction(() => document.querySelector('.hdp-booklet-label').textContent === 'Page 2–3', null, { timeout: 5000 });
   await shot(page, 'desktop-06-booklet');
   await page.click('.hdp-tab[data-view="pages"]');
 
