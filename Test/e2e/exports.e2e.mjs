@@ -14,7 +14,7 @@ import { join, resolve } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import assert from 'node:assert/strict';
 import {
-  PLUGIN, PROJECT_ID, php, problems, watch, CSP_PROBE, cspCheck, login, state, items, until, serverCopy,
+  PLUGIN, PROJECT_ID, php, problems, watch, CSP_PROBE, cspCheck, login, state, serverCopy,
   createZine, removeZine,
 } from './lib.mjs';
 import { readZip } from '../js/helpers/zip-reader.mjs';
@@ -128,6 +128,20 @@ try {
   await page.click('.hdp-mustard button:has-text("Apply")');
   await page.waitForSelector('.hdp-note-ok');
   await page.click('.hdp-mustard button:has-text("Close")');
+  // A marker on every page, so no two pages look alike (the example leaves the last pages empty).
+  await page.evaluate(async () => {
+    const m = await import(document.querySelector('script[type=module][src*="HotDogPress/Assets/js/app/main.js"]').src);
+    m.editor.store.update((d) => ({
+      ...d,
+      pages: d.pages.map((p, n) => ({
+        ...p,
+        items: [...p.items, {
+          id: `marker_${n + 1}`, type: 'text', by: 'hand', x: 0.1, y: 0.88, w: 0.8, h: 0.08, font: 'display', size: 0.06,
+          runs: [{ text: `Marker ${n + 1}` }],
+        }],
+      })),
+    }));
+  });
   s = await untilSaved(page, 'the Mustard zine');
   const zslug = 'plant-medicine';
   await page.click('.hdp-export summary');
@@ -139,14 +153,29 @@ try {
   const frames = readZip(carousel.bytes);
   assert.deepEqual(frames.map((e) => e.name), [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `hotdog-${zslug}-carousel-3x4-0${n}.png`));
   for (const f of frames) assert.deepEqual(pngSize(f.data), [1080, 1440], f.name);
-  // In page order: two frames are the same picture exactly when their pages have the same content.
-  const content = s.doc.pages.map(({ id, ...rest }) => JSON.stringify({ ...rest, items: rest.items.map(({ id: _, ...it }) => it) }));
-  for (let i = 0; i < 8; i++) {
-    for (let j = i + 1; j < 8; j++) {
-      assert.equal(latin1(frames[i].data) === latin1(frames[j].data), content[i] === content[j], `frames ${i + 1} and ${j + 1}`);
+  // In page order: frame n is byte for byte page n drawn alone in the same frame (the drawing below takes the page
+  // index itself, not the frame plan's), and no two frames are alike.
+  assert.equal(new Set(frames.map((f) => latin1(f.data))).size, 8, 'eight different pages');
+  const alone = await page.evaluate(async () => {
+    const base = document.querySelector('script[type=module][src*="HotDogPress/Assets/js/app/main.js"]').src;
+    const m = await import(base);
+    const social = await import(new URL('../core/social.js', base).href);
+    const doc = m.editor.store.doc;
+    const [first] = social.socialPlan(doc, 'carousel-3x4');
+    const out = [];
+    for (let n = 0; n < 8; n++) {
+      const frame = { ...first, source: { kind: 'page', index: n } };
+      const c = document.createElement('canvas');
+      c.width = frame.w;
+      c.height = frame.h;
+      social.renderFrame(c.getContext('2d'), doc, frame, { images: m.editor.images.map });
+      const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      out.push(Array.from(bytes, (b) => String.fromCharCode(b)).join(''));
     }
-  }
-  assert.ok(new Set(content).size >= 4, 'the zine has distinct pages to tell apart');
+    return out;
+  });
+  for (let n = 0; n < 8; n++) assert.equal(latin1(frames[n].data), alone[n], `carousel frame ${n + 1} is page ${n + 1}`);
   // Frame n is page n: the first frame matches the cover image (page 1) pixel for pixel.
   const cover = await download(page, '[data-export="cover"]');
   assert.equal(cover.name, `hotdog-${zslug}-cover.png`);
@@ -196,7 +225,8 @@ try {
   assert.equal(linkedin.name, `hotdog-${zslug}-linkedin.pdf`);
   assert.equal((latin1(linkedin.bytes).match(/\/Type \/Page\b/g) ?? []).length, 8, 'LinkedIn PDF has 8 pages');
 
-  // Save PDF to project files.
+  // Save PDF to project files, straight after a paper change: the stored name follows the live zine.
+  await page.selectOption('select[name=paper]', 'a4');
   await page.click('[data-export="save-pdf"]');
   await page.waitForFunction(() => /Saved to the project files as/.test(document.querySelector('.hdp-status').textContent), null, { timeout: 120000 });
   const stored = JSON.parse(php(`
@@ -206,7 +236,7 @@ try {
     foreach ($rows as &$r) { $r["head"] = substr((string) @file_get_contents("/var/www/app/data/files/" . $r["path"]), 0, 8); }
     echo json_encode($rows);`, String(zineId)));
   assert.equal(stored.length, 1, JSON.stringify(stored));
-  assert.equal(stored[0].name, `hotdogpress-${zineId}-${zslug}-letter.pdf`);
+  assert.equal(stored[0].name, `hotdogpress-${zineId}-${zslug}-a4.pdf`);
   assert.equal(stored[0].head, '%PDF-1.4');
   await page.screenshot({ path: join(SHOTS, 'exports-02-menu.png'), fullPage: true });
 
