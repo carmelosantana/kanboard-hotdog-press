@@ -199,7 +199,7 @@ const codePoints = (s) => { let n = 0; for (const _ of s) n += 1; return n; };
 const escapeSegment = (s) => String(s).replaceAll('~', '~0').replaceAll('/', '~1');
 
 /** `z_` + 8 lowercase base36 characters. */
-function randomId() {
+export function randomId() {
   const bytes = new Uint8Array(8);
   if (globalThis.crypto?.getRandomValues) globalThis.crypto.getRandomValues(bytes);
   else for (let i = 0; i < bytes.length; i += 1) bytes[i] = Math.floor(Math.random() * 256);

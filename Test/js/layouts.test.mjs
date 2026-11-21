@@ -187,3 +187,20 @@ test('a wider margin never raises a budget', () => {
     assert.ok(wide < narrow, `${paper}: margin 10 should cost characters`);
   }
 });
+
+test('ids are fresh: page-less placements merge into a valid Dog and re-placing gives new ids', () => {
+  const dog = newDog({ paper: 'a4' });
+  dog.assets = { a1: { kind: 'image', file_id: 1, w: 1300, h: 900 } };
+  dog.pages[0].layout = 'two-up';
+  dog.pages[0].items = [...place('two-up', fill('two-up'), 'a4'), ...place('two-up', fill('two-up'), 'a4')];
+  assert.deepEqual(validateDog(dog, { mode: 'strict' }).errors ?? [], []);
+
+  const first = place('quote', fill('quote'), 'letter', { page: 2 }).map((i) => i.id);
+  const again = place('quote', fill('quote'), 'letter', { page: 2 }).map((i) => i.id);
+  assert.equal(new Set([...first, ...again]).size, first.length + again.length);
+});
+
+test('a slot filled with null counts as unfilled', () => {
+  const items = place('headline-body', { title: null, body: { text: 'words' } }, 'a4', { page: 3 });
+  assert.deepEqual(items.map((i) => i.slot), ['body']);
+});

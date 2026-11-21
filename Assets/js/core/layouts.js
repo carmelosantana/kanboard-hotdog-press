@@ -1,6 +1,6 @@
 // Layouts: each layout's named slots and where they sit, plus character budgets. Pure, no DOM.
 // Layouts own all slot geometry: boxes are fractions of a page's safe area, so nothing is placed off it.
-import { LAYOUT_NAMES } from './dog.js';
+import { LAYOUT_NAMES, randomId } from './dog.js';
 import { safeArea } from './impose.js';
 import { panelSize } from './paper.js';
 
@@ -77,7 +77,8 @@ export const LAYOUTS = Object.freeze(Object.fromEntries(LAYOUT_NAMES.map((name) 
 
 /**
  * Dog items for the filled slots, in slot order, inside the page's safe area (panel units, reading orientation).
- * Without a page the boxes sit inside every page's safe area. Unfilled slots are left out; text is not truncated.
+ * Without a page the boxes sit inside every page's safe area. Unfilled (absent or null) slots are left out; text is not
+ * truncated. Every item gets a fresh id.
  * @param {string} layout
  * @param {Record<string, SlotFill>} slots
  * @param {Paper} paper
@@ -87,10 +88,9 @@ export function place(layout, slots, paper, { margin_mm = 6, page } = {}) {
   const defs = slotsOf(layout);
   for (const name of Object.keys(slots)) slotOf(layout, name);
   const area = areaFor(paper, margin_mm, page);
-  const prefix = page === undefined ? 'p' : `p${page}`;
-  return defs.filter((s) => slots[s.name] !== undefined).map((s) => {
+  return defs.filter((s) => slots[s.name] != null).map((s) => {
     const fill = slots[s.name];
-    const base = { id: `${prefix}-${s.name}`, slot: s.name, by: fill.by ?? 'hand', ...boxIn(area, s.box) };
+    const base = { id: `${s.name}_${randomId()}`, slot: s.name, by: fill.by ?? 'hand', ...boxIn(area, s.box) };
     if (s.kind === 'image') return { ...base, type: 'image', asset: fill.asset, fit: 'cover', focus: [0.5, 0.5] };
     const runs = s.kind === 'list'
       ? (fill.items ?? []).map((line) => ({ text: `${BULLET} ${line}` }))
