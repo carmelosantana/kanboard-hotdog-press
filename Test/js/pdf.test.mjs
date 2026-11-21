@@ -278,12 +278,14 @@ test('guides draw the cut and the folds where impose puts them, the centre fold 
   }
 });
 
-test('guides off leaves no cut, fold or tick lines, but keeps the check square', () => {
+test('guides off is a clean sheet: no cut, fold, tick or check-square lines, only the panels', () => {
   const page = sheetPage(dog(), panels(), { guides: false });
   assert.equal(linesWith(page, GUIDE_STYLES.cut).length, 0);
   assert.equal(linesWith(page, GUIDE_STYLES.fold).length, 0);
   assert.equal(linesWith(page, GUIDE_STYLES.tick).length, 0);
-  assert.equal(linesWith(page, GUIDE_STYLES.check).length, 4);
+  assert.equal(linesWith(page, GUIDE_STYLES.check).length, 0);
+  assert.equal(page.lines.length, 0);
+  assert.equal(page.images.length, 8);
 });
 
 test('guides default to on', () => {

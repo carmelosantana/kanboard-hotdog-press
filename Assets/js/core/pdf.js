@@ -168,7 +168,7 @@ function concat(parts) {
 
 /**
  * The print sheet as one buildPdf page: the 8 panels on their quarters (top row turned 180°), then, with guides on,
- * the folds, the cut and the page ticks, and always the 10 mm check square.
+ * the folds, the cut, the page ticks and the 10 mm check square. Guides off is a clean sheet: nothing over the artwork.
  *
  * - Page ticks: page N gets N short strokes at the bottom-right corner of its safe area in reading orientation,
  *   i.e. on the margin line along the sheet edge (no fonts needed).
@@ -213,14 +213,14 @@ export function sheetPage(dog, rasterPanels, { guides = true } = {}) {
       line(...cut, GUIDE_STYLES.cut),
     );
     for (let page = 1; page <= 8; page++) lines.push(...pageTicks(paper, margin, page, line));
+    const [x0, y0, s] = [margin, H - margin, CHECK_MM];
+    lines.push(
+      line(x0, y0, x0 + s, y0, GUIDE_STYLES.check),
+      line(x0 + s, y0, x0 + s, y0 - s, GUIDE_STYLES.check),
+      line(x0 + s, y0 - s, x0, y0 - s, GUIDE_STYLES.check),
+      line(x0, y0 - s, x0, y0, GUIDE_STYLES.check),
+    );
   }
-  const [x0, y0, s] = [margin, H - margin, CHECK_MM];
-  lines.push(
-    line(x0, y0, x0 + s, y0, GUIDE_STYLES.check),
-    line(x0 + s, y0, x0 + s, y0 - s, GUIDE_STYLES.check),
-    line(x0 + s, y0 - s, x0, y0 - s, GUIDE_STYLES.check),
-    line(x0, y0 - s, x0, y0, GUIDE_STYLES.check),
-  );
 
   return { w_pt: mm(paper.w_mm), h_pt: mm(H), images, lines, rects: [] };
 }
