@@ -110,7 +110,7 @@ test('edits are buffered at once and saved once, 2 s after the last one, with th
   assert.equal(req.document, JSON.stringify(t.store.doc));
   assert.equal(t.config.revision, 4, 'the new revision is kept for the next save');
   assert.equal(t.storage.getItem(bufferKey(7)), null, 'the buffer goes once the server has it');
-  assert.deepEqual(t.states, ['dirty', 'dirty', 'saving', 'saved']);
+  assert.deepEqual(t.states, ['saved', 'dirty', 'dirty', 'saving', 'saved'], 'a clean zine starts saved');
 });
 
 test('an edit made while a save is in flight is saved next, on the new revision', async () => {

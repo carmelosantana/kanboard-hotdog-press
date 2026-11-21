@@ -4,90 +4,29 @@
 //   create a zine → add text (typed in place) → draw ink → a shape → a sticker → upload a photo → move, resize,
 //   rotate, undo/redo, lock → apply a layout (hand items stay) → change the look → paste Mustard and Apply (warnings
 //   shown, hand ink kept) → bad Mustard shows errors and changes nothing → reorder pages in the strip → Pages / Sheet /
-//   Booklet → save once through the save route and reload (the server's strict validator accepts the document) →
+//   Booklet → autosave reaches the server and a reload brings the zine back (the strict validator accepts it) →
 //   a viewer gets read-only mode → the same at 375 px (toolbar and strip scroll, no page-wide horizontal scroll).
 // Every page must log no console error, no page error and no CSP violation, and request nothing from another origin.
 //
 // A viewer user and the zine are made and removed with PDO inside kb-suite (dev only; never the production MCP).
+// Shared helpers are in lib.mjs; autosave, the conflict prompt and the exports run in exports.e2e.mjs.
 // Run from the harness root: node HotDogPress/Test/e2e/editor.e2e.mjs [shots-dir]
 import { chromium } from 'playwright';
-import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, resolve } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import assert from 'node:assert/strict';
+import {
+  BASE, PLUGIN, PROJECT_ID, php, problems, watch, CSP_PROBE, cspCheck, login, state, items, until, serverCopy,
+  createZine, removeZine,
+} from './lib.mjs';
 
-const BASE = process.env.KB_URL || 'http://localhost:8081';
-if (!['localhost', '127.0.0.1'].includes(new URL(BASE).hostname)) {
-  console.error(`refusing: KB_URL must be a localhost dev stack, not ${BASE}`);
-  process.exit(2);
-}
-const CONTAINER = process.env.KB_CONTAINER || 'kb-suite';
-const PLUGIN = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const SHOTS = resolve(process.argv[2] || join(PLUGIN, 'Test/e2e/shots'));
 const PHOTO = join(PLUGIN, 'Test/fixtures/pdf/two-tone.jpg');
-const PROJECT_ID = 1;
 const tag = randomBytes(3).toString('hex');
 const VIEWER = { username: `hdp-viewer-${tag}`, password: randomBytes(12).toString('base64url') };
 const MUSTARD = readFileSync(join(PLUGIN, 'Test/fixtures/mustard/example.mustard.md'), 'utf8');
 mkdirSync(SHOTS, { recursive: true });
-
-/** Runs PHP with PDO on the dev stack's SQLite database; the script gets $db. Returns stdout. */
-function php(code, ...args) {
-  const prelude = '$db = new PDO("sqlite:/var/www/app/data/db.sqlite"); $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); $db->exec("PRAGMA foreign_keys = ON");';
-  return execFileSync('docker', ['exec', CONTAINER, 'php', '-r', prelude + code, '--', ...args], { encoding: 'utf8' });
-}
-
-const problems = [];
-/** Watches a page for console errors, page errors, CSP violations and requests to other origins. */
-function watch(page, label) {
-  page.on('console', (m) => { if (m.type() === 'error') problems.push(`${label} console: ${m.text()}`); });
-  page.on('pageerror', (e) => problems.push(`${label} pageerror: ${e.message}`));
-  page.on('response', (r) => { if (r.status() >= 400) problems.push(`${label} HTTP ${r.status()}: ${r.url()}`); });
-  page.on('request', (r) => {
-    const u = new URL(r.url());
-    if (!['http:', 'https:'].includes(u.protocol)) return;
-    if (u.origin !== new URL(BASE).origin) problems.push(`${label} other origin: ${r.url()}`);
-  });
-}
-const CSP_PROBE = () => {
-  window.__csp = [];
-  document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(`${e.violatedDirective} ${e.blockedURI}`));
-};
-async function cspCheck(page, label) {
-  const v = await page.evaluate(() => window.__csp ?? []);
-  for (const x of v) problems.push(`${label} CSP: ${x}`);
-}
-
-async function login(context, username, password) {
-  const page = await context.newPage();
-  await page.goto(`${BASE}/login`);
-  await page.fill('input[name=username]', username);
-  await page.fill('input[name=password]', password);
-  await Promise.all([page.waitForNavigation(), page.click('button[type=submit]')]);
-  return page;
-}
-
-/** The editor module's live state: the same module instance the page booted (same URL, query included). */
-const state = (page) => page.evaluate(async () => {
-  const src = document.querySelector('script[type=module][src*="HotDogPress/Assets/js/app/main.js"]').src;
-  const m = await import(src);
-  await m.ready;
-  const e = m.editor;
-  return e && { doc: e.store.doc, selection: e.store.selection, page: e.store.page, ui: e.ui, canUndo: e.store.canUndo, revision: e.config.revision };
-});
-const items = (s, p = s.page) => s.doc.pages[p].items;
-/** Polls the editor state until `pred(state)` holds. */
-async function until(page, pred, what, ms = 15000) {
-  const end = Date.now() + ms;
-  for (;;) {
-    const s = await state(page);
-    if (pred(s)) return s;
-    if (Date.now() > end) throw new Error(`timed out waiting for ${what}`);
-    await page.waitForTimeout(100);
-  }
-}
 
 async function overlayBox(page) {
   const b = await page.locator('.hdp-overlay').boundingBox();
@@ -113,14 +52,7 @@ try {
   await ctx.addInitScript(CSP_PROBE);
   const page = await login(ctx, 'admin', 'admin');
   watch(page, 'desktop');
-  await page.goto(`${BASE}/hotdogpress/project/${PROJECT_ID}`);
-  await page.fill('form[action*="/create"] input[name=title]', `E2E zine ${tag}`);
-  await Promise.all([
-    page.waitForURL(/\/hotdogpress\/zine\/\d+$/),
-    page.locator('form[action*="/create"] [type=submit]').click(),
-  ]);
-  zineId = Number(/zine\/(\d+)/.exec(page.url())[1]);
-  await page.waitForSelector('#hotdogpress-app[data-ready="true"]');
+  zineId = await createZine(page, `E2E zine ${tag}`);
   let s = await state(page);
   assert.equal(s.doc.pages.length, 8);
   assert.equal(s.ui.view, 'pages');
@@ -318,18 +250,13 @@ try {
   await shot(page, 'desktop-06-booklet');
   await page.click('.hdp-tab[data-view="pages"]');
 
-  // Save once through the route (autosave is Task 12) and reload: the server accepts the document, it comes back.
+  // Autosave: the edits reach the server (the strict validator accepts them) and a reload brings them back.
   s = await state(page);
-  const saved = await page.evaluate(async ({ doc, revision }) => {
-    const c = JSON.parse(document.getElementById('hotdogpress-config').textContent);
-    const body = new FormData();
-    body.append('csrf_token', c.csrf_token);
-    body.append('revision', String(revision));
-    body.append('document', JSON.stringify(doc));
-    const r = await fetch(c.routes.save, { method: 'POST', body });
-    return { status: r.status, json: await r.json() };
-  }, { doc: s.doc, revision: s.revision });
-  assert.equal(saved.status, 200, JSON.stringify(saved.json));
+  const end = Date.now() + 15000;
+  while (JSON.stringify((await serverCopy(page)).document) !== JSON.stringify(s.doc)) {
+    assert.ok(Date.now() < end, 'autosave did not reach the server');
+    await page.waitForTimeout(250);
+  }
   await page.reload();
   await page.waitForSelector('#hotdogpress-app[data-ready="true"]');
   const reloaded = await state(page);
@@ -423,14 +350,7 @@ try {
 } finally {
   await browser.close();
   // Clean up: the zine, its uploaded photos (project files named hotdogpress-<id>-…) and the viewer.
-  if (zineId) {
-    php(`
-      $files = $db->prepare("SELECT path FROM project_has_files WHERE project_id = ? AND name LIKE ?");
-      $files->execute([${PROJECT_ID}, "hotdogpress-" . $argv[1] . "-%"]);
-      foreach ($files->fetchAll(PDO::FETCH_COLUMN) as $p) { @unlink("/var/www/app/data/files/" . $p); @unlink("/var/www/app/data/files/" . $p . ".thumb"); }
-      $db->prepare("DELETE FROM project_has_files WHERE project_id = ? AND name LIKE ?")->execute([${PROJECT_ID}, "hotdogpress-" . $argv[1] . "-%"]);
-      $db->prepare("DELETE FROM hotdogpress_zines WHERE id = ?")->execute([$argv[1]]);`, String(zineId));
-  }
+  if (zineId) removeZine(zineId);
   if (viewerId) {
     php('$db->prepare("DELETE FROM project_has_users WHERE user_id = ?")->execute([$argv[1]]); $db->prepare("DELETE FROM users WHERE id = ?")->execute([$argv[1]]);', String(viewerId));
   }

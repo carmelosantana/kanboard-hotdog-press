@@ -103,7 +103,7 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
     if (!conflict) schedule(AUTOSAVE_DELAY_MS);
   };
   store.on('change', onChange);
-  if (recovered) onChange();
+  if (recovered) onChange(); else onState('saved');
 
   /** The server's copy as {revision, text}, or null when it cannot be read. */
   async function serverCopy() {

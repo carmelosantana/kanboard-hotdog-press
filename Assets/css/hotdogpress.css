@@ -447,7 +447,10 @@
 /* ------------------------------------------------------------------ saving, export and the conflict prompt */
 
 .hdp-saving {
-  min-height: 1.2em;
+  /* A fixed line, so the page below does not move when the save state first appears. */
+  height: 1.5em;
+  line-height: 1.5em;
+  overflow: hidden;
   font-size: 0.85em;
   opacity: 0.8;
 }
