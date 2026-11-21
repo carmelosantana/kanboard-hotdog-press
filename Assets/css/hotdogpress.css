@@ -99,3 +99,347 @@
   text-align: center;
   opacity: 0.7;
 }
+
+.hotdogpress-error {
+  padding: 2rem 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ the editor (Assets/js/app)
+   Mobile-first: one column, the toolbar and the page strip scroll sideways; wider screens get the Mustard panel
+   beside the page. Chrome uses Kanboard/ShadcnTheme buttons and inputs; brand colours stay on the canvas. */
+
+.hotdogpress-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.hdp-toolbar,
+.hdp-props {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: thin;
+}
+
+.hdp-props {
+  /* Always one row tall, so the page below does not jump when options come and go. */
+  min-height: 2.75rem;
+}
+
+.hdp-props[hidden] {
+  display: none;
+}
+
+.hdp-group {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.25rem;
+}
+
+.hdp-toolbar .btn,
+.hdp-props .btn,
+.hdp-tab {
+  white-space: nowrap;
+  min-height: 2.25rem;
+}
+
+.hdp-tab {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.hdp-tab[aria-selected="true"] {
+  opacity: 1;
+  background: var(--hdp-mustard);
+  border-color: var(--hdp-mustard);
+  color: var(--hdp-toner);
+  font-weight: 600;
+}
+
+.hdp-tool[aria-pressed="true"],
+.hdp-props .btn[aria-pressed="true"] {
+  outline: 2px solid var(--hdp-mustard);
+  outline-offset: 1px;
+  font-weight: 600;
+}
+
+.hdp-danger:not(:disabled) {
+  color: var(--hdp-ketchup);
+}
+
+.hdp-swatches {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.hdp-swatch {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(27, 26, 23, 0.4);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.hdp-swatch[aria-pressed="true"] {
+  outline: 2px solid var(--hdp-ketchup);
+  outline-offset: 2px;
+}
+
+.hdp-sticker {
+  flex: 0 0 auto;
+  padding: 0.25rem;
+  border: 1px solid rgba(127, 127, 127, 0.4);
+  border-radius: 0.5rem;
+  background: var(--hdp-copy);
+  cursor: pointer;
+}
+
+.hdp-sticker img {
+  display: block;
+}
+
+.hdp-settings summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.hdp-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.4rem;
+}
+
+.hdp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.9em;
+}
+
+.hdp-field input[type="number"] {
+  width: 5rem;
+}
+
+.hdp-check {
+  flex-direction: row;
+  align-items: center;
+  align-self: flex-end;
+  gap: 0.4rem;
+}
+
+.hdp-read-only {
+  margin: 0;
+  font-style: italic;
+}
+
+.hdp-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.hdp-stage {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.hdp-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hdp-view[hidden] {
+  display: none;
+}
+
+.hdp-page-frame {
+  position: relative;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+}
+
+.hdp-page-canvas,
+.hdp-overlay {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.hdp-overlay {
+  touch-action: none;
+  cursor: default;
+}
+
+[data-tool="text"] .hdp-overlay {
+  cursor: text;
+}
+
+[data-tool="ink"] .hdp-overlay,
+[data-tool="shape"] .hdp-overlay {
+  cursor: crosshair;
+}
+
+.hdp-text-edit {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 1px dashed var(--hdp-ketchup);
+  background: transparent;
+  resize: none;
+  overflow: hidden;
+  transform-origin: center;
+}
+
+.hdp-sheet-canvas {
+  display: block;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.hdp-spread {
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+}
+
+.hdp-booklet-page {
+  display: block;
+}
+
+.hdp-booklet-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hdp-flip {
+  min-width: 2.75rem;
+  font-size: 1.25rem;
+}
+
+.hdp-mustard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.hdp-mustard[hidden] {
+  display: none;
+}
+
+.hdp-mustard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hdp-mustard-head h3 {
+  margin: 0;
+}
+
+.hdp-mustard-text {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 18rem;
+  font-family: "Courier Prime", "Courier New", monospace;
+  font-size: 0.9rem;
+}
+
+.hdp-note ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.hdp-note-error {
+  color: var(--hdp-ketchup);
+}
+
+.hdp-note-ok {
+  color: var(--hdp-relish);
+}
+
+.hdp-strip-list {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.25rem;
+  scrollbar-width: thin;
+}
+
+.hdp-thumb {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 0.2rem;
+  border: 2px solid transparent;
+  border-radius: 0.4rem;
+  background: transparent;
+  cursor: pointer;
+  touch-action: pan-x;
+}
+
+.hdp-thumb canvas {
+  display: block;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.hdp-thumb[aria-current="true"] {
+  border-color: var(--hdp-mustard);
+}
+
+.hdp-thumb.is-dragging,
+.hdp-thumb.is-picked {
+  opacity: 0.5;
+}
+
+.hdp-thumb.is-drop {
+  border-color: var(--hdp-ketchup);
+}
+
+.hdp-thumb-label {
+  display: block;
+  font-size: 0.8em;
+  text-align: center;
+}
+
+.hdp-strip-hint {
+  margin: 0;
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+
+.hdp-status {
+  min-height: 1.2em;
+  margin: 0;
+}
+
+.hdp-status[data-kind="error"] {
+  color: var(--hdp-ketchup);
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  .hdp-main.has-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem);
+    align-items: start;
+  }
+}
