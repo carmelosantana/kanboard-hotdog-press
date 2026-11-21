@@ -2,11 +2,15 @@
 namespace Kanboard\Plugin\HotDogPress;
 
 use Kanboard\Core\Plugin\Base;
+use Kanboard\Core\Security\Role;
 
 class Plugin extends Base
 {
     public function initialize(): void
     {
+        // Task 1 browser spike (removed at the end of the task).
+        $this->route->addRoute('hotdogpress/spike', 'SpikeController', 'show', 'HotDogPress');
+        $this->applicationAccessMap->add('SpikeController', '*', Role::APP_ADMIN);
     }
 
     public function getPluginName(): string        { return 'HotDogPress'; }
