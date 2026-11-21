@@ -100,7 +100,7 @@ try {
       pages: d.pages.map((p, n) => ({
         ...p,
         items: [...p.items, {
-          id: `marker_${n + 1}`, type: 'text', by: 'hand', x: 0.1, y: 0.88, w: 0.8, h: 0.08, font: 'display', size: 0.06,
+          id: `marker_${n + 1}`, type: 'text', by: 'hand', x: 0.1, y: 0.86, w: 0.8, h: 0.12, font: 'display', size: 0.06,
           runs: [{ text: `Marker ${n + 1}` }],
         }],
       })),

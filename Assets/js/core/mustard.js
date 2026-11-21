@@ -1,7 +1,7 @@
 // Mustard (*.mustard.md): markdown for writing a zine. compileMustard turns it into the Dog (deterministic apart from
 // minted ids); exportMustard (mustard-export.js) writes a Dog back. Pure, no DOM. Format: hotdogpress-formats.md.
 import { newDog, validateDog, randomId, LAYOUT_NAMES, BY_VALUES, PAPER_IDS, MAX_DOG_BYTES } from './dog.js';
-import { LAYOUTS, place, budget, BULLET } from './layouts.js';
+import { LAYOUTS, place, budget, overflows, BULLET } from './layouts.js';
 import { safeArea } from './impose.js';
 import { DEFAULT_MARGIN_MM, MAX_MARGIN_MM } from './paper.js';
 import { readFrontMatter } from './frontmatter.js';
@@ -186,11 +186,12 @@ function compilePage(src, p, ctx) {
       ctx.warn(path, `no slot left for this ${block.kind} on layout ${layout}; it is placed freely`, block.line);
     }
     if (item.slot && item.type === 'text' && !moved) {
-      const max = budget(layout, item.slot, ctx.paper, opts);
-      const used = codePoints(item.runs.map((r) => r.text).join('\n'));
-      if (used > max) {
-        ctx.warn(`${path}/runs`, `over budget: the ${item.slot} slot of ${layout} holds about ${max} characters `
-          + `on ${ctx.paper}; this has ${used}`, block.line);
+      const text = item.runs.map((r) => r.text).join('\n');
+      if (overflows(layout, item.slot, text, ctx.paper, opts)) {
+        const max = budget(layout, item.slot, ctx.paper, opts);
+        const used = codePoints(text);
+        ctx.warn(`${path}/runs`, `over budget: this runs past the ${item.slot} slot of ${layout}, which holds about `
+          + `${max} characters on ${ctx.paper}; this has ${used}`, block.line);
       }
     }
   });

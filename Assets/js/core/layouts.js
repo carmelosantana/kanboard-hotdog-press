@@ -3,6 +3,9 @@
 import { LAYOUT_NAMES, randomId } from './dog.js';
 import { safeArea } from './impose.js';
 import { panelSize } from './paper.js';
+import { linesThatFit, metricsOf, wrapText } from './textfit.js';
+
+export { LINE_HEIGHT } from './textfit.js';
 
 /** @typedef {import('./impose.js').Paper} Paper */
 /** @typedef {'text'|'list'|'image'} SlotKind */
@@ -18,10 +21,6 @@ import { panelSize } from './paper.js';
  * Placeholder until the print probe is read.
  */
 export const MIN_FONT_SIZE = 0.024;
-/** Average glyph width as a fraction of the font size (em), for budgets: 0.5 em suits proportional faces. */
-export const GLYPH_EM = 0.5;
-/** Line height as a multiple of the font size, for budgets. */
-export const LINE_HEIGHT = 1.2;
 export const BULLET = '•';
 
 const text = (name, box, font, size, align = 'left') => ({ name, kind: 'text', box, font, size, align });
@@ -31,17 +30,17 @@ const image = (name, box) => ({ name, kind: 'image', box });
 /** @type {Record<string, Slot[]>} */
 const SLOTS = {
   cover: [
-    text('title', [0, 0, 1, 0.26], 'display', 0.09),
-    text('subtitle', [0, 0.28, 1, 0.1], 'body', 0.04),
-    image('photo', [0, 0.4, 1, 0.6]),
+    text('title', [0, 0, 1, 0.28], 'display', 0.09),
+    text('subtitle', [0, 0.3, 1, 0.1], 'body', 0.04),
+    image('photo', [0, 0.42, 1, 0.58]),
   ],
   'back-cover': [
     text('body', [0, 0, 1, 0.7], 'body', 0.035),
     text('note', [0, 0.76, 1, 0.24], 'mono', 0.028),
   ],
   'headline-body': [
-    text('title', [0, 0, 1, 0.22], 'display', 0.075),
-    text('body', [0, 0.25, 1, 0.75], 'body', 0.035),
+    text('title', [0, 0, 1, 0.24], 'display', 0.075),
+    text('body', [0, 0.27, 1, 0.73], 'body', 0.035),
   ],
   'photo-full': [
     image('photo', [0, 0, 1, 0.86]),
@@ -53,12 +52,12 @@ const SLOTS = {
     text('body', [0, 0.7, 1, 0.3], 'body', 0.032),
   ],
   list: [
-    text('title', [0, 0, 1, 0.18], 'display', 0.065),
-    list('list', [0, 0.21, 1, 0.79], 0.038),
+    text('title', [0, 0, 1, 0.2], 'display', 0.065),
+    list('list', [0, 0.23, 1, 0.77], 0.038),
   ],
   quote: [
     text('quote', [0, 0.15, 1, 0.55], 'display', 0.06, 'center'),
-    text('attribution', [0, 0.74, 1, 0.1], 'mono', 0.03, 'right'),
+    text('attribution', [0, 0.76, 1, 0.24], 'mono', 0.03, 'right'),
   ],
   'two-up': [
     text('title', [0, 0, 1, 0.14], 'display', 0.055),
@@ -100,23 +99,45 @@ export function place(layout, slots, paper, { margin_mm = 6, page } = {}) {
 }
 
 /**
- * The most characters a text slot holds at its font size: characters per line (box width / (GLYPH_EM × font))
- * times lines (box height / (LINE_HEIGHT × font)). Image slots hold 0.
+ * About how many characters a text slot holds at its font size: characters per line (box width / the slot font's
+ * average advance) times the lines that fit (textfit.js's rule, the renderer's). Image slots hold 0. A rough guide
+ * for messages; whether text fits is `overflows`.
  * @param {string} layout
  * @param {string} slot
  * @param {Paper} paper
  * @param {PlaceOpts} [opts]
  * @returns {number}
  */
-export function budget(layout, slot, paper, { margin_mm = 6, page } = {}) {
+export function budget(layout, slot, paper, opts = {}) {
+  const fit = slotFit(layout, slot, paper, opts);
+  if (!fit) return 0;
+  return Math.floor(fit.w / (metricsOf(fit.font).glyph * fit.size)) * linesThatFit(fit.h, fit.size, fit.font);
+}
+
+/**
+ * Whether `text` would run past the slot's box: wrapped by the renderer's word wrap with each character at the slot
+ * font's average advance, against the lines the renderer draws. Image slots never overflow.
+ * @param {string} layout
+ * @param {string} slot
+ * @param {string} text
+ * @param {Paper} paper
+ * @param {PlaceOpts} [opts]
+ */
+export function overflows(layout, slot, text, paper, opts = {}) {
+  const fit = slotFit(layout, slot, paper, opts);
+  if (!fit) return false;
+  const advance = metricsOf(fit.font).glyph * fit.size;
+  const lines = wrapText(text, (s) => [...s].length * advance <= fit.w);
+  return lines.length > linesThatFit(fit.h, fit.size, fit.font);
+}
+
+/** A text slot's box and font size in mm on the page, or null for an image slot. */
+function slotFit(layout, slot, paper, { margin_mm = 6, page } = {}) {
   const s = slotOf(layout, slot);
-  if (s.kind === 'image') return 0;
+  if (s.kind === 'image') return null;
   const { w, h } = panelSize(paper);
   const box = boxIn(areaFor(paper, margin_mm, page), s.box);
-  const font = s.size * h;
-  const perLine = Math.floor((box.w * w) / (GLYPH_EM * font));
-  const lines = Math.floor((box.h * h) / (LINE_HEIGHT * font));
-  return perLine * lines;
+  return { w: box.w * w, h: box.h * h, size: s.size * h, font: s.font };
 }
 
 function slotsOf(layout) {

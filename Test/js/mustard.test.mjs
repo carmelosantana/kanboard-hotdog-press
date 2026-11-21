@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { compileMustard, exportMustard } from '../../Assets/js/core/mustard.js';
 import { validateDog, newDog, MAX_DOG_BYTES } from '../../Assets/js/core/dog.js';
-import { place, BULLET } from '../../Assets/js/core/layouts.js';
+import { place, overflows, BULLET } from '../../Assets/js/core/layouts.js';
 
 const DIR = new URL('../fixtures/mustard/', import.meta.url);
 const FIXTURES = readdirSync(DIR).filter((f) => f.endsWith('.mustard.md')).sort();
@@ -78,7 +78,9 @@ test('the Plant Medicine sample: eight pages from the draft plan, Spanish first,
   assert.deepEqual(placeholders, ['cohoba.jpg', 'portada.jpg']);
   // The only warnings are the two unknown photos: everything fits its budget on both papers.
   assert.deepEqual(warnings.map((w) => w.path), ['pages/0/items/2/asset', 'pages/2/items/1/asset']);
-  assert.deepEqual(compileMustard(read('plant-medicine.mustard.md'), { paper: 'a4' }).warnings.length, 2);
+  const a4 = compileMustard(read('plant-medicine.mustard.md').replace('paper: letter', 'paper: a4'));
+  assert.equal(a4.dog.paper, 'a4');
+  assert.deepEqual(a4.warnings.map((w) => w.path), ['pages/0/items/2/asset', 'pages/2/items/1/asset'], 'and on A4');
 });
 
 test('front matter: version, title, paper, look and margin; opts.paper is only the default', () => {
@@ -286,6 +288,15 @@ test('over-budget text is a warning with the item path, never truncated', () => 
   const w = warnings.find((x) => x.path === 'pages/0/items/0/runs');
   assert.ok(w);
   assert.match(w.message, /budget/);
+});
+
+test('a quote credit warns exactly when it will not fit its box (layouts.overflows); the sample credit fits', () => {
+  const credit = 'Taíno voices are community-led; some testimony is held back on purpose.';
+  const runs = (body) => compileOne('quote', body).warnings.filter((w) => /\/runs$/.test(w.path));
+  const long = Array(4).fill(credit).join(' ');
+  assert.equal(overflows('quote', 'attribution', long, 'letter', { page: 1 }), true);
+  assert.ok(runs(`> Q\n\n${long}`).some((w) => w.path === 'pages/0/items/1/runs' && /budget/.test(w.message)));
+  assert.deepEqual(runs(`> Q\n\n${credit}`), []);
 });
 
 test('text past the Dog limit is an error from validation', () => {

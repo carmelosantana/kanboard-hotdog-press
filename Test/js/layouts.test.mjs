@@ -2,8 +2,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  LAYOUTS, place, budget, MIN_FONT_SIZE, GLYPH_EM, LINE_HEIGHT,
+  LAYOUTS, place, budget, overflows, MIN_FONT_SIZE, LINE_HEIGHT,
 } from '../../Assets/js/core/layouts.js';
+import { FONT_METRICS, linesThatFit } from '../../Assets/js/core/textfit.js';
+import { layoutText } from '../../Assets/js/core/render.js';
+import { LOOKS } from '../../Assets/js/core/looks.js';
 import { LAYOUT_NAMES, newDog, validateDog } from '../../Assets/js/core/dog.js';
 import { safeArea } from '../../Assets/js/core/impose.js';
 import { panelSize } from '../../Assets/js/core/paper.js';
@@ -168,16 +171,57 @@ test('budget is a non-negative integer; image slots get 0', () => {
   }
 });
 
-test('budget follows box size, font size and the glyph-width constant', () => {
+test('budget follows box size, font size and the slot font\'s measured glyph width and line rule', () => {
   const paper = 'letter';
   const page = 1;
-  const items = place('headline-body', fill('headline-body'), paper, { margin_mm: 6, page });
-  const body = items.find((i) => i.slot === 'body');
   const { w, h } = panelSize(paper);
-  const font = body.size * h;
-  const perLine = Math.floor((body.w * w) / (GLYPH_EM * font));
-  const lines = Math.floor((body.h * h) / (LINE_HEIGHT * font));
-  assert.equal(budget('headline-body', 'body', paper, { margin_mm: 6, page }), perLine * lines);
+  for (const slot of ['title', 'body']) {
+    const item = place('headline-body', fill('headline-body'), paper, { margin_mm: 6, page }).find((i) => i.slot === slot);
+    const font = item.size * h;
+    const perLine = Math.floor((item.w * w) / (FONT_METRICS[item.font].glyph * font));
+    const lines = linesThatFit(item.h * h, font, item.font);
+    assert.equal(budget('headline-body', slot, paper, { margin_mm: 6, page }), perLine * lines, slot);
+  }
+});
+
+/** A 2D context whose text measures each bundled font by its measured average advance. */
+function metricContext() {
+  const roles = Object.entries(LOOKS.kraft.fonts);
+  let font = '';
+  return {
+    set font(f) { font = f; },
+    get font() { return font; },
+    measureText(s) {
+      const px = Number(/^(\d+(?:\.\d+)?)px/.exec(font)[1]);
+      const role = roles.find(([, stack]) => font.endsWith(stack))[0];
+      return { width: [...s].length * FONT_METRICS[role].glyph * px };
+    },
+  };
+}
+const CREDIT = 'Taíno voices are community-led; some testimony is held back on purpose.';
+
+test('overflows agrees with what the renderer draws, for every text slot, both papers, short to long text', () => {
+  const words = `${CREDIT} Raíces, ancestros y vivir con las plantas. ¿Por qué? Neighbours, not the same.`.split(' ');
+  for (const layout of LAYOUT_NAMES) {
+    for (const s of LAYOUTS[layout].slots.filter((x) => x.kind === 'text')) {
+      for (const paper of PAPERS) {
+        const { w, h } = panelSize(paper);
+        for (let n = 1; n <= 60; n += 3) {
+          const text = Array.from({ length: n }, (_, i) => words[i % words.length]).join(' ');
+          const [item] = place(layout, { [s.name]: { text } }, paper, { page: 4 });
+          const drawn = layoutText(metricContext(), item, w * 10, h * 10).overflow;
+          assert.equal(overflows(layout, s.name, text, paper, { page: 4 }), drawn, `${layout}.${s.name} ${paper} ${n} words`);
+        }
+      }
+    }
+  }
+});
+
+test('the Plant Medicine credit fits the quote attribution on both papers (it lost "on purpose." in the first run)', () => {
+  for (const paper of PAPERS) {
+    assert.equal(overflows('quote', 'attribution', CREDIT, paper, { page: 4 }), false, paper);
+    assert.equal(overflows('quote', 'attribution', Array(4).fill(CREDIT).join(" "), paper, { page: 4 }), true, paper);
+  }
 });
 
 test('a wider margin never raises a budget', () => {

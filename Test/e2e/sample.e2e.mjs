@@ -164,11 +164,26 @@ try {
     s = await state(page);
     assert.ok(!items(s).some((i) => i.type === 'image') && items(s).filter((i) => i.type === 'ink').length === 2, `page ${n}: ink, no photo`);
   }
-  // Page 4: the quote layout's attribution box is one line short for the English line; make it taller by hand.
-  await goPage(page, 4);
-  const credit = items(await state(page)).find((i) => i.type === 'text' && i.runs[0]?.text.startsWith('Taíno'));
-  await setHeight(page, credit, credit.h + 0.1);
   s = await untilSaved(page, 'zine A');
+  // Nothing overflows: every text box of zine A holds all its lines in the real fonts, on Letter and on A4.
+  const cut = await page.evaluate(async () => {
+    const base = document.querySelector('script[type=module][src*="HotDogPress/Assets/js/app/main.js"]').src;
+    const m = await import(base);
+    const { layoutText } = await import(new URL('../core/render.js', base).href);
+    const { panelSize } = await import(new URL('../core/paper.js', base).href);
+    const g = new OffscreenCanvas(10, 10).getContext('2d');
+    const doc = m.editor.store.doc;
+    const out = [];
+    for (const paper of ['letter', 'a4']) {
+      const { w, h } = panelSize(paper);
+      doc.pages.forEach((p, n) => p.items.filter((i) => i.type === 'text').forEach((i) => {
+        const l = layoutText(g, i, w * 10, h * 10, doc.look);
+        if (l.overflow) out.push(`${paper} page ${n + 1} ${i.slot}: ${l.lines.slice(l.visible).join(' / ')}`);
+      }));
+    }
+    return out;
+  });
+  assert.deepEqual(cut, [], 'no text in zine A runs past its box');
   assert.ok(!s.doc.pages.some((p) => p.items.some((i) => i.type === 'image')), 'no photo slot left in zine A');
   await goPage(page, 1);
   await shot(page, 'zine-a-editor');
