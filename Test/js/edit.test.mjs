@@ -93,7 +93,7 @@ test('applyLayout places the layout on that page, carries slot content over and 
   strictOk(dog);
 
   // Type into the title, then switch layout: the text follows to the new layout's title slot, nothing doubles.
-  dog = updateItem(dog, title.id, { runs: [{ text: 'Elder' }] });
+  dog = updateItem(dog, title.id, { runs: [{ text: 'Elder' }], by: 'hand' });
   dog = applyLayout(dog, 1, 'photo-caption');
   const slots = dog.pages[1].items.filter((i) => i.slot).map((i) => i.slot).sort();
   assert.deepEqual(slots, ['body', 'photo', 'title']);
@@ -103,9 +103,16 @@ test('applyLayout places the layout on that page, carries slot content over and 
   assert.equal(photo.asset, PLACEHOLDER_ASSET);
   strictOk(dog);
 
+  // Freeform has no slots: the typed title stays as a free hand item where it was; empty template boxes go.
+  const titleBox = dog.pages[1].items.find((i) => i.slot === 'title');
   dog = applyLayout(dog, 1, 'freeform');
   assert.deepEqual(dog.pages[1].items.filter((i) => i.slot).length, 0);
   assert.ok(dog.pages[1].items.some((i) => i.id === 'free-hand'));
+  const freed = dog.pages[1].items.find((i) => i.type === 'text' && i.runs[0].text === 'Elder');
+  assert.ok(freed, 'typed text is never dropped');
+  assert.equal(freed.by, 'hand');
+  assert.deepEqual([freed.x, freed.y, freed.w, freed.h], [titleBox.x, titleBox.y, titleBox.w, titleBox.h]);
+  assert.equal(dog.pages[1].items.filter((i) => i.type === 'text').length, 1, 'empty template boxes are not kept');
   assert.ok(!(PLACEHOLDER_ASSET in dog.assets), 'an unused placeholder asset is dropped');
   strictOk(dog);
 });
@@ -162,4 +169,17 @@ test('applyMustard puts a kept hand item with no surviving neighbour below it on
   low = { ...low, pages: low.pages.map((p, i) => (i ? p : { ...p, items: [...p.items, textItem({ x: 0, y: 0 })] })) };
   const c2 = compileMustard(text, { paper: low.paper, assets: low.assets, from: low });
   assert.equal(applyMustard(low, c2.dog).pages[0].items[0].id, 'bottom');
+});
+
+test('applyLayout keeps a hand photo as a free item when the new layout has no photo slot', () => {
+  let dog = addAsset(newDog(), 'img1', { kind: 'image', file_id: 9, w: 10, h: 10 });
+  dog = applyLayout(dog, 0, 'photo-full');
+  const photo = dog.pages[0].items.find((i) => i.slot === 'photo');
+  dog = updateItem(dog, photo.id, { asset: 'img1', by: 'hand' });
+  dog = applyLayout(dog, 0, 'list');
+  const kept = dog.pages[0].items.find((i) => i.type === 'image');
+  assert.equal(kept?.asset, 'img1', 'the photo is not dropped');
+  assert.equal(kept.slot, undefined);
+  assert.equal(kept.by, 'hand');
+  strictOk(dog);
 });

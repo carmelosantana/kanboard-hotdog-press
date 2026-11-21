@@ -92,7 +92,8 @@ export function setMargin(doc, mm) {
 /**
  * Applies a layout to one page: its slot items are placed in the page's safe area. Free hand items and locked items
  * stay; every other item (slot items, items by ai or import) is replaced, and slot content (text, list lines, photos)
- * moves into the new layout's slots, by slot name first and then in order of kind, keeping its `by`. A slot with no
+ * moves into the new layout's slots, by slot name first and then in order of kind, keeping its `by`; hand-made content
+ * with no slot to go to stays where it was as a free item, so typing is never lost. A slot with no
  * content is an empty template box, `by: 'import'`, until someone types or puts a photo in it (then it is `hand`), so
  * Mustard Apply may replace it. An empty photo slot points at the placeholder asset.
  * @param {any} doc @param {number} pageIndex 0..7 @param {string} layout
@@ -131,7 +132,12 @@ export function applyLayout(doc, pageIndex, layout) {
   }));
   const placed = place(layout, slots, doc.paper, { margin_mm: doc.margin_mm, page: pageIndex + 1 });
 
-  let next = withPage(doc, pageIndex, (p) => ({ ...p, layout, items: [...placed, ...kept] }));
+  // Hand-made content the new layout has no slot for stays where it was, as a free item.
+  const freed = pool.filter((c) => c.item.by === 'hand').map(({ item }) => {
+    const { slot, ...free } = item;
+    return free;
+  });
+  let next = withPage(doc, pageIndex, (p) => ({ ...p, layout, items: [...placed, ...kept, ...freed] }));
   if (needsPlaceholder && !(PLACEHOLDER_ASSET in next.assets)) {
     next = addAsset(next, PLACEHOLDER_ASSET, { kind: 'placeholder', name: 'photo' });
   }
@@ -141,14 +147,16 @@ export function applyLayout(doc, pageIndex, layout) {
 /** What a replaced item carries into a new slot: its photo, or its text as lines. */
 function contentOf(it) {
   if (it.type === 'image') {
-    return { slot: it.slot, image: true, asset: it.asset === PLACEHOLDER_ASSET ? undefined : it.asset, by: it.by };
+    const asset = it.asset === PLACEHOLDER_ASSET ? undefined : it.asset;
+    return { item: it, slot: it.slot, image: true, asset, by: it.by };
   }
   if (it.type !== 'text') return null;
   const texts = (it.runs ?? []).map((r) => String(r.text ?? ''));
   const lines = texts.every((t) => t.startsWith(BULLET)) && texts.length
     ? texts.map((t) => t.slice(BULLET.length).trim())
     : texts.join('').split('\n');
-  return { slot: it.slot, image: false, lines: lines.filter((l, i) => l !== '' || i < lines.length - 1), by: it.by };
+  const kept = lines.filter((l, i) => l !== '' || i < lines.length - 1);
+  return { item: it, slot: it.slot, image: false, lines: kept, by: it.by };
 }
 
 /**
