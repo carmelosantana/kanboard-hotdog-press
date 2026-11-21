@@ -47,8 +47,8 @@ const SLOTS = {
     text('caption', [0, 0.88, 1, 0.12], 'body', 0.03),
   ],
   'photo-caption': [
-    text('title', [0, 0, 1, 0.16], 'display', 0.06),
-    image('photo', [0, 0.18, 1, 0.5]),
+    text('title', [0, 0, 1, 0.19], 'display', 0.06),
+    image('photo', [0, 0.21, 1, 0.47]),
     text('body', [0, 0.7, 1, 0.3], 'body', 0.032),
   ],
   list: [
@@ -60,9 +60,9 @@ const SLOTS = {
     text('attribution', [0, 0.76, 1, 0.24], 'mono', 0.03, 'right'),
   ],
   'two-up': [
-    text('title', [0, 0, 1, 0.14], 'display', 0.055),
-    image('photo', [0, 0.16, 0.48, 0.4]),
-    image('photo2', [0.52, 0.16, 0.48, 0.4]),
+    text('title', [0, 0, 1, 0.17], 'display', 0.055),
+    image('photo', [0, 0.19, 0.48, 0.38]),
+    image('photo2', [0.52, 0.19, 0.48, 0.38]),
     text('body', [0, 0.6, 1, 0.4], 'body', 0.03),
   ],
   freeform: [],

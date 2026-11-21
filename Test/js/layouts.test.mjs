@@ -184,6 +184,22 @@ test('budget follows box size, font size and the slot font\'s measured glyph wid
   }
 });
 
+test('every display title slot holds at least two lines, on both papers and every page (default margin)', () => {
+  for (const layout of LAYOUT_NAMES) {
+    for (const s of LAYOUTS[layout].slots.filter((x) => x.name === 'title')) {
+      assert.equal(s.font, 'display', `${layout}.title is a display slot`);
+      for (const paper of PAPERS) {
+        const { h } = panelSize(paper);
+        for (let page = 1; page <= 8; page++) {
+          const [item] = place(layout, { title: { text: 'T' } }, paper, { page });
+          const lines = linesThatFit(item.h * h, item.size * h, item.font);
+          assert.ok(lines >= 2, `${layout}.title on ${paper} page ${page}: ${lines} line(s)`);
+        }
+      }
+    }
+  }
+});
+
 /** A 2D context whose text measures each bundled font by its measured average advance. */
 function metricContext() {
   const roles = Object.entries(LOOKS.kraft.fonts);
