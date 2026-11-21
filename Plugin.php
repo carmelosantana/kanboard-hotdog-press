@@ -2,11 +2,32 @@
 namespace Kanboard\Plugin\HotDogPress;
 
 use Kanboard\Core\Plugin\Base;
+use Kanboard\Core\Security\Role;
 
 class Plugin extends Base
 {
     public function initialize(): void
     {
+        // Project-scoped pages: core's middleware checks the role for :project_id, and the controllers again.
+        $this->route->addRoute('hotdogpress/project/:project_id', 'ZineController', 'index', 'HotDogPress');
+        $this->route->addRoute('hotdogpress/project/:project_id/create', 'ZineController', 'create', 'HotDogPress');
+        $this->route->addRoute('hotdogpress/project/:project_id/import', 'ZineController', 'import', 'HotDogPress');
+        // Zine-scoped routes carry no project_id: ZineAccess resolves the zine's project and checks the role there.
+        $this->route->addRoute('hotdogpress/zine/:zine_id', 'ZineController', 'editor', 'HotDogPress');
+        $this->route->addRoute('hotdogpress/zine/:zine_id/rename', 'ZineController', 'rename', 'HotDogPress');
+        $this->route->addRoute('hotdogpress/zine/:zine_id/confirm', 'ZineController', 'confirm', 'HotDogPress');
+        $this->route->addRoute('hotdogpress/zine/:zine_id/remove', 'ZineController', 'remove', 'HotDogPress');
+        $this->route->addRoute('hotdogpress/zine/:zine_id/export', 'ZineController', 'export', 'HotDogPress');
+        $this->route->addRoute('hotdogpress/zine/:zine_id/load', 'ZineApiController', 'load', 'HotDogPress');
+        $this->route->addRoute('hotdogpress/zine/:zine_id/save', 'ZineApiController', 'save', 'HotDogPress');
+        $this->route->addRoute('hotdogpress/zine/:zine_id/upload', 'ZineApiController', 'upload', 'HotDogPress');
+        $this->route->addRoute('hotdogpress/zine/:zine_id/image/:file_id', 'ZineApiController', 'image', 'HotDogPress');
+        $this->route->addRoute('hotdogpress/mine', 'MyZinesController', 'index', 'HotDogPress');
+
+        // Unlisted actions default to project viewer (index, editor, export, load, image).
+        $this->projectAccessMap->add('ZineController', ['create', 'rename', 'import'], Role::PROJECT_MEMBER);
+        $this->projectAccessMap->add('ZineController', ['confirm', 'remove'], Role::PROJECT_MANAGER);
+        $this->projectAccessMap->add('ZineApiController', ['save', 'upload'], Role::PROJECT_MEMBER);
     }
 
     public function getPluginName(): string        { return 'HotDogPress'; }
