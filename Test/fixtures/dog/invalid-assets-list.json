@@ -1,0 +1,75 @@
+{
+  "mode": "lenient",
+  "errors": [
+    {
+      "path": "assets",
+      "message": "must be an object"
+    }
+  ],
+  "dog": {
+    "hotdog": 1,
+    "id": "z_fixture1",
+    "title": "Untitled",
+    "paper": "letter",
+    "margin_mm": 6,
+    "look": "kraft",
+    "assets": [
+      {
+        "kind": "image",
+        "file_id": 1,
+        "w": 1,
+        "h": 1
+      }
+    ],
+    "pages": [
+      {
+        "id": "p1",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p2",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p3",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p4",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p5",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p6",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p7",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p8",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      }
+    ]
+  }
+}

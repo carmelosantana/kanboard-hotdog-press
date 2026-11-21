@@ -102,7 +102,8 @@ class ZineModel extends Base
 
     /**
      * Checks a Dog sent by a client and returns it decoded. The size cap applies to the raw text before decoding;
-     * the Dog must pass DogValidator in strict mode.
+     * the Dog is decoded by DogValidator::decode (a JSON [] where Dog 1 has an object is refused, as in JS) and
+     * must pass DogValidator in strict mode.
      *
      * @throws ZineRejected too_large, bad_request or invalid (extra: errors)
      */
@@ -111,10 +112,7 @@ class ZineModel extends Base
         if (strlen($json) > DogValidator::MAX_BYTES) {
             throw new ZineRejected('too_large', 'A zine must be at most 2 MiB of JSON.');
         }
-        $dog = json_decode($json, true, 64);
-        if (! is_array($dog) || ! str_starts_with(ltrim($json), '{')) { // [] decodes like {}
-            throw new ZineRejected('bad_request', 'The zine must be a JSON object.');
-        }
+        $dog = DogValidator::decode($json) ?? throw new ZineRejected('bad_request', 'The zine must be a JSON object.');
         $result = DogValidator::validate($dog, 'strict');
         if (! $result['ok']) {
             throw new ZineRejected('invalid', 'The zine is not valid.', ['errors' => $result['errors']]);

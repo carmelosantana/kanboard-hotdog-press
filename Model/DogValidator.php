@@ -25,7 +25,7 @@ class DogValidator
         'cover', 'back-cover', 'headline-body', 'photo-full', 'photo-caption', 'list', 'quote', 'two-up', 'freeform',
     ];
     // Asset ids like "0" would make the assets map a JSON list in PHP, so both languages refuse them.
-    private const NUMERIC_ID = '/^[0-9]+$/';
+    private const NUMERIC_ID = '/^[0-9]+\z/';
     public const BY = ['hand', 'ai', 'import'];
 
     // Allowed fields per object, for strict mode: an item may carry 'item' plus its own type's fields.
@@ -75,6 +75,47 @@ class DogValidator
         return match ($from) {
             0 => $dog, // No shape change; the hook exists for Dog 2.
         };
+    }
+
+    /**
+     * A Dog from JSON text, decoded to arrays the way validate() reads it; null unless the text is a JSON object.
+     * Use this, not json_decode(…, true), on anything a client sent: see normalize().
+     */
+    public static function decode(string $json): ?array
+    {
+        $raw = json_decode($json, false, 64);
+        return $raw instanceof \stdClass ? self::normalize($raw) : null;
+    }
+
+    /**
+     * A Dog decoded with objects (json_decode(…, false)) as the arrays validate() reads. Decoded to arrays, a JSON
+     * [] and {} look alike, so where Dog 1 has objects (assets, each asset) a JSON array becomes false, which
+     * validate() refuses with the same message as the JS validator.
+     */
+    public static function normalize(mixed $raw): mixed
+    {
+        if ($raw instanceof \stdClass && property_exists($raw, 'assets')) {
+            $raw = clone $raw;
+            if (is_array($raw->assets)) {
+                $raw->assets = false;
+            } elseif ($raw->assets instanceof \stdClass) {
+                $raw->assets = clone $raw->assets;
+                foreach (get_object_vars($raw->assets) as $id => $asset) {
+                    if (is_array($asset)) {
+                        $raw->assets->{$id} = false;
+                    }
+                }
+            }
+        }
+        return self::toArrays($raw);
+    }
+
+    private static function toArrays(mixed $v): mixed
+    {
+        if ($v instanceof \stdClass) {
+            $v = get_object_vars($v);
+        }
+        return is_array($v) ? array_map(self::toArrays(...), $v) : $v;
     }
 
     /** Migrates, then checks every rule. 'lenient' keeps unknown fields; 'strict' reports them. */

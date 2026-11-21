@@ -14,6 +14,13 @@ class DogValidatorTest extends Base
         return json_decode(file_get_contents(self::DIR.$name), true, 512, JSON_THROW_ON_ERROR);
     }
 
+    /** A fixture's Dog as the save endpoint reads JSON: DogValidator::decode keeps [] apart from {}. */
+    private static function dog(string $name): mixed
+    {
+        $raw = json_decode(file_get_contents(self::DIR.$name), false, 512, JSON_THROW_ON_ERROR);
+        return DogValidator::normalize(str_starts_with($name, 'valid-') ? $raw : $raw->dog);
+    }
+
     private static function fixtures(string $prefix): array
     {
         $rows = [];
@@ -40,11 +47,21 @@ class DogValidatorTest extends Base
         $this->assertGreaterThanOrEqual(15, count(self::invalidFixtures()));
     }
 
+    public function testDecodeKeepsAJsonArrayApartFromAnObjectWhereDogOneHasObjects(): void
+    {
+        $this->assertSame(['assets' => [], 'pages' => []], DogValidator::decode('{"assets":{},"pages":[]}'));
+        $this->assertSame(['assets' => false], DogValidator::decode('{"assets":[]}'));
+        $this->assertSame(['assets' => ['a' => false, 'b' => []]], DogValidator::decode('{"assets":{"a":[],"b":{}}}'));
+        $this->assertNull(DogValidator::decode('[]'));
+        $this->assertNull(DogValidator::decode('"x"'));
+        $this->assertNull(DogValidator::decode('{'));
+    }
+
     /** @dataProvider validFixtures */
     public function testValidFixturePassesBothModes(string $name): void
     {
         foreach (['lenient', 'strict'] as $mode) {
-            $res = DogValidator::validate(self::load($name), $mode);
+            $res = DogValidator::validate(self::dog($name), $mode);
             $this->assertSame([], $res['errors'] ?? [], $mode);
             $this->assertTrue($res['ok'], $mode);
             $this->assertSame(1, $res['dog']['hotdog'], $mode);
@@ -55,13 +72,14 @@ class DogValidatorTest extends Base
     public function testInvalidFixtureReportsExactlyItsErrors(string $name): void
     {
         $fixture = self::load($name);
-        $res = DogValidator::validate($fixture['dog'], $fixture['mode']);
+        $dog = self::dog($name);
+        $res = DogValidator::validate($dog, $fixture['mode']);
         $this->assertFalse($res['ok']);
         $this->assertSame($fixture['errors'], $res['errors']);
         if ($fixture['mode'] === 'lenient') {
-            $this->assertSame($fixture['errors'], DogValidator::validate($fixture['dog'], 'strict')['errors']);
+            $this->assertSame($fixture['errors'], DogValidator::validate($dog, 'strict')['errors']);
         } else {
-            $lenient = DogValidator::validate($fixture['dog'], 'lenient');
+            $lenient = DogValidator::validate($dog, 'lenient');
             $this->assertTrue($lenient['ok']);
             $this->assertSame($fixture['dog'], $lenient['dog']);
         }

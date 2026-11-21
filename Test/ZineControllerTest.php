@@ -231,6 +231,7 @@ class ZineControllerTest extends Base
             'svg data' => json_encode($this->dog('valid-minimal', ['assets' => ['a1' => ['kind' => 'image', 'data' => 'data:image/svg+xml;base64,'.base64_encode('<svg/>')]]])),
             'bad dog' => json_encode($this->dog('valid-minimal', ['paper' => 'a3', 'assets' => ['a1' => $image]])),
             'unknown field' => json_encode($this->dog('valid-minimal', ['extra' => true, 'assets' => ['a1' => $image]])),
+            'assets array' => str_replace('"assets":{}', '"assets":[]', json_encode($this->dog('valid-minimal', ['assets' => new \stdClass()]))),
             'too large' => '{'.str_repeat(' ', HotdogFile::MAX_BYTES),
         ];
         foreach ($cases as $case => $text) {

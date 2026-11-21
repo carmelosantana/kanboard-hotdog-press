@@ -38,7 +38,8 @@ class HotdogFile extends Base
 
     /**
      * A new zine in $projectId from a .hotdog file's text. Nothing is written unless the whole file is good: the
-     * images are checked (size, sniffed type) and the Dog validated (lenient + migrate, then strict) first.
+     * images are checked (size, sniffed type) and the Dog migrated and validated (strict: an unknown field is
+     * refused, as on save) first.
      *
      * @throws ZineRejected too_large, bad_request, unsupported, invalid or unavailable
      */
@@ -47,10 +48,7 @@ class HotdogFile extends Base
         if (strlen($text) > self::MAX_BYTES) {
             throw new ZineRejected('too_large', 'A .hotdog file must be at most 16 MB.');
         }
-        $dog = json_decode($text, true, 64);
-        if (! is_array($dog) || ! str_starts_with(ltrim($text), '{')) {
-            throw new ZineRejected('bad_request', 'This is not a .hotdog file.');
-        }
+        $dog = DogValidator::decode($text) ?? throw new ZineRejected('bad_request', 'This is not a .hotdog file.');
 
         // Inline images leave the Dog before it is checked; file_id 0 holds their place until they are stored.
         // Other kinds with data (stickers) stay inline, as the editor saves them.
@@ -66,13 +64,8 @@ class HotdogFile extends Base
             }
         }
 
-        $lenient = DogValidator::validate($dog, 'lenient');
-        if (! $lenient['ok']) {
-            throw new ZineRejected('invalid', 'The zine is not valid.', ['errors' => $lenient['errors']]);
-        }
-        $dog = $lenient['dog'];
         $zines = new ZineModel($this->container);
-        $zines->document(self::encode($dog)); // strict, and the stored-size cap
+        $dog = $zines->document(self::encode($dog)); // migrated, strict, and the stored-size cap
 
         $images = new ZineImages($this->container);
         $stored = [];

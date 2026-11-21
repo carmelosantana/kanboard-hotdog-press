@@ -172,4 +172,24 @@ class ZineModelTest extends Base
             $this->assertSame([['path' => 'paper', 'message' => 'must be one of a4, letter']], $e->extra['errors']);
         }
     }
+
+    // Kills: reading the Dog with json_decode(…, true), where "assets": [] passes as {} and is stored, and the editor
+    // (JS validator) then refuses to open the zine.
+    public function testDocumentRefusesAJsonArrayWhereDogOneHasAnObject(): void
+    {
+        $minimal = json_decode($this->dogJson());
+        foreach ([
+            'assets' => [[], [['path' => 'assets', 'message' => 'must be an object']]],
+            'asset' => [(object) ['a1' => []], [['path' => 'assets/a1', 'message' => 'must be an object']]],
+        ] as $case => [$assets, $errors]) {
+            $minimal->assets = $assets;
+            try {
+                $this->zines()->document(json_encode($minimal));
+                $this->fail("accepted an array as $case");
+            } catch (ZineRejected $e) {
+                $this->assertSame('invalid', $e->code, $case);
+                $this->assertSame($errors, $e->extra['errors'], $case);
+            }
+        }
+    }
 }
