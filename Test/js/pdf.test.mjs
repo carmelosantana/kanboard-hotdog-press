@@ -220,6 +220,20 @@ test('guideLines is the sheet\'s guide layer on its own, for the on-screen sheet
   }
 });
 
+test('guides take the look\'s guide level: as styled on light papers, mirrored (1 - gray) on night', () => {
+  const base = guideLines(dog());
+  assert.deepEqual(guideLines({ ...dog(), look: 'kraft' }), base);
+  assert.deepEqual(guideLines({ ...dog(), look: 'copy-shop' }), base);
+  const night = guideLines({ ...dog(), look: 'night' });
+  assert.equal(night.length, base.length);
+  night.forEach((l, i) => {
+    assert.equal(l.gray, 1 - base[i].gray, `line ${i}`);
+    assert.deepEqual({ ...l, gray: 0 }, { ...base[i], gray: 0 }, `line ${i} otherwise unchanged`);
+  });
+  assert.equal(night.at(-1).gray, 1, 'the check square is white on night');
+  assert.deepEqual(sheetPage({ ...dog(), look: 'night' }, panels()).lines, night, 'the print sheet uses them');
+});
+
 test('guides default to on', () => {
   assert.equal(linesWith(sheetPage(dog(), panels()), GUIDE_STYLES.cut).length, 1);
   assert.equal(linesWith(sheetPage(dog(), panels(), {}), GUIDE_STYLES.cut).length, 1);

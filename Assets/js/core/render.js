@@ -1,41 +1,13 @@
 // The renderer: a Dog page, or the whole print sheet, drawn onto any 2D-canvas-like context. The editor preview,
 // the PDF rasteriser and the social frames all draw through here. Pure, no DOM: the caller hands in the context and
 // the decoded images; nothing here loads fonts or files.
-import { luminance } from './filters.js';
 import { panelRect } from './impose.js';
 import { LINE_HEIGHT } from './layouts.js';
+import { colorOf, grayHex, grayLevelHex, lookOf } from './looks.js';
 import { resolvePaper } from './paper.js';
 import { guideLines, PT_PER_MM } from './pdf.js';
 
-/**
- * Colour tokens. `paper` is the look's page colour and `toner` its ink (light on a dark look); the rest are the
- * brand accents (`copy` is copy paper).
- */
-export const TOKENS = Object.freeze(['paper', 'toner', 'mustard', 'ketchup', 'kraft', 'copy', 'relish']);
-
-const BRAND = Object.freeze({
-  mustard: '#E8B517', ketchup: '#C8322B', kraft: '#D9C4A0', copy: '#FAF7F0', toner: '#1B1A17', relish: '#4E7D32',
-});
-
-/** Font roles to CSS font-family stacks; the font files themselves are loaded by the browser code. */
-const FONTS = Object.freeze({
-  display: '"Anton", "Arial Narrow", sans-serif',
-  body: '"Archivo", "Helvetica Neue", Arial, sans-serif',
-  mono: '"Courier Prime", "Courier New", monospace',
-});
-
-const look = (paper, toner) => Object.freeze({
-  colors: Object.freeze({ ...BRAND, paper, toner }),
-  text: 'toner',
-  fonts: FONTS,
-});
-
-/** Named looks: colour per token, the token unknown colours fall back to, and the font role stacks. */
-export const LOOKS = Object.freeze({
-  kraft: look(BRAND.kraft, BRAND.toner),
-  'copy-shop': look(BRAND.copy, BRAND.toner),
-  night: look(BRAND.toner, BRAND.copy),
-});
+export { LOOKS, TOKENS, colorOf } from './looks.js';
 
 /** Neutral stand-in for an image that is missing, a placeholder, or not decoded. */
 const PLACEHOLDER = Object.freeze({ fill: '#E4E1DA', line: '#9A968C' });
@@ -50,20 +22,6 @@ const ALIGNS = ['left', 'center', 'right'];
  * @typedef {{font: string, size_px: number, line_px: number, lines: string[], visible: number,
  *   overflow: boolean}} TextLayout
  */
-
-/**
- * A token's colour in a look (unknown look: kraft; unknown token: the look's text colour). With `bw` the colour is
- * its luminance gray, so fills match photos run through filters.toGray.
- * @param {string} lookName
- * @param {string|undefined} token
- * @param {boolean} [bw]
- * @returns {string} `#RRGGBB`
- */
-export function colorOf(lookName, token, bw = false) {
-  const l = lookOf(lookName);
-  const hex = (typeof token === 'string' && Object.hasOwn(l.colors, token)) ? l.colors[token] : l.colors[l.text];
-  return bw ? grayHex(hex) : hex;
-}
 
 /**
  * Draw page `pageIndex` (0..7) of the Dog into the context's 0,0..px_w,px_h, clipped to it: the background, then the
@@ -105,7 +63,8 @@ export function renderPage(ctx, dog, pageIndex, { px_w, px_h, images = {}, bw = 
 
 /**
  * Draw the print sheet at `px_per_mm`: each page through renderPage into its quarter (the top row turned 180°),
- * then, with guides on, the print export's guide layer (folds, cut, page ticks, check square) in its print styles.
+ * then, with guides on, the print export's guide layer (folds, cut, page ticks, check square) in its print styles and
+ * the look's guide level. Guide strokes are at least 1 px wide, so they stay visible at small preview scales.
  * @param {CanvasRenderingContext2D|any} ctx
  * @param {any} dog
  * @param {{px_per_mm: number, images?: Images, guides?: boolean, bw?: boolean}} opts
@@ -130,7 +89,7 @@ export function renderSheet(ctx, dog, { px_per_mm: k, images = {}, guides = true
   const H = paper.h_mm * k;
   for (const l of guideLines(dog)) {
     ctx.save();
-    ctx.lineWidth = px(l.width_pt ?? 1);
+    ctx.lineWidth = Math.max(1, px(l.width_pt ?? 1));
     ctx.strokeStyle = grayLevelHex(l.gray ?? 0);
     ctx.setLineDash((l.dash ?? []).map(px));
     ctx.beginPath();
@@ -306,7 +265,6 @@ function turn(ctx, item, px_w, px_h) {
 
 // ---------------------------------------------------------------- helpers
 
-const lookOf = (name) => (typeof name === 'string' && Object.hasOwn(LOOKS, name) ? LOOKS[name] : LOOKS.kraft);
 const num = (v, fallback) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const round = (v) => Math.round(v * 100) / 100;
@@ -323,16 +281,4 @@ function clipTo(ctx, b) {
   ctx.beginPath();
   ctx.rect(b.x, b.y, b.w, b.h);
   ctx.clip();
-}
-
-/** `#RRGGBB` → its luminance gray `#GGGGGG`. */
-function grayHex(hex) {
-  const n = Number.parseInt(hex.slice(1), 16);
-  return grayLevelHex(luminance((n >> 16) & 255, (n >> 8) & 255, n & 255) / 255);
-}
-
-/** A gray level 0 (black)..1 (white) as `#GGGGGG`. */
-function grayLevelHex(level) {
-  const g = Math.round(clamp(level, 0, 1) * 255).toString(16).padStart(2, '0').toUpperCase();
-  return `#${g}${g}${g}`;
 }

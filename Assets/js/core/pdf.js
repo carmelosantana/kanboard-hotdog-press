@@ -2,6 +2,7 @@
 // Pure, no DOM: the browser rasterises the panels to JPEG and hands the bytes in.
 import { clampMargin, panelSize, resolvePaper } from './paper.js';
 import { panelRect, guides as sheetGuides, safeArea } from './impose.js';
+import { lookOf } from './looks.js';
 
 /** 1 mm in PDF points. */
 export const PT_PER_MM = 72 / 25.4;
@@ -176,7 +177,7 @@ function concat(parts) {
  *   (the printer's unprintable border), so it prints in the corner of page 6's safe area, far from the cut.
  * - Where the cut runs, the centre fold is left out, so the cut's dash-dot is not muddied by fold dashes.
  *
- * @param {{paper: import('./paper.js').PaperId, margin_mm?: number}} dog
+ * @param {{paper: import('./paper.js').PaperId, margin_mm?: number, look?: string}} dog
  * @param {RasterPanel[]} rasterPanels pages 1..8 in order
  * @param {{guides?: boolean}} [opts]
  * @returns {PdfPage}
@@ -197,20 +198,23 @@ export function sheetPage(dog, rasterPanels, { guides = true } = {}) {
 
 /**
  * The guide layer of the print sheet in PDF points (origin bottom-left): the folds, the cut, the page ticks and
- * the check square, styled by GUIDE_STYLES. The on-screen sheet preview draws these same lines.
- * @param {{paper: import('./paper.js').PaperId|import('./paper.js').PaperSize, margin_mm?: number}} dog
+ * the check square, styled by GUIDE_STYLES. Each style's gray is measured from the look's guide level
+ * (|guide - gray|): as styled on light papers, mirrored to light guides on a dark look such as night.
+ * The on-screen sheet preview draws these same lines.
+ * @param {{paper: import('./paper.js').PaperId|import('./paper.js').PaperSize, margin_mm?: number, look?: string}} dog
  * @returns {PdfLine[]}
  */
 export function guideLines(dog) {
   const paper = resolvePaper(dog.paper);
   const H = paper.h_mm;
   const margin = clampMargin(dog.margin_mm);
+  const { guide } = lookOf(dog.look);
   /** Sheet mm (origin top-left, y down) to PDF points (origin bottom-left, y up): the one conversion. */
   const toPt = (x, y) => [mm(x), mm(H - y)];
   const line = (x1, y1, x2, y2, style) => {
     const [a, b] = toPt(x1, y1);
     const [c, d] = toPt(x2, y2);
-    return { x1: a, y1: b, x2: c, y2: d, ...style };
+    return { x1: a, y1: b, x2: c, y2: d, ...style, gray: Math.abs(guide - style.gray) };
   };
   const { cut, folds: [centre, ...verticals] } = sheetGuides(paper);
   const [cx1, cy, cx2] = cut;
@@ -248,7 +252,7 @@ function pageTicks(paper, margin, page, line) {
 
 /**
  * The print PDF: one landscape page at the paper size.
- * @param {{paper: import('./paper.js').PaperId, margin_mm?: number}} dog
+ * @param {{paper: import('./paper.js').PaperId, margin_mm?: number, look?: string}} dog
  * @param {RasterPanel[]} rasterPanels pages 1..8 in order, each a 300 dpi JPEG of the panel in reading orientation
  * @param {{guides?: boolean}} [opts] guides default to on
  * @returns {Uint8Array}

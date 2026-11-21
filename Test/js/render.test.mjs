@@ -361,7 +361,7 @@ test('renderSheet passes the images and bw through to each page', () => {
 
 test('renderSheet draws the print guide layer on top, in px, with the print styles', () => {
   const dog = newDog({ paper: 'letter' });
-  const k = 3;
+  const k = 10; // every print width is over 1 px here, so none is raised to the preview minimum
   const ctx = fakeContext();
   renderSheet(ctx, dog, { px_per_mm: k });
   const lines = guideLines(dog);
@@ -386,6 +386,37 @@ test('renderSheet draws the print guide layer on top, in px, with the print styl
   const g = Math.round(GUIDE_STYLES.cut.gray * 255).toString(16).padStart(2, '0').toUpperCase();
   assert.equal(setsOf(ctx, 'strokeStyle')[cut], `#${g}${g}${g}`);
   assert.equal(callsOf(ctx, 'save').length, callsOf(ctx, 'restore').length, 'balanced save/restore');
+});
+
+test('each look has a guide level: 0 (dark guides) on light papers, 1 (light guides) on night', () => {
+  assert.equal(LOOKS.kraft.guide, 0);
+  assert.equal(LOOKS['copy-shop'].guide, 0);
+  assert.equal(LOOKS.night.guide, 1);
+});
+
+test('the sheet preview draws night guides light and kraft guides dark, matching the print', () => {
+  const strokes = (look) => {
+    const dog = newDog({ paper: 'a4' });
+    dog.look = look;
+    const ctx = fakeContext();
+    renderSheet(ctx, dog, { px_per_mm: 3 });
+    return setsOf(ctx, 'strokeStyle');
+  };
+  assert.equal(strokes('kraft').at(-1), '#000000', 'check square black on kraft');
+  assert.equal(strokes('night').at(-1), '#FFFFFF', 'check square white on night');
+  const g = Math.round((1 - GUIDE_STYLES.fold.gray) * 255).toString(16).padStart(2, '0').toUpperCase();
+  assert.equal(strokes('night')[0], `#${g}${g}${g}`, 'night fold');
+});
+
+test('preview guide strokes are at least 1 px wide at small scales; print widths stay physical', () => {
+  const ctx = fakeContext();
+  renderSheet(ctx, newDog({ paper: 'letter' }), { px_per_mm: 0.5 });
+  const widths = setsOf(ctx, 'lineWidth');
+  assert.equal(widths.length, guideLines(newDog()).length);
+  for (const w of widths) assert.equal(w, 1);
+  const big = fakeContext();
+  renderSheet(big, newDog({ paper: 'letter' }), { px_per_mm: 20 });
+  close(setsOf(big, 'lineWidth')[0], (GUIDE_STYLES.fold.width_pt / PT_PER_MM) * 20, 'fold at 20 px/mm');
 });
 
 test('the fake context measures text predictably', () => {
