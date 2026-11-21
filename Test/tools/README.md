@@ -20,3 +20,18 @@ Cap height is taken as 0.7 of the font size. Read off the first line and the fir
 and unbroken after the photocopy ("the 3rd line" = 0.2 mm, "the 2nd block" = 6 pt): those set the layouts'
 minimum stroke and font size. The gray patch shows whether the copier keeps midtones or blows them to black or
 white; a hatch that turns into a flat gray or moiré means fine texture will not survive copying.
+
+## Plant Medicine sample (dev stack only)
+
+`node Test/tools/seed-plant-medicine.mjs` seeds the **Plant Medicine (sample)** project (identifier `PMSAMPLE`) on the
+:8081 dev stack over JSON-RPC: eight tasks carrying the page plan of `hotdogpress-plant-medicine.md`, and a
+`zine-viewer` user with the project viewer role (dev-only password `zine-viewer-dev-only`, or `ZINE_VIEWER_PASSWORD`
+when the user is first created). It refuses any URL that isn't localhost. Re-runnable: it adds only what is missing,
+and a run that finds everything in place prints `already seeded: nothing changed`. Env: `KB_URL`, `KB_USER`,
+`KB_PASSWORD` (default `http://localhost:8081`, `admin`, `admin`).
+
+`node HotDogPress/Test/e2e/sample.e2e.mjs [out-dir]` (from the harness root) runs the seed, then makes the two sample
+zines in that project through the editor (zine A from `Test/fixtures/mustard/plant-medicine.mustard.md` via
+Write in Mustard; zine B by hand), checks reload, the two-tab prompt and the viewer, and writes the print and social
+exports, page-1 PNG previews (`pdftoppm`) and a `manifest.json` of measured sizes to `out-dir`
+(default `reports/hotdogpress-p1/` in the harness). Each run replaces the sample project's zines.
