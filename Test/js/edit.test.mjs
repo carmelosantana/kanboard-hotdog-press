@@ -13,6 +13,8 @@ const strictOk = (dog) => {
   const r = validateDog(dog, { mode: 'strict' });
   assert.ok(r.ok, JSON.stringify(r.errors));
 };
+// The editor adds a photo's asset in the same edit that uses it (an asset no item uses is dropped).
+const IMG1 = { kind: 'image', file_id: 9, w: 10, h: 10 };
 const shape = (id, over = {}) => ({ id, type: 'shape', by: 'hand', x: 0.1, y: 0.1, w: 0.2, h: 0.2, shape: 'rect', ...over });
 
 test('add, update, find and remove items without touching the input (frozen) document', () => {
@@ -118,10 +120,9 @@ test('applyLayout places the layout on that page, carries slot content over and 
 });
 
 test('applyLayout keeps a list slot as list lines and an image slot asset across layouts', () => {
-  let dog = addAsset(newDog(), 'img1', { kind: 'image', file_id: 9, w: 10, h: 10 });
-  dog = applyLayout(dog, 0, 'photo-full');
+  let dog = applyLayout(newDog(), 0, 'photo-full');
   const photo = dog.pages[0].items.find((i) => i.slot === 'photo');
-  dog = updateItem(dog, photo.id, { asset: 'img1' });
+  dog = updateItem(addAsset(dog, 'img1', IMG1), photo.id, { asset: 'img1' });
   dog = applyLayout(dog, 0, 'cover');
   assert.equal(dog.pages[0].items.find((i) => i.slot === 'photo').asset, 'img1');
   strictOk(dog);
@@ -172,10 +173,9 @@ test('applyMustard puts a kept hand item with no surviving neighbour below it on
 });
 
 test('applyLayout keeps a hand photo as a free item when the new layout has no photo slot', () => {
-  let dog = addAsset(newDog(), 'img1', { kind: 'image', file_id: 9, w: 10, h: 10 });
-  dog = applyLayout(dog, 0, 'photo-full');
+  let dog = applyLayout(newDog(), 0, 'photo-full');
   const photo = dog.pages[0].items.find((i) => i.slot === 'photo');
-  dog = updateItem(dog, photo.id, { asset: 'img1', by: 'hand' });
+  dog = updateItem(addAsset(dog, 'img1', IMG1), photo.id, { asset: 'img1', by: 'hand' });
   dog = applyLayout(dog, 0, 'list');
   const kept = dog.pages[0].items.find((i) => i.type === 'image');
   assert.equal(kept?.asset, 'img1', 'the photo is not dropped');
@@ -192,4 +192,24 @@ test('applyLayout carries a list slot with a plain line as separate lines, not m
   const body = dog.pages[0].items.find((i) => i.slot === 'body');
   assert.equal(body.runs.map((r) => r.text).join(''), 'a\nnote');
   strictOk(dog);
+});
+
+test('a photo no item uses any more leaves the assets: deleted, or replaced by another photo', () => {
+  const photo = (id) => ({ kind: 'image', file_id: id, w: 800, h: 600 });
+  let dog = addAsset(addAsset(newDog(), 'a1', photo(1)), 'a2', photo(2));
+  const one = imageItem('a1', 800, 600, 0.77);
+  const two = imageItem('a1', 800, 600, 0.77);
+  dog = addItem(addItem(dog, 0, one), 1, two);
+  dog = addItem(dog, 2, stickerItem('a2'));
+
+  const fewer = removeItems(dog, [one.id]);
+  assert.ok('a1' in fewer.assets, 'still used by the other photo');
+  const none = removeItems(fewer, [two.id]);
+  assert.deepEqual(Object.keys(none.assets), ['a2'], 'the last use gone, the asset goes');
+  strictOk(none);
+
+  const replaced = updateItem(addAsset(fewer, 'a3', photo(3)), two.id, { asset: 'a3' });
+  assert.deepEqual(Object.keys(replaced.assets).sort(), ['a2', 'a3'], 'replace photo drops the old one');
+  strictOk(replaced);
+  assert.equal(updateItem(dog, two.id, { x: 0.2 }).assets, dog.assets, 'other edits leave the assets as they are');
 });

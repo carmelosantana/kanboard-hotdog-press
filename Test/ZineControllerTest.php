@@ -159,7 +159,8 @@ class ZineControllerTest extends Base
         $this->assertThrowsFor(PageNotFoundException::class, fn () => $this->onZine('export', $id));
     }
 
-    // Kills: an export that keeps file_id (not portable), leaks another project's file, or is not a download.
+    // Kills: an export that keeps file_id (not portable), leaks another project's file, carries a photo no item uses
+    // (one replaced or deleted before the editor pruned them), or is not a download.
     public function testExportInlinesImagesAsDataUrls(): void
     {
         $png = self::png();
@@ -168,6 +169,8 @@ class ZineControllerTest extends Base
         $dog = $this->dog('valid-full');
         $dog['assets']['a1']['file_id'] = $mine;
         $dog['assets']['a2'] = ['kind' => 'image', 'file_id' => $theirs, 'name' => 'x.png'];
+        $dog['pages'][1]['items'][] = ['id' => 'i_theirs', 'type' => 'image', 'by' => 'hand', 'x' => 0, 'y' => 0, 'w' => 1, 'h' => 1, 'asset' => 'a2'];
+        $dog['assets']['old'] = ['kind' => 'image', 'file_id' => $mine, 'name' => 'replaced.png'];
         $id = $this->zines()->create($this->project, 'Plant Medicine: Vol 1', json_encode($dog, JSON_UNESCAPED_SLASHES), $this->users['member']);
         $this->loginAs('viewer');
 
@@ -181,6 +184,7 @@ class ZineControllerTest extends Base
         $this->assertArrayNotHasKey('file_id', $assets['a1']);
         $this->assertSame(['kind' => 'placeholder', 'name' => 'x.png'], $assets['a2'], 'another project\'s file is not inlined');
         $this->assertSame($dog['assets']['s1'], $assets['s1'], 'a data asset is kept as is');
+        $this->assertSame(['a1', 's1', 'a2'], array_keys($assets), 'an asset no item uses is left out');
         $this->assertTrue(DogValidator::validate($out['json'], 'strict')['ok']);
     }
 

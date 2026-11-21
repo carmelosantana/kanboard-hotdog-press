@@ -36,9 +36,10 @@ export function updateItem(doc, id, patch) {
   const at = findItem(doc, id);
   if (!at) return doc;
   if (at.item.locked === true && Object.keys(patch).some((k) => k !== 'locked')) return doc;
-  return withPage(doc, at.page, (p) => ({
+  const next = withPage(doc, at.page, (p) => ({
     ...p, items: p.items.map((it, i) => (i === at.index ? { ...it, ...patch } : it)),
   }));
+  return 'asset' in patch ? dropUnusedAssets(next) : next;
 }
 
 /** Removes the items with these ids, except locked ones. */
@@ -48,7 +49,7 @@ export function removeItems(doc, ids) {
     const items = p.items.filter((it) => !gone.has(it.id) || it.locked === true);
     return items.length === p.items.length ? p : { ...p, items };
   });
-  return pages.every((p, i) => p === doc.pages[i]) ? doc : dropUnusedPlaceholder({ ...doc, pages });
+  return pages.every((p, i) => p === doc.pages[i]) ? doc : dropUnusedAssets({ ...doc, pages });
 }
 
 /** Locks every listed item, or unlocks them all when they are all locked already. */
@@ -142,7 +143,7 @@ export function applyLayout(doc, pageIndex, layout) {
   if (needsPlaceholder && !(PLACEHOLDER_ASSET in next.assets)) {
     next = addAsset(next, PLACEHOLDER_ASSET, { kind: 'placeholder', name: 'photo' });
   }
-  return dropUnusedPlaceholder(next);
+  return dropUnusedAssets(next);
 }
 
 /** What a replaced item carries into a new slot: its photo, or its text as lines. */
@@ -253,10 +254,13 @@ function withPage(doc, index, fn) {
   return { ...doc, pages: doc.pages.map((p, i) => (i === index ? fn(p) : p)) };
 }
 
-function dropUnusedPlaceholder(doc) {
-  if (!(PLACEHOLDER_ASSET in doc.assets)) return doc;
-  const used = doc.pages.some((p) => p.items.some((it) => it.asset === PLACEHOLDER_ASSET));
-  if (used) return doc;
-  const { [PLACEHOLDER_ASSET]: _, ...assets } = doc.assets;
-  return { ...doc, assets };
+/**
+ * The Dog without assets no item uses (a deleted or replaced photo, an unused placeholder), so saved and exported
+ * zines carry no dead images. Undo brings them back with the item. The project file itself stays.
+ */
+function dropUnusedAssets(doc) {
+  const used = new Set(doc.pages.flatMap((p) => p.items.map((it) => it.asset)));
+  const ids = Object.keys(doc.assets);
+  if (ids.every((id) => used.has(id))) return doc;
+  return { ...doc, assets: Object.fromEntries(ids.filter((id) => used.has(id)).map((id) => [id, doc.assets[id]])) };
 }

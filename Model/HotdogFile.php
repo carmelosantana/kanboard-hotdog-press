@@ -15,11 +15,29 @@ class HotdogFile extends Base
 {
     public const MAX_BYTES = 16 * 1024 * 1024;
 
-    /** The zine's Dog, pretty-printed, with its project's images inlined; any other file_id becomes a placeholder. */
+    /**
+     * The zine's Dog, pretty-printed, with its project's images inlined; any other file_id becomes a placeholder.
+     * Assets no item uses (a photo replaced or deleted in an older editor) are left out rather than inlined.
+     */
     public function export(array $zine): string
     {
         $dog = json_decode($zine['document']); // objects, so {} stays {}
         $images = new ZineImages($this->container);
+        if (is_object($dog->assets ?? null)) {
+            $used = [];
+            foreach (is_array($dog->pages ?? null) ? $dog->pages : [] as $page) {
+                foreach (is_array($page->items ?? null) ? $page->items : [] as $item) {
+                    if (is_string($item->asset ?? null)) {
+                        $used[$item->asset] = true;
+                    }
+                }
+            }
+            foreach (array_keys(get_object_vars($dog->assets)) as $id) {
+                if (! isset($used[$id])) {
+                    unset($dog->assets->{$id});
+                }
+            }
+        }
         foreach (is_object($dog->assets ?? null) ? $dog->assets : [] as $asset) {
             if (! is_object($asset) || ! property_exists($asset, 'file_id')) {
                 continue;
