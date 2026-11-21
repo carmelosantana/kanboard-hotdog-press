@@ -89,25 +89,66 @@ class DogValidator
 
     /**
      * A Dog decoded with objects (json_decode(…, false)) as the arrays validate() reads. Decoded to arrays, a JSON
-     * [] and {} look alike, so where Dog 1 has objects (assets, each asset) a JSON array becomes false, which
-     * validate() refuses with the same message as the JS validator.
+     * [] and {} look alike (and {"0": …} looks like a list), so a value of the wrong kind where Dog 1 fixes the kind
+     * becomes false, which validate() refuses with the same message as the JS validator:
+     * objects at assets, each asset, each page, each item and each run; arrays at pages, items, runs, points and
+     * each point. Other fields (crop, focus, attrs, …) are not checked by either validator and pass as decoded.
      */
     public static function normalize(mixed $raw): mixed
     {
-        if ($raw instanceof \stdClass && property_exists($raw, 'assets')) {
-            $raw = clone $raw;
-            if (is_array($raw->assets)) {
-                $raw->assets = false;
-            } elseif ($raw->assets instanceof \stdClass) {
-                $raw->assets = clone $raw->assets;
-                foreach (get_object_vars($raw->assets) as $id => $asset) {
-                    if (is_array($asset)) {
-                        $raw->assets->{$id} = false;
-                    }
-                }
+        if (! $raw instanceof \stdClass) {
+            return self::toArrays($raw);
+        }
+        $object = fn ($v) => is_array($v) ? false : $v;
+        $array = fn ($v) => $v instanceof \stdClass ? false : $v;
+        $raw = clone $raw;
+        if (property_exists($raw, 'assets')) {
+            $raw->assets = $object($raw->assets);
+            if ($raw->assets instanceof \stdClass) {
+                $raw->assets = (object) array_map($object, get_object_vars($raw->assets));
+            }
+        }
+        if (property_exists($raw, 'pages')) {
+            $raw->pages = $array($raw->pages);
+            if (is_array($raw->pages)) {
+                $raw->pages = array_map(fn ($page) => self::shapePage($object($page)), $raw->pages);
             }
         }
         return self::toArrays($raw);
+    }
+
+    private static function shapePage(mixed $page): mixed
+    {
+        if (! $page instanceof \stdClass || ! property_exists($page, 'items')) {
+            return $page;
+        }
+        $page = clone $page;
+        $page->items = $page->items instanceof \stdClass ? false : $page->items;
+        if (is_array($page->items)) {
+            $page->items = array_map(fn ($item) => self::shapeItem(is_array($item) ? false : $item), $page->items);
+        }
+        return $page;
+    }
+
+    private static function shapeItem(mixed $item): mixed
+    {
+        if (! $item instanceof \stdClass) {
+            return $item;
+        }
+        $item = clone $item;
+        if (property_exists($item, 'runs')) {
+            $item->runs = $item->runs instanceof \stdClass ? false : $item->runs;
+            if (is_array($item->runs)) {
+                $item->runs = array_map(fn ($run) => is_array($run) ? false : $run, $item->runs);
+            }
+        }
+        if (property_exists($item, 'points')) {
+            $item->points = $item->points instanceof \stdClass ? false : $item->points;
+            if (is_array($item->points)) {
+                $item->points = array_map(fn ($pt) => $pt instanceof \stdClass ? false : $pt, $item->points);
+            }
+        }
+        return $item;
     }
 
     private static function toArrays(mixed $v): mixed

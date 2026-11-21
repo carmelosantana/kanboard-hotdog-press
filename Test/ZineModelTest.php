@@ -201,4 +201,19 @@ class ZineModelTest extends Base
             }
         }
     }
+
+    // Kills: reading a JSON object as a list where Dog 1 has an array ("items": {} decodes like []), so a zine the
+    // editor refuses to open is stored.
+    public function testDocumentRefusesAJsonObjectWhereDogOneHasAnArray(): void
+    {
+        $dog = json_decode($this->dogJson());
+        $dog->pages[0]->items = new \stdClass();
+        try {
+            $this->zines()->document(json_encode($dog));
+            $this->fail('accepted an object as items');
+        } catch (ZineRejected $e) {
+            $this->assertSame('invalid', $e->code);
+            $this->assertSame([['path' => 'pages/0/items', 'message' => 'must be an array']], $e->extra['errors']);
+        }
+    }
 }
