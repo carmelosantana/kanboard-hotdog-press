@@ -1,7 +1,7 @@
 // A minimal PDF 1.4 writer (JPEG images, lines, rects; no fonts, no compression) and the one-sheet print export.
 // Pure, no DOM: the browser rasterises the panels to JPEG and hands the bytes in.
 import { clampMargin, panelSize, resolvePaper } from './paper.js?v=0.1.0';
-import { panelRect, guides as sheetGuides, safeArea } from './impose.js?v=0.1.0';
+import { panelRect, guides as sheetGuides, readingToSheet, safeArea } from './impose.js?v=0.1.0';
 import { lookOf } from './looks.js?v=0.1.0';
 
 /** 1 mm in PDF points. */
@@ -237,13 +237,11 @@ export function guideLines(dog) {
 
 /** N strokes for page N, at the reading bottom-right of its safe area, mapped onto the sheet. */
 function pageTicks(paper, margin, page, line) {
-  const r = panelRect(paper, page);
   const { w, h } = panelSize(paper);
   const sa = safeArea(paper, margin, page);
   const right = (sa.x + sa.w) * w;
   const bottom = (sa.y + sa.h) * h;
-  // Reading-orientation panel mm to sheet mm.
-  const at = (lx, ly) => (r.rotate === 180 ? [r.x + w - lx, r.y + h - ly] : [r.x + lx, r.y + ly]);
+  const at = (lx, ly) => readingToSheet(paper, page, lx, ly);
   return Array.from({ length: page }, (_, i) => {
     const lx = right - i * TICK_GAP_MM;
     return line(...at(lx, bottom), ...at(lx, bottom - TICK_LEN_MM), GUIDE_STYLES.tick);

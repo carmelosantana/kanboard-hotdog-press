@@ -1,7 +1,7 @@
 // The 4x2 imposition: cells, panel rectangles, cut/fold guides and the per-page safe area.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cell, panelRect, guides, safeArea, SAFE_MM } from '../../Assets/js/core/impose.js';
+import { cell, panelRect, guides, safeArea, readingToSheet, SAFE_MM } from '../../Assets/js/core/impose.js';
 
 const close = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-9, `${msg}: ${a} !== ${b}`);
 const closeAll = (actual, expected) => {
@@ -119,4 +119,20 @@ test('safeArea clamps the margin: 0 leaves sheet edges uninset, a bad value mean
   closeAll(safeArea('letter', 0, 6), { x: 0, y: s / LH, w: 1 - s / LW, h: 1 - s / LH });
   assert.deepEqual(safeArea('letter', 'x', 6), safeArea('letter', 6, 6));
   assert.deepEqual(safeArea('letter', 50, 6), safeArea('letter', 10, 6));
+});
+
+test('readingToSheet: a point in a page\'s reading frame lands on the sheet, turned with an upside-down page', () => {
+  for (const paper of ['letter', 'a4']) {
+    for (let page = 1; page <= 8; page++) {
+      const r = panelRect(paper, page);
+      const [tlx, tly] = readingToSheet(paper, page, 0, 0);
+      const [brx, bry] = readingToSheet(paper, page, r.w, r.h);
+      if (r.rotate === 180) {
+        assert.deepEqual([tlx, tly, brx, bry], [r.x + r.w, r.y + r.h, r.x, r.y], `${paper} p${page}: reading top-left is the panel's bottom-right`);
+      } else {
+        assert.deepEqual([tlx, tly, brx, bry], [r.x, r.y, r.x + r.w, r.y + r.h], `${paper} p${page}`);
+      }
+      assert.deepEqual(readingToSheet(paper, page, 10, 20), r.rotate === 180 ? [r.x + r.w - 10, r.y + r.h - 20] : [r.x + 10, r.y + 20]);
+    }
+  }
 });

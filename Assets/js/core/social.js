@@ -47,7 +47,7 @@ const SLUG_MAX = 40;
  * @param {unknown} title
  */
 export function slug(title) {
-  const s = String(title ?? '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  const s = String(title ?? '').normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
     .slice(0, SLUG_MAX).replace(/-+$/, '');
   return s || 'zine';

@@ -37,6 +37,20 @@ export function panelRect(paper, page) {
 }
 
 /**
+ * A point in page `page`'s reading orientation, mm from its reading top-left, as sheet mm from the sheet's top-left
+ * (an upside-down page turns it about the panel's centre).
+ * @param {Paper} paper
+ * @param {number} page
+ * @param {number} x
+ * @param {number} y
+ * @returns {[number, number]}
+ */
+export function readingToSheet(paper, page, x, y) {
+  const r = panelRect(paper, page);
+  return r.rotate === 180 ? [r.x + r.w - x, r.y + r.h - y] : [r.x + x, r.y + y];
+}
+
+/**
  * Cut and fold lines in sheet mm, each [x1, y1, x2, y2]. They lie on panel edges.
  * @param {Paper} paper
  * @returns {{cut: number[], folds: number[][]}}

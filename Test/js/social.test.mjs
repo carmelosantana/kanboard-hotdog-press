@@ -271,3 +271,9 @@ test('renderFrame wraps a long caption to the band width and keeps it inside the
   assert.ok(texts[1][2] - texts[0][2] > size * (LINE_HEIGHT - 0.01), 'line spacing');
   assert.equal(setsOf(ctx, 'fillStyle').at(-1), grayHex(colorOf('kraft', LOOKS.kraft.text)), 'bw caption is gray');
 });
+
+test('slug drops every combining mark, and social.js spells the rule without literal combining characters', () => {
+  assert.equal(slug('a\u1ab0b \u0041\u030a'), 'ab-a', 'marks outside U+0300..U+036F go too');
+  const src = readFileSync(new URL('../../Assets/js/core/social.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(src, /\p{M}/u, 'no literal combining characters (editors and diffs mangle them)');
+});

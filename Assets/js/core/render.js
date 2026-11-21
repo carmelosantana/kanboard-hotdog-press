@@ -52,7 +52,7 @@ export function renderPage(ctx, dog, pageIndex, { px_w, px_h, images = {}, bw = 
   ctx.fillStyle = color(Object.hasOwn(lookOf(dog.look).colors, page.bg) ? page.bg : 'paper');
   ctx.fillRect(0, 0, px_w, px_h);
   for (const item of Array.isArray(page.items) ? page.items : []) {
-    const draw = DRAW[item?.type];
+    const draw = Object.hasOwn(DRAW, item?.type) ? DRAW[item.type] : null;
     if (!draw) continue;
     ctx.save();
     turn(ctx, item, px_w, px_h);
@@ -106,8 +106,8 @@ export function renderSheet(ctx, dog, { px_per_mm: k, images = {}, guides = true
  * ctx.font), breaking at newlines and between the runs of a list item (runs.js), and splitting words wider than the box.
  * `visible` counts the lines that fit the box height by textfit.js's rule (the first line needs the font's accent
  * ascent + descent, each further one LINE_HEIGHT); the rest are not drawn (except a first line in a box too short for
- * it, drawn clipped), and `overflow` says so. Lines are drawn on
- * alphabetic baselines, the first `ascent_px` below the box top.
+ * it, drawn clipped), and `overflow` says so. Lines are drawn on alphabetic baselines, the first `ascent_px` below
+ * the box top.
  * @param {CanvasRenderingContext2D|any} ctx
  * @param {any} item
  * @param {number} px_w

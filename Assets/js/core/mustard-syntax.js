@@ -121,7 +121,7 @@ export function inline(lines) {
 }
 
 /** Text as markdown lines inline() reads back: each newline a hard break, block markers escaped. */
-export function textLines(text) {
+export function markdownLines(text) {
   const lines = text.split('\n');
   return lines.map((l, i) => {
     const s = l.trim();

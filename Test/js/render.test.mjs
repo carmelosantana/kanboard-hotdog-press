@@ -479,3 +479,9 @@ test('layoutText puts each bullet run of a list on its own line, and keeps "\\n"
   // A styled run that happens to start with the bullet in a non-list item stays on its line.
   assert.deepEqual(layoutText(ctx, text({ runs: [{ text: 'Hi ' }, { text: '• x' }] }), PX_W, PX_H).lines, ['Hi • x']);
 });
+
+test('an item whose type names an Object.prototype key is skipped, not called', () => {
+  for (const type of ['constructor', 'toString', '__proto__', 'hasOwnProperty']) {
+    assert.doesNotThrow(() => render([{ ...text(), type }]), type);
+  }
+});

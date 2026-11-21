@@ -5,8 +5,9 @@ import { LAYOUTS, place, BULLET } from './layouts.js?v=0.1.0';
 import { DEFAULT_MARGIN_MM, MAX_MARGIN_MM } from './paper.js?v=0.1.0';
 import { yamlScalar } from './frontmatter.js?v=0.1.0';
 import {
-  MUSTARD_VERSION, KEPT_TYPES, KEY, canName, attrValue, formatImage, textLines, routeBlock,
+  MUSTARD_VERSION, KEPT_TYPES, KEY, canName, attrValue, formatImage, markdownLines, routeBlock,
 } from './mustard-syntax.js?v=0.1.0';
+import { isListItem } from './runs.js?v=0.1.0';
 
 const BOX = ['x', 'y', 'w', 'h'];
 const EPS = 1e-6;
@@ -125,7 +126,7 @@ function freeBlock(item, id, path, markFree, ctx) {
   const text = texts.join('');
   let kind = 'paragraph';
   if (item.type === 'image') kind = 'image';
-  else if (texts.length && texts.every((t) => t.startsWith(BULLET))) kind = 'list';
+  else if (isListItem(item)) kind = 'list';
   else if (item.font === 'display' && item.align === 'center') kind = 'quote';
   else if (item.font === 'display' && !text.includes('\n')) kind = 'heading';
   return writeBlock(kind, item, texts, itemAttrs(item, id, path, ctx.env, { free: markFree, placed: true }), ctx.env);
@@ -141,7 +142,7 @@ function writeBlock(kind, item, texts, attrs, env) {
     return lines.join('\n');
   }
   if (kind === 'heading') return `# ${text} ${attrs}`;
-  const lines = withAttrs(textLines(text), attrs);
+  const lines = withAttrs(markdownLines(text), attrs);
   return (kind === 'quote' ? lines.map((l) => `> ${l}`) : lines).join('\n');
 }
 

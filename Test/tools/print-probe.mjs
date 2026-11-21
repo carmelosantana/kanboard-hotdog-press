@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildPdf, guideLines, PT_PER_MM } from '../../Assets/js/core/pdf.js';
-import { panelRect, safeArea } from '../../Assets/js/core/impose.js';
+import { panelRect, readingToSheet, safeArea } from '../../Assets/js/core/impose.js';
 import { DEFAULT_MARGIN_MM, paperSize } from '../../Assets/js/core/paper.js';
 
 /** Stroke widths in mm, left to right. */
@@ -48,8 +48,7 @@ export function probePage(paper) {
     const [ox, oy] = [sa.x * r.w, sa.y * r.h];
     /** Reading mm (from the safe-area corner) to PDF points. */
     const at = (lx, ly) => {
-      const [px, py] = [ox + lx, oy + ly];
-      const [sx, sy] = r.rotate === 180 ? [r.x + r.w - px, r.y + r.h - py] : [r.x + px, r.y + py];
+      const [sx, sy] = readingToSheet(paper, n, ox + lx, oy + ly);
       return [sx * PT_PER_MM, (H - sy) * PT_PER_MM];
     };
     const line = (x1, y1, x2, y2, width_mm) => {
