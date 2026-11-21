@@ -67,7 +67,11 @@ export async function seedPlantMedicine(call = rpc(), viewerPassword = process.e
   }
   const projectId = Number(project.id);
 
-  const have = new Set((await call('getAllTasks', { project_id: projectId, status_id: 1 })).map((t) => t.title));
+  // Open and closed tasks both count: a page task someone closed is still there.
+  const have = new Set();
+  for (const status_id of [1, 0]) {
+    for (const t of await call('getAllTasks', { project_id: projectId, status_id })) have.add(t.title);
+  }
   for (const [i, [layout, content]] of PAGES.entries()) {
     const title = taskTitle(i + 1, layout);
     if (have.has(title)) continue;
