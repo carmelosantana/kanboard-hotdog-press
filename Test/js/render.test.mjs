@@ -432,3 +432,14 @@ test('layoutText terminates on a box too narrow for one character', () => {
     assert.deepEqual(out.lines, ['a', 'b', 'c', 'd'], `w ${w}`);
   }
 });
+
+test('layoutText puts each bullet run of a list on its own line, and keeps "\\n" inside runs as a hard break', async () => {
+  const { place } = await import('../../Assets/js/core/layouts.js');
+  const [, list] = place('list', { title: { text: 'T' }, list: { items: ['Calendula', 'Lemon balm', 'Chamomile'] } }, 'letter', { page: 6 });
+  const ctx = fakeContext();
+  const out = layoutText(ctx, list, PX_W, PX_H);
+  assert.deepEqual(out.lines, ['• Calendula', '• Lemon balm', '• Chamomile']);
+  // Plain runs still join with nothing between them (they are spans of one paragraph).
+  assert.deepEqual(layoutText(ctx, text({ runs: [{ text: 'He' }, { text: 'llo' }] }), PX_W, PX_H).lines, ['Hello']);
+  assert.deepEqual(layoutText(ctx, text({ runs: [{ text: 'a\nb' }] }), PX_W, PX_H).lines, ['a', 'b']);
+});
