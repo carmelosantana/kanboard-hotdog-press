@@ -13,11 +13,11 @@ export const AUTOSAVE_DELAY_MS = 2000;
 export const RETRY_MS = 5000;
 export const RETRY_MAX_MS = 60000;
 /**
- * Answers a retry cannot fix: the session ended (401, 403: a new session has a new CSRF token), the zine is too
- * large (413) or not valid (422). A redirect (the login page; fetch does not follow it) and any answer under 500
+ * Answers a retry cannot fix: the session ended (401, 403: a new session has a new CSRF token), the zine was
+ * removed (404), the request is refused (400), the zine is too large (413) or not valid (422). A redirect (the login page; fetch does not follow it) and any answer under 500
  * that is not JSON count the same. Server errors (5xx) and network failures are retried.
  */
-export const TERMINAL_STATUS = Object.freeze([401, 403, 413, 422]);
+export const TERMINAL_STATUS = Object.freeze([400, 401, 403, 404, 413, 422]);
 
 /** @param {number} zineId */
 export const bufferKey = (zineId) => `hotdogpress:zine:${zineId}`;

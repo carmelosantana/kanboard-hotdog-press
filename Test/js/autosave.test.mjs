@@ -301,18 +301,20 @@ test('recoverBuffer: none, already saved, unsaved, unreadable', () => {
   assert.deepEqual(recoverBuffer({ getItem: () => { throw new Error('denied'); } }, 7, loaded), { ...loaded, dirty: false });
 });
 
-// Errors a retry cannot fix: the session ended (401, 403, or a redirect to the login page), the zine is too large
-// (413) or not valid (422), or the answer is not JSON. Saving stops, the buffer stays for a reload, and the line
+// Errors a retry cannot fix: the session ended (401, 403, or a redirect to the login page), the zine was removed
+// (404), the request or zine is refused (400, 413, 422), or the answer is not JSON. Saving stops, the buffer stays for a reload, and the line
 // says so; nothing is retried.
 const TERMINAL = {
+  400: () => json(400, { error: 'bad_request' }),
   401: () => json(401, { error: 'unauthorized' }),
   403: () => json(403, { error: 'forbidden' }),
+  404: () => json(404, { error: 'not_found' }),
   413: () => json(413, { error: 'too_large' }),
   422: () => json(422, { error: 'invalid', errors: [] }),
   'a redirect (manual)': () => ({ ok: false, status: 0, type: 'opaqueredirect', json: async () => { throw new SyntaxError('opaque'); } }),
   'a login page (200, not JSON)': () => ({ ok: true, status: 200, json: async () => { throw new SyntaxError('Unexpected token <'); } }),
 };
-test('the terminal statuses', () => assert.deepEqual(TERMINAL_STATUS, [401, 403, 413, 422]));
+test('the terminal statuses', () => assert.deepEqual(TERMINAL_STATUS, [400, 401, 403, 404, 413, 422]));
 for (const [name, reply] of Object.entries(TERMINAL)) {
   test(`${name} stops saving, keeps the buffer and is not retried`, async () => {
     const t = setup({ reply });
