@@ -1,0 +1,88 @@
+{
+  "dog": [
+    "hotdog",
+    "id",
+    "title",
+    "paper",
+    "margin_mm",
+    "look",
+    "assets",
+    "pages"
+  ],
+  "page": [
+    "id",
+    "layout",
+    "bg",
+    "items"
+  ],
+  "item": [
+    "id",
+    "type",
+    "x",
+    "y",
+    "w",
+    "h",
+    "rot",
+    "by",
+    "locked",
+    "slot",
+    "attrs"
+  ],
+  "types": {
+    "text": [
+      "font",
+      "size",
+      "align",
+      "color",
+      "runs"
+    ],
+    "image": [
+      "asset",
+      "fit",
+      "focus",
+      "crop"
+    ],
+    "shape": [
+      "shape",
+      "fill",
+      "stroke",
+      "stroke_width"
+    ],
+    "ink": [
+      "points",
+      "width",
+      "color"
+    ],
+    "sticker": [
+      "asset"
+    ]
+  },
+  "asset": [
+    "kind",
+    "file_id",
+    "data",
+    "w",
+    "h",
+    "name"
+  ],
+  "papers": [
+    "a4",
+    "letter"
+  ],
+  "layouts": [
+    "cover",
+    "back-cover",
+    "headline-body",
+    "photo-full",
+    "photo-caption",
+    "list",
+    "quote",
+    "two-up",
+    "freeform"
+  ],
+  "by": [
+    "hand",
+    "ai",
+    "import"
+  ]
+}

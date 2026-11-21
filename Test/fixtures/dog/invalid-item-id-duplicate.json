@@ -1,0 +1,101 @@
+{
+  "mode": "lenient",
+  "errors": [
+    {
+      "path": "pages/1/items/0/id",
+      "message": "duplicate item id"
+    }
+  ],
+  "dog": {
+    "hotdog": 1,
+    "id": "z_fixture1",
+    "title": "Fixture",
+    "paper": "letter",
+    "margin_mm": 6,
+    "look": "kraft",
+    "assets": {},
+    "pages": [
+      {
+        "id": "p1",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": [
+          {
+            "id": "t1",
+            "type": "text",
+            "x": 0.1,
+            "y": 0.1,
+            "w": 0.8,
+            "h": 0.2,
+            "rot": 0,
+            "font": "anton",
+            "size": 0.1,
+            "align": "left",
+            "color": "toner",
+            "runs": [
+              {
+                "text": "Hi"
+              }
+            ],
+            "by": "hand",
+            "locked": false
+          }
+        ]
+      },
+      {
+        "id": "p2",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": [
+          {
+            "id": "t1",
+            "type": "shape",
+            "x": 0.1,
+            "y": 0.1,
+            "w": 0.2,
+            "h": 0.2,
+            "shape": "rect",
+            "fill": "mustard",
+            "by": "hand"
+          }
+        ]
+      },
+      {
+        "id": "p3",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p4",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p5",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p6",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p7",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p8",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "mode": "lenient",
+  "errors": [
+    {
+      "path": "pages/0/items/0/points",
+      "message": "must be an array of [x, y] pairs from -1 to 2"
+    }
+  ],
+  "dog": {
+    "hotdog": 1,
+    "id": "z_fixture1",
+    "title": "Fixture",
+    "paper": "letter",
+    "margin_mm": 6,
+    "look": "kraft",
+    "assets": {},
+    "pages": [
+      {
+        "id": "p1",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": [
+          {
+            "id": "k1",
+            "type": "ink",
+            "points": [[0.1, 0.2], [2.01, 0.5]],
+            "width": 0.01,
+            "by": "hand"
+          }
+        ]
+      },
+      {
+        "id": "p2",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p3",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p4",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p5",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p6",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p7",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p8",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      }
+    ]
+  }
+}
