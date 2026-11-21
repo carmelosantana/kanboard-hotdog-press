@@ -112,7 +112,7 @@ class ZineModel extends Base
             throw new ZineRejected('too_large', 'A zine must be at most 2 MiB of JSON.');
         }
         $dog = json_decode($json, true, 64);
-        if (! is_array($dog) || ($dog !== [] && array_is_list($dog))) {
+        if (! is_array($dog) || ! str_starts_with(ltrim($json), '{')) { // [] decodes like {}
             throw new ZineRejected('bad_request', 'The zine must be a JSON object.');
         }
         $result = DogValidator::validate($dog, 'strict');
