@@ -79,6 +79,9 @@ class ZineApiControllerTest extends Base
         // A project_id the outsider manages does not lend its role to this zine.
         $this->assertJsonError($this->api('save', ['project_id' => (string) $this->otherProject], ['revision' => '1', 'document' => $this->dogJson(), 'csrf_token' => $this->reusable()]), 404, 'not_found');
         $this->assertJsonError($this->api('image', ['file_id' => '1']), 404, 'not_found');
+        $this->assertJsonError($this->uploadImage(self::png()), 404, 'not_found');
+        $this->assertJsonError($this->uploadPdf(self::PDF), 404, 'not_found');
+        $this->assertSame([], $this->container['projectFileModel']->getAll($this->project), 'nothing stored');
     }
 
     // Kills: a save without the revision check, without bumping it, or storing a re-encoded document.
