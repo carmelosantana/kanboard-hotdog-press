@@ -18,6 +18,7 @@ export const PAPER_IDS = Object.freeze(Object.keys(PAPERS));
 export const LAYOUT_NAMES = Object.freeze([
   'cover', 'back-cover', 'headline-body', 'photo-full', 'photo-caption', 'list', 'quote', 'two-up', 'freeform',
 ]);
+const NUMERIC_ID = /^[0-9]+$/;
 export const BY_VALUES = Object.freeze(['hand', 'ai', 'import']);
 
 /** Allowed fields per object, for strict mode: an item may carry `item` plus its own type's fields. */
@@ -93,7 +94,13 @@ export function validateDog(input, { mode = 'lenient' } = {}) {
     }
   }
   if (!isObject(json)) return fail('', 'must be an object');
-  if (new TextEncoder().encode(JSON.stringify(json)).length > MAX_DOG_BYTES) {
+  let text;
+  try {
+    text = JSON.stringify(json); // throws on a cycle or a BigInt
+  } catch {
+    return fail('', 'must be valid JSON');
+  }
+  if (new TextEncoder().encode(text).length > MAX_DOG_BYTES) {
     return fail('', `must be at most ${MAX_DOG_BYTES} bytes of JSON`);
   }
 
@@ -114,7 +121,9 @@ export function validateDog(input, { mode = 'lenient' } = {}) {
   const assets = isObject(dog.assets) ? dog.assets : {};
   if (!isObject(dog.assets)) err(['assets'], 'must be an object');
   for (const [key, asset] of Object.entries(assets)) {
-    if (!isObject(asset)) err(['assets', key], 'must be an object');
+    // PHP decodes an object with only numeric keys as a list, so ids like "0" are refused in both languages.
+    if (NUMERIC_ID.test(key)) err(['assets', key], 'must not be a numeric-only id');
+    else if (!isObject(asset)) err(['assets', key], 'must be an object');
     else unknown(asset, FIELDS.asset, ['assets', key]);
   }
 

@@ -122,3 +122,14 @@ test('the error path escapes ~ and / in asset ids like a JSON pointer', () => {
   dog.assets = { 'a/1~': { kind: 'image', file_id: 1, w: 1, h: 1, extra: 1 } };
   assert.deepEqual(validateDog(dog, { mode: 'strict' }).errors, [{ path: 'assets/a~11~0/extra', message: 'unknown field' }]);
 });
+
+test('a Dog that JSON cannot encode (a cycle, a BigInt) is an error, not a throw', () => {
+  const cyclic = load('valid-minimal.json');
+  cyclic.pages[0].self = cyclic;
+  const big = { ...load('valid-minimal.json'), margin_mm: 6n };
+  for (const dog of [cyclic, big]) {
+    assert.deepEqual(validateDog(dog, { mode: 'lenient' }), {
+      ok: false, errors: [{ path: '', message: 'must be valid JSON' }],
+    });
+  }
+});

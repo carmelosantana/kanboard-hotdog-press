@@ -22,6 +22,8 @@ class DogValidator
     public const LAYOUTS = [
         'cover', 'back-cover', 'headline-body', 'photo-full', 'photo-caption', 'list', 'quote', 'two-up', 'freeform',
     ];
+    // Asset ids like "0" would make the assets map a JSON list in PHP, so both languages refuse them.
+    private const NUMERIC_ID = '/^[0-9]+$/';
     public const BY = ['hand', 'ai', 'import'];
 
     // Allowed fields per object, for strict mode: an item may carry 'item' plus its own type's fields.
@@ -50,8 +52,9 @@ class DogValidator
      */
     public static function migrate(array $dog): array
     {
-        $v = $dog['hotdog'] ?? 0;
-        if (! self::isInteger($v) || $v < 0) {
+        // Compare before casting: (int) of null or a huge float is 0, which would migrate a Dog JS rejects.
+        $v = array_key_exists('hotdog', $dog) ? $dog['hotdog'] : 0;
+        if (! self::isInteger($v) || $v < 0 || $v >= self::VERSION) {
             return $dog;
         }
         $v = (int) $v;
@@ -108,14 +111,17 @@ class DogValidator
             $this->error(['margin_mm'], 'must be a number from 0 to '.self::MAX_MARGIN_MM);
         }
 
+        // is_array, not isObject: json_decode turns an object whose keys are all numeric into a list.
         $assets = $dog['assets'] ?? null;
-        if (self::isObject($assets)) {
+        if (is_array($assets)) {
             $this->assets = $assets;
         } else {
             $this->error(['assets'], 'must be an object');
         }
         foreach ($this->assets as $key => $asset) {
-            if (! self::isObject($asset)) {
+            if (preg_match(self::NUMERIC_ID, (string) $key)) {
+                $this->error(['assets', $key], 'must not be a numeric-only id');
+            } elseif (! self::isObject($asset)) {
                 $this->error(['assets', $key], 'must be an object');
             } else {
                 $this->unknown($asset, self::FIELDS['asset'], ['assets', $key]);
