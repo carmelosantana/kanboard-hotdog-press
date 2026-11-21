@@ -97,21 +97,16 @@ class ZineControllerTest extends Base
         $this->assertSame(1, $this->zineCount());
     }
 
-    // Kills: a create with a document (the browser's compiled Mustard) that skips the size cap or strict checks.
-    public function testCreateWithADocumentChecksIt(): void
+    // Kills: a create that takes a Dog from the client (create makes blank zines; Mustard reaches the server only as a
+    // save from the editor, and .hotdog files through import).
+    public function testCreateIgnoresAPostedDocument(): void
     {
         $this->loginAs('member');
-        $doc = $this->dogJson('valid-full');
-
-        $this->onProject('create', ['document' => $doc]);
+        $this->onProject('create', ['title' => 'Blank', 'document' => $this->dogJson('valid-full')]);
         $zine = $this->container['db']->table(ZineModel::TABLE)->findOne();
-        $this->assertSame($doc, $zine['document']);
-        $this->assertSame('Plant Medicine', $zine['title'], 'the Dog title when the form has none');
-
-        $this->onProject('create', ['document' => $this->dogJson('valid-minimal', ['paper' => 'a3'])]);
-        $this->assertNotNull($this->lastFlash('failure'));
-        $this->onProject('create', ['document' => '{'.str_repeat(' ', DogValidator::MAX_BYTES)]);
-        $this->assertSame(1, $this->zineCount());
+        $this->assertSame('Blank', $zine['title']);
+        $dog = json_decode($zine['document'], true);
+        $this->assertSame([], array_merge(...array_column($dog['pages'], 'items')), 'eight empty pages');
     }
 
     // Kills: a rename open to viewers, or one that does not reach the model.

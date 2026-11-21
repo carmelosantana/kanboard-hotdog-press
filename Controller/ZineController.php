@@ -11,8 +11,8 @@ use Kanboard\Plugin\HotDogPress\Model\ZineRejected;
  * Zine pages and form actions. Project-scoped: index (list), create, import (.hotdog). Zine-scoped: editor,
  * rename, confirm + remove, export (.hotdog). Roles come from the access map in Plugin.php via ZineAccess.
  *
- * Mustard (.mustard.md) never reaches the server: the browser compiles it and posts the Dog to create (with
- * `document`) or to the API's save, and exports it itself.
+ * Mustard (.mustard.md) never reaches the server: the editor reads and writes those files itself, compiles Mustard,
+ * and saves the Dog through the API's save.
  */
 class ZineController extends BaseController
 {
@@ -48,26 +48,13 @@ class ZineController extends BaseController
         ]));
     }
 
-    /** POST title, and optionally document (a Dog the browser compiled from Mustard); opens the editor. */
+    /** POST title: a blank zine; opens the editor. */
     public function create(): void
     {
         $this->checkCSRFForm();
         $project = $this->projectFor('create');
         $title = (string) $this->request->getRawValue('title');
-        $document = $this->request->getRawValue('document');
-        try {
-            if (is_string($document) && $document !== '') {
-                $dog = $this->zines()->document($document);
-                $title = trim($title) === '' && is_string($dog['title'] ?? null) ? $dog['title'] : $title;
-            } else {
-                $document = ZineModel::blankDocument($title);
-            }
-        } catch (ZineRejected $e) {
-            $this->flash->failure(t($e->getMessage()));
-            $this->toList((int) $project['id']);
-            return;
-        }
-        $id = $this->zines()->create((int) $project['id'], $title, $document, (int) $this->userSession->getId());
+        $id = $this->zines()->create((int) $project['id'], $title, ZineModel::blankDocument($title), (int) $this->userSession->getId());
         $this->toEditor($id);
     }
 

@@ -17,6 +17,8 @@ export { exportMustard } from './mustard-export.js?v=0.1.0';
 const PAGE_COUNT = 8;
 /** Mustard text is refused above the Dog's own size limit (UTF-8 bytes). */
 export const MAX_MUSTARD_BYTES = MAX_DOG_BYTES;
+/** The error for Mustard over MAX_MUSTARD_BYTES. */
+export const MUSTARD_TOO_LARGE = `must be at most ${MAX_MUSTARD_BYTES} bytes of Mustard`;
 const FRONT_KEYS = ['mustard', 'title', 'issue', 'paper', 'look', 'margin_mm', 'kept'];
 /** Keys that move an item; they act only next to `.place`. */
 const GEOMETRY = ['x', 'y', 'w', 'h', 'rot'];
@@ -47,7 +49,7 @@ export function compileMustard(text, { paper, assets = {}, from } = {}) {
 
   const source = String(text);
   if (source.length > MAX_MUSTARD_BYTES || new TextEncoder().encode(source).length > MAX_MUSTARD_BYTES) {
-    fail('', `must be at most ${MAX_MUSTARD_BYTES} bytes of Mustard`);
+    fail('', MUSTARD_TOO_LARGE);
     return { dog: newDog({ paper: PAPER_IDS.includes(paper) ? paper : 'letter' }), warnings, errors };
   }
   const lines = source.replace(/\r\n?/g, '\n').split('\n');

@@ -356,6 +356,12 @@
   margin: 0;
 }
 
+.hdp-mustard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .hdp-mustard-text {
   box-sizing: border-box;
   width: 100%;

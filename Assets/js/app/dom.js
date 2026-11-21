@@ -37,3 +37,18 @@ export function sizeCanvas(canvas, w, h) {
   ctx.clearRect(0, 0, w, h);
   return ctx;
 }
+
+/**
+ * Downloads `blob` as `name` through a hidden <a download> with a blob: href (a link, never a blob: <img>, which
+ * Kanboard's CSP refuses). The URL is revoked a minute later.
+ * @param {Blob} blob
+ * @param {string} name
+ */
+export function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = h('a', { href: url, download: name, hidden: true });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}

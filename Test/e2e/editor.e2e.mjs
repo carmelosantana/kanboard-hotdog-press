@@ -2,8 +2,8 @@
 // the harness root's node_modules. Desktop (1280) and phone (375) widths:
 //
 //   create a zine (every script URL carries ?v=<version>; a module that fails to load shows the boot error) → add text (typed in place) → draw ink → a shape → a sticker → upload a photo → move, resize,
-//   rotate, undo/redo, lock → apply a layout (hand items stay) → change the look → paste Mustard and Apply (warnings
-//   shown, hand ink kept) → bad Mustard shows errors and changes nothing → reorder pages in the strip → Pages / Sheet /
+//   rotate, undo/redo, lock → apply a layout (hand items stay) → change the look → bad Mustard shows errors and
+//   changes nothing → import a .mustard.md file (applied, warnings shown, hand ink kept) → download it back → reorder pages in the strip → Pages / Sheet /
 //   Booklet → autosave reaches the server and a reload brings the zine back (the strict validator accepts it) →
 //   a viewer gets read-only mode → the same at 375 px (toolbar and strip scroll, no page-wide horizontal scroll).
 // Every page must log no console error, no page error and no CSP violation, and request nothing from another origin.
@@ -18,14 +18,14 @@ import { randomBytes } from 'node:crypto';
 import assert from 'node:assert/strict';
 import {
   BASE, PLUGIN, PROJECT_ID, php, problems, watch, CSP_PROBE, cspCheck, login, state, items, until, serverCopy,
-  createZine, removeZine,
+  createZine, removeZine, download,
 } from './lib.mjs';
 
 const SHOTS = resolve(process.argv[2] || join(PLUGIN, 'Test/e2e/shots'));
 const PHOTO = join(PLUGIN, 'Test/fixtures/pdf/two-tone.jpg');
 const tag = randomBytes(3).toString('hex');
 const VIEWER = { username: `hdp-viewer-${tag}`, password: randomBytes(12).toString('base64url') };
-const MUSTARD = readFileSync(join(PLUGIN, 'Test/fixtures/mustard/example.mustard.md'), 'utf8');
+const MUSTARD_PATH = join(PLUGIN, 'Test/fixtures/mustard/example.mustard.md');
 const VERSION = JSON.parse(readFileSync(join(PLUGIN, 'plugin.json'), 'utf8')).version;
 mkdirSync(SHOTS, { recursive: true });
 
@@ -249,8 +249,8 @@ try {
   await page.click('.hdp-mustard button:has-text("Apply")');
   await page.waitForSelector('.hdp-note-error');
   assert.deepEqual((await state(page)).doc, before, 'errors change nothing');
-  await page.fill('.hdp-mustard-text', MUSTARD);
-  await page.click('.hdp-mustard button:has-text("Apply")');
+  // "Import Mustard file" loads a .mustard.md and applies it like typed text.
+  await page.setInputFiles('.hdp-mustard input[type=file]', MUSTARD_PATH);
   await page.waitForSelector('.hdp-note-ok');
   s = await state(page);
   assert.equal(s.doc.title, 'Plant Medicine');
@@ -258,6 +258,11 @@ try {
   assert.ok(items(s, 0).some((i) => i.id === ink.id), 'hand ink kept through Apply');
   assert.ok(await page.locator('.hdp-note-warning li').count() > 0, 'warnings listed (unknown photos, short zine)');
   await shot(page, 'desktop-04-mustard-applied');
+  // "Download Mustard": the zine as <title>.mustard.md, the text the panel shows, which compiles back to the zine.
+  const mustardDl = await download(page, '[data-mustard="download"]');
+  assert.equal(mustardDl.name, 'plant-medicine.mustard.md');
+  assert.equal(new TextDecoder().decode(mustardDl.bytes), await page.inputValue('.hdp-mustard-text'));
+  assert.match(new TextDecoder().decode(mustardDl.bytes), /^---\n(#[^\n]*\n)?mustard: 1\ntitle: Plant Medicine\n/);
   await page.click('.hdp-mustard button:has-text("Close")');
 
   // Edit the list on page 3 in place: one bullet per line comes back as one run per line.
@@ -342,6 +347,8 @@ try {
   await vpage.click('.hdp-mustard-toggle');
   assert.ok(await vpage.locator('.hdp-mustard-text').getAttribute('readonly') !== null, 'Mustard is read-only');
   assert.equal(await vpage.locator('.hdp-mustard button:has-text("Apply")').count(), 0);
+  assert.equal(await vpage.locator('[data-mustard="import"]').count(), 0, 'no Mustard import for a viewer');
+  assert.equal((await download(vpage, '[data-mustard="download"]')).name, 'plant-medicine.mustard.md', 'a viewer may download it');
   await shot(vpage, 'viewer-01-read-only');
   await cspCheck(vpage, 'viewer');
   await vctx.close();

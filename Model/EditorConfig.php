@@ -98,6 +98,8 @@ class EditorConfig extends Base
             'mustard' => e('Write in Mustard'),
             'mustard_apply' => e('Apply'),
             'mustard_warnings' => e('Warnings'),
+            'mustard_import' => e('Import Mustard file'),
+            'mustard_download' => e('Download Mustard'),
             'close' => e('Close'),
             // Photos
             'uploading' => e('Uploading…'),

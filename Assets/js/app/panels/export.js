@@ -2,7 +2,7 @@
 // files (carousel ZIP at 3:4 or 4:5, cover, pin, story, sheet shot, Bluesky set, LinkedIn PDF). A file is downloaded
 // through an <a download> with a blob: href (never a blob: <img>); where the browser can share files (phones) it is
 // offered to the share sheet as well. Viewers may export; only members save to the project.
-import { h } from '../dom.js?v=0.1.0';
+import { downloadBlob as download, h } from '../dom.js?v=0.1.0';
 import { linkedInFile, printName, printPdf, socialFiles } from '../exports.js?v=0.1.0';
 
 const SOCIAL = [
@@ -106,15 +106,6 @@ export function createExportPanel(app) {
       download(blob, file.name);
     }
     app.status(done);
-  }
-
-  function download(blob, name) {
-    const url = URL.createObjectURL(blob);
-    const a = h('a', { href: url, download: name, hidden: true });
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
   return {

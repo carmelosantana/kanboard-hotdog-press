@@ -96,6 +96,8 @@ return [
     // Editor: Mustard panel
     'Write in Mustard' => 'Escribir en Mustard',
     'Apply' => 'Aplicar',
+    'Import Mustard file' => 'Importar archivo Mustard',
+    'Download Mustard' => 'Descargar Mustard',
     'Warnings' => 'Avisos',
     'Close' => 'Cerrar',
 
