@@ -30,7 +30,7 @@ export function createProps(app) {
     const id = `sticker_${s.name.replace(/-/g, '_')}`;
     if (!store.doc.assets[id]) {
       const svg = await (await fetch(stickerUrl(s.name))).text();
-      const data = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+      const data = `data:image/svg+xml;base64,${btoa(String.fromCharCode(...new TextEncoder().encode(svg)))}`;
       store.update((d) => addAsset(d, id, { kind: 'sticker', name: s.name, data, w: s.w, h: s.h }));
     }
     const item = stickerItem(id);
