@@ -29,4 +29,17 @@ class PluginVersionTest extends Base
         $this->assertSame([], $json['requires']);
         $this->assertSame([], $json['recommends']);
     }
+
+    // Kills: a release with no changelog entry for its version, or a zip that ships the tests.
+    public function testReleasePackaging(): void
+    {
+        $root = __DIR__.'/..';
+        $version = json_decode(file_get_contents($root.'/plugin.json'), true)['version'];
+        $this->assertMatchesRegularExpression('/^## '.preg_quote($version, '/').' — /m', (string) @file_get_contents($root.'/CHANGELOG.md'));
+        $workflow = (string) @file_get_contents($root.'/.github/workflows/release.yml');
+        $this->assertStringContainsString('does not match plugin.json', $workflow, 'the tag must equal the version');
+        foreach (['.git', '.github', '.gitignore', 'Test', 'docs'] as $path) {
+            $this->assertStringContainsString("--exclude '$path'", $workflow, "$path stays out of the zip");
+        }
+    }
 }
