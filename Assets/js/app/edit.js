@@ -92,8 +92,9 @@ export function setMargin(doc, mm) {
 /**
  * Applies a layout to one page: its slot items are placed in the page's safe area. Free hand items and locked items
  * stay; every other item (slot items, items by ai or import) is replaced, and slot content (text, list lines, photos)
- * moves into the new layout's slots, by slot name first and then in order of kind. An empty photo slot points at the
- * placeholder asset.
+ * moves into the new layout's slots, by slot name first and then in order of kind, keeping its `by`. A slot with no
+ * content is an empty template box, `by: 'import'`, until someone types or puts a photo in it (then it is `hand`), so
+ * Mustard Apply may replace it. An empty photo slot points at the placeholder asset.
  * @param {any} doc @param {number} pageIndex 0..7 @param {string} layout
  */
 export function applyLayout(doc, pageIndex, layout) {
@@ -115,7 +116,7 @@ export function applyLayout(doc, pageIndex, layout) {
   }
   for (const def of defs) {
     if (fills[def.name]) continue;
-    fills[def.name] = take((c) => c.image === isImage(def)) ?? { image: isImage(def), lines: [], by: 'hand' };
+    fills[def.name] = take((c) => c.image === isImage(def)) ?? { image: isImage(def), lines: [], by: 'import' };
   }
 
   let needsPlaceholder = false;
@@ -152,7 +153,8 @@ function contentOf(it) {
 
 /**
  * Mustard Apply: the compiled Dog's pages and settings, plus the zine's own hand-made and locked items that the
- * text did not bring back (by id). A locked item always keeps its current version. The zine keeps its id.
+ * text did not bring back (by id), above their nearest surviving neighbour or else on top. A locked item always
+ * keeps its current version. The zine keeps its id.
  * @param {any} doc the zine now
  * @param {any} compiled compileMustard(…).dog, compiled with `from: doc`
  */
@@ -169,9 +171,10 @@ export function applyMustard(doc, compiled) {
       if (at && it.locked === true) {
         next.pages[at[0]].items[at[1]] = clone(it);
       } else if (!at) {
-        // After the nearest earlier item of the same page that is on the compiled page, so z-order holds.
+        // After the nearest earlier item of the same page that is on the compiled page, so z-order holds; with none,
+        // on top (it was drawn over content the text replaced), unless it was the bottom item.
         const items = next.pages[pi].items;
-        let pos = 0;
+        let pos = i === 0 ? 0 : items.length;
         for (let j = i - 1; j >= 0; j--) {
           const k = items.findIndex((x) => x.id === p.items[j].id);
           if (k >= 0) { pos = k + 1; break; }

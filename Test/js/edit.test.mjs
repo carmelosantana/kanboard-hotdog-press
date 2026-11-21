@@ -89,6 +89,7 @@ test('applyLayout places the layout on that page, carries slot content over and 
   assert.ok(!ids.includes('ai-thing'));
   const title = page.items.find((i) => i.slot === 'title');
   assert.equal(title.type, 'text');
+  assert.equal(title.by, 'import', 'an empty template box is not hand-made');
   strictOk(dog);
 
   // Type into the title, then switch layout: the text follows to the new layout's title slot, nothing doubles.
@@ -147,4 +148,18 @@ test('applyMustard takes the compiled pages, keeps hand and locked items, and lo
   assert.equal(findItem(merged, locked.id).item.runs[0].text, 'mine');
   assert.equal(merged.pages.flatMap((p) => p.items).filter((i) => i.id === ink.id).length, 1, 'no duplicate ids');
   strictOk(merged);
+});
+
+test('applyMustard puts a kept hand item with no surviving neighbour below it on top, not under the new content', () => {
+  let dog = applyLayout(newDog(), 0, 'cover');
+  dog = addItem(dog, 0, shape('my-shape'));
+  const text = '---\nmustard: 1\n---\n\n::: page {layout=cover}\n# New\n:::\n';
+  const compiled = compileMustard(text, { paper: dog.paper, assets: dog.assets, from: dog });
+  const out = applyMustard(dog, compiled.dog);
+  assert.equal(out.pages[0].items.at(-1).id, 'my-shape');
+  // An item that was at the very bottom stays at the bottom.
+  let low = addItem(newDog(), 0, shape('bottom'));
+  low = { ...low, pages: low.pages.map((p, i) => (i ? p : { ...p, items: [...p.items, textItem({ x: 0, y: 0 })] })) };
+  const c2 = compileMustard(text, { paper: low.paper, assets: low.assets, from: low });
+  assert.equal(applyMustard(low, c2.dog).pages[0].items[0].id, 'bottom');
 });
