@@ -2,6 +2,7 @@
 // empty text boxes, the selection and live tool strokes, and a textarea for typing into a text box in place.
 // Pointer input goes to the active tool (tools/*.js).
 import { renderPage, layoutText } from '../../core/render.js';
+import { joinRuns, splitRuns } from '../../core/runs.js';
 import { safeArea } from '../../core/impose.js';
 import { panelSize } from '../../core/paper.js';
 import { colorOf, lookOf } from '../../core/looks.js';
@@ -85,7 +86,7 @@ export function createPagesView(app) {
   function editText(id, { fresh = false } = {}) {
     editing = { id, fresh };
     editor.hidden = false;
-    editor.value = (findItem(store.doc, id)?.item.runs ?? []).map((r) => r.text).join('');
+    editor.value = joinRuns(findItem(store.doc, id)?.item);
     placeEditor();
     editor.focus();
     app.render();
@@ -113,7 +114,9 @@ export function createPagesView(app) {
   editor.addEventListener('input', () => {
     if (!editing) return;
     const id = editing.id;
-    store.update((d) => updateItem(d, id, { runs: [{ text: editor.value.slice(0, 2000) }], by: 'hand' }), { merge: `text:${id}` });
+    const item = findItem(store.doc, id)?.item;
+    const runs = splitRuns(item, editor.value.slice(0, 2000));
+    store.update((d) => updateItem(d, id, { runs, by: 'hand' }), { merge: `text:${id}` });
   });
   editor.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
