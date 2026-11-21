@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { compileMustard, exportMustard } from '../../Assets/js/core/mustard.js';
-import { validateDog, newDog } from '../../Assets/js/core/dog.js';
+import { validateDog, newDog, MAX_DOG_BYTES } from '../../Assets/js/core/dog.js';
 import { place, BULLET } from '../../Assets/js/core/layouts.js';
 
 const DIR = new URL('../fixtures/mustard/', import.meta.url);
@@ -358,4 +358,120 @@ test('kept items come back when re-imported into the same zine', () => {
   assert.deepEqual(same.dog.pages[1].items.map((i) => i.id), ['sh1', 'st1']);
   assert.deepEqual(same.dog.assets.s1, dog.assets.s1);
   assert.deepEqual(strict(same.dog).errors ?? [], []);
+});
+
+test('long whitespace runs and long lists compile in linear time', () => {
+  const pad = ' '.repeat(100_000);
+  const cases = {
+    'front matter value': `---\ntitle: a${pad}x\n---\n`,
+    'front matter comment': `---\ntitle: a${pad}#${pad}x\n---\n`,
+    'front matter key': `---\ntitle${pad}x\n---\n`,
+    'flow list': `---\nkept: [${'a,'.repeat(50_000)}a]\n---\n`,
+    'page line': front(`::: page${pad}x\n:::\n`),
+    'page attrs': front(`::: page {${pad}x\n:::\n`),
+    'trailing braces': front(pageOf('freeform', `para${pad}{${pad}x`)),
+    'many classes': front(pageOf('freeform', `para {${' .a'.repeat(30_000)}}`)),
+    'broken image': front(pageOf('freeform', `![${pad}](${pad}x`)),
+    'quote and list': front(pageOf('freeform', `>${pad}x\n-${pad}x\n#${pad}x`)),
+  };
+  for (const [name, text] of Object.entries(cases)) {
+    const t0 = performance.now();
+    compileMustard(text);
+    const ms = performance.now() - t0;
+    assert.ok(ms < 500, `${name}: ${ms.toFixed(0)} ms`);
+  }
+});
+
+test('input over the Dog size limit is refused with an error', () => {
+  for (const text of ['x'.repeat(MAX_DOG_BYTES + 1), 'é'.repeat(MAX_DOG_BYTES / 2 + 1)]) {
+    const { dog, errors } = compileMustard(text);
+    assert.equal(errors.length, 1);
+    assert.equal(errors[0].path, '');
+    assert.match(errors[0].message, /bytes/);
+    assert.equal(dog.pages.length, 8);
+  }
+});
+
+test('image names with parentheses or spaces and alt text with brackets round-trip', () => {
+  const dog = newDog({ title: 'Imgs' });
+  dog.assets.a = { kind: 'image', file_id: 3, name: 'photo (1).jpg' };
+  dog.assets.b = { kind: 'image', file_id: 4, name: 'a <b> c\\d.jpg' };
+  dog.pages[0].layout = 'two-up';
+  dog.pages[0].items = place('two-up', { photo: { asset: 'a' }, photo2: { asset: 'b' } }, 'letter', { page: 1 });
+  dog.pages[0].items[0].attrs = { alt: 'a ] b [c] \\ d' };
+  const { text } = exportMustard(dog);
+  const back = compileMustard(text, { assets: dog.assets });
+  assert.deepEqual(back.warnings.filter((w) => /image/.test(w.message)), []);
+  assert.deepEqual(back.dog.pages[0].items.map((i) => i.asset), ['a', 'b']);
+  assert.deepEqual(back.dog.pages[0].items[0].attrs, { alt: 'a ] b [c] \\ d' });
+  assert.equal(exportMustard(back.dog).text, text);
+  // Hand-written: the CommonMark <…> form and balanced parentheses both work.
+  const assets = { a: dog.assets.a };
+  assert.equal(compileOne('photo-full', '![x](<photo (1).jpg>)', { assets }).dog.pages[0].items[0].asset, 'a');
+  assert.equal(compileOne('photo-full', '![x](photo (1).jpg)', { assets }).dog.pages[0].items[0].asset, 'a');
+});
+
+test('a line that starts like an image but does not parse warns and stays text', () => {
+  const { dog, warnings } = compileOne('headline-body', '![oops](x.jpg');
+  assert.equal(slotText(dog.pages[0], 'body'), '![oops](x.jpg');
+  assert.ok(warnings.some((w) => w.path === 'pages/0' && /image/.test(w.message) && w.line));
+});
+
+test('export: ids that attributes cannot carry are re-minted with a warning; values and classes round-trip', () => {
+  const dog = newDog({ title: 'Ids' });
+  dog.pages[0].id = 'page one';
+  dog.pages[0].layout = 'headline-body';
+  dog.pages[0].items = place('headline-body', { title: { text: 'T' }, body: { text: 'B' } }, 'letter', { page: 1 });
+  const [title, body] = dog.pages[0].items;
+  body.id = 'body.1';
+  title.attrs = { class: 'a.b c', note: 'a}b', other: 'x"y {z} \\ q', empty: '' };
+  const { text, warnings } = exportMustard(dog);
+  assert.deepEqual(warnings.map((w) => w.path), ['pages/0/id', 'pages/0/items/1/id']);
+  const back = compileMustard(text);
+  assert.deepEqual(back.errors, []);
+  const page = back.dog.pages[0];
+  assert.equal(page.layout, 'headline-body');
+  assert.equal(slotText(page, 'title'), 'T');
+  assert.equal(slotText(page, 'body'), 'B');
+  assert.equal(slotItem(page, 'title').id, title.id);
+  assert.notEqual(slotItem(page, 'body').id, 'body.1');
+  assert.deepEqual(slotItem(page, 'title').attrs, title.attrs);
+});
+
+test('export never throws on a sparse Dog and never writes undefined', () => {
+  assert.doesNotThrow(() => exportMustard({}));
+  const sparse = {
+    title: 'S',
+    pages: [{ layout: 'cover', items: [
+      { type: 'text', slot: 'title', runs: [{}] }, { type: 'image', slot: 'photo' },
+      { type: 'text', id: 'loose' }, null,
+      { type: 'image', id: 'img', x: 0.1 },
+    ] }, null, {}],
+  };
+  const { text } = exportMustard(sparse);
+  assert.doesNotMatch(text, /undefined|NaN|null/);
+  const back = compileMustard(text);
+  assert.deepEqual(back.errors, []);
+});
+
+test('item order (z-order) survives export and compile, kept items included', () => {
+  const dog = newDog({ title: 'Z' });
+  dog.assets.pic = { kind: 'image', file_id: 1, name: 'pic.jpg' };
+  dog.pages[0].layout = 'photo-full';
+  const slots = { photo: { asset: 'pic' }, caption: { text: 'C' } };
+  const [photo, caption] = place('photo-full', slots, 'letter', { page: 1 });
+  const ink = { id: 'k1', type: 'ink', points: [[0.1, 0.1], [0.2, 0.2]], width: 0.01, color: 'toner', by: 'hand' };
+  const loose = {
+    id: 'loose', type: 'text', by: 'hand', x: 0.1, y: 0.1, w: 0.5, h: 0.1, font: 'body', size: 0.03, align: 'left',
+    color: 'toner', runs: [{ text: 'on top of nothing' }],
+  };
+  dog.pages[0].items = [caption, ink, loose, photo];
+  const { text } = exportMustard(dog);
+  const back = compileMustard(text, { assets: dog.assets, from: dog });
+  assert.deepEqual(back.errors, []);
+  assert.deepEqual(back.dog.pages[0].items.map((i) => i.id), [caption.id, 'k1', 'loose', photo.id]);
+  assert.equal(exportMustard(back.dog).text, text);
+  // Hand-written order is document order.
+  const doc = compileOne('photo-caption', '![](a.jpg)\n\n# T\n\nBody');
+  assert.deepEqual(doc.dog.pages[0].items.map((i) => i.slot), ['photo', 'title', 'body']);
 });

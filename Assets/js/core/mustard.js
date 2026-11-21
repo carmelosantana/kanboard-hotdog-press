@@ -1,21 +1,25 @@
 // Mustard (*.mustard.md): markdown for writing a zine. compileMustard turns it into the Dog (deterministic apart from
-// minted ids); exportMustard writes a Dog back as Mustard. Pure, no DOM. Format: hotdogpress-formats.md.
-import { newDog, validateDog, randomId, LAYOUT_NAMES, BY_VALUES, PAPER_IDS } from './dog.js';
+// minted ids); exportMustard (mustard-export.js) writes a Dog back. Pure, no DOM. Format: hotdogpress-formats.md.
+import { newDog, validateDog, randomId, LAYOUT_NAMES, BY_VALUES, PAPER_IDS, MAX_DOG_BYTES } from './dog.js';
 import { LAYOUTS, place, budget, BULLET } from './layouts.js';
 import { safeArea } from './impose.js';
 import { DEFAULT_MARGIN_MM, MAX_MARGIN_MM } from './paper.js';
+import { readFrontMatter } from './frontmatter.js';
+import {
+  MUSTARD_VERSION, emptyAttrs, parseAttrs, splitAttrs, parseImage, unescapeLine, inline, isPara, routeBlock,
+} from './mustard-syntax.js';
+
+export { MUSTARD_VERSION } from './mustard-syntax.js';
+export { exportMustard } from './mustard-export.js';
 
 /** @typedef {{path: string, message: string, line?: number}} MustardProblem */
-/** @typedef {{id?: string, classes: string[], kv: Record<string, string>}} Attrs */
 
-export const MUSTARD_VERSION = 1;
 const PAGE_COUNT = 8;
+/** Mustard text is refused above the Dog's own size limit (UTF-8 bytes). */
+export const MAX_MUSTARD_BYTES = MAX_DOG_BYTES;
 const FRONT_KEYS = ['mustard', 'title', 'issue', 'paper', 'look', 'margin_mm', 'kept'];
-/** Item types Mustard cannot write; export lists their ids under `kept:`. */
-const KEPT_TYPES = ['ink', 'sticker', 'shape'];
-const BOX = ['x', 'y', 'w', 'h'];
 /** Keys that move an item; they act only next to `.place`. */
-const GEOMETRY = [...BOX, 'rot'];
+const GEOMETRY = ['x', 'y', 'w', 'h', 'rot'];
 /** A block with no slot borrows the style of the slot its kind normally fills: [layout, slot]. */
 const FREE_STYLE = {
   heading: ['headline-body', 'title'],
@@ -23,14 +27,7 @@ const FREE_STYLE = {
   quote: ['quote', 'quote'],
   list: ['list', 'list'],
 };
-const EPS = 1e-6;
-const KEY = /^[A-Za-z_][\w-]*$/;
 const NUMERIC_ID = /^[0-9]+$/;
-const KEPT_NOTE = '# Exported from Hot Dog Press. Ink, stickers and shapes are listed in kept: and come back only '
-  + 'when this is re-imported into the same zine.';
-
-// ---------------------------------------------------------------------------------------------------------------
-// Compile
 
 /**
  * Mustard text to a Dog. Problems never throw: errors make the Dog unfit to save, warnings are for the editor.
@@ -48,7 +45,12 @@ export function compileMustard(text, { paper, assets = {}, from } = {}) {
   const warn = note(warnings);
   const fail = note(errors);
 
-  const lines = String(text).replace(/\r\n?/g, '\n').split('\n');
+  const source = String(text);
+  if (source.length > MAX_MUSTARD_BYTES || new TextEncoder().encode(source).length > MAX_MUSTARD_BYTES) {
+    fail('', `must be at most ${MAX_MUSTARD_BYTES} bytes of Mustard`);
+    return { dog: newDog({ paper: PAPER_IDS.includes(paper) ? paper : 'letter' }), warnings, errors };
+  }
+  const lines = source.replace(/\r\n?/g, '\n').split('\n');
   const { meta, start } = readFrontMatter(lines, warn);
   const fm = readMeta(meta, paper, warn, fail);
   const dog = newDog({ title: fm.title, paper: fm.paper });
@@ -121,14 +123,16 @@ function readPages(lines, start, warn) {
   for (let i = start; i < lines.length; i += 1) {
     const line = lines[i];
     const n = i + 1;
-    const open = /^:::\s*page(?:\s+(.*?))?\s*$/.exec(line);
-    if (open) {
+    const open = /^:::\s*page/.exec(line);
+    const after = open ? line.slice(open[0].length) : '';
+    if (open && (after === '' || /^\s/.test(after))) {
       if (page) warn(`pages/${pages.length - 1}`, `page is not closed with ::: before line ${n}`, page.line);
-      const raw = open[1] ?? '';
-      const braces = /^\{(.*)\}$/.exec(raw);
-      let attrs = braces ? parseAttrs(braces[1]) : raw === '' ? emptyAttrs() : null;
+      const raw = after.trim();
+      const braces = raw.startsWith('{') && raw.endsWith('}');
+      let attrs = braces ? parseAttrs(raw.slice(1, -1)) : raw === '' ? emptyAttrs() : null;
       if (!attrs) {
-        warn(`pages/${pages.length}`, `"${raw}" is not an attribute block like {layout=cover}; ignored`, n);
+        const shown = raw.slice(0, 80);
+        warn(`pages/${pages.length}`, `"${shown}" is not an attribute block like {layout=cover}; ignored`, n);
         attrs = emptyAttrs();
       }
       page = { line: n, attrs, lines: [] };
@@ -163,12 +167,16 @@ function compilePage(src, p, ctx) {
   for (const c of classes) ctx.warn(at, `page class .${c} is ignored`, src.line);
   const page = { id: pageId(id, p, ctx, src.line), layout, bg: kv.bg ?? 'paper', items: [] };
 
-  const { fills, free } = assignSlots(readBlocks(src.lines), layout, at, ctx);
+  const blocks = readBlocks(src.lines, (message, line) => ctx.warn(at, message, line));
+  const { fills, free } = assignSlots(blocks, layout, at, ctx);
   const slotFills = Object.fromEntries([...fills].map(([name, f]) => [name, { ...f.content, by: 'import' }]));
   const opts = { margin_mm: ctx.margin_mm, page: p + 1 };
   const pairs = place(layout, slotFills, ctx.paper, opts).map((item) => ({ item, block: fills.get(item.slot).block }));
   const area = safeArea(ctx.paper, ctx.margin_mm, p + 1);
   free.forEach((block, k) => pairs.push({ item: freeItem(block, k, free.length, area), block, free: true }));
+  // Items keep document order, which is the Dog's z-order.
+  const order = new Map(blocks.map((block, i) => [block, i]));
+  pairs.sort((a, b) => order.get(a.block) - order.get(b.block));
 
   pairs.forEach(({ item, block, free: loose }, i) => {
     const path = `${at}/items/${i}`;
@@ -200,7 +208,6 @@ function assignSlots(blocks, layout, at, ctx) {
   const fills = new Map();
   const free = [];
   let lastPara = null;
-  const open = (pred) => defs.find((d) => pred(d) && !fills.has(d.name));
   const fill = (def, block) => {
     fills.set(def.name, { block, content: contentFor(def, block) });
     if (isPara(def)) lastPara = def;
@@ -240,17 +247,10 @@ function assignSlots(blocks, layout, at, ctx) {
         continue;
       }
     }
-    let def;
-    if (block.kind === 'heading') def = open((d) => d.name === 'title');
-    else if (block.kind === 'quote') def = open((d) => d.name === 'quote');
-    else if (block.kind === 'list') def = open((d) => d.kind === 'list');
-    else if (block.kind === 'image') def = open((d) => d.kind === 'image');
-    if (!def && block.kind !== 'list' && block.kind !== 'image') {
-      def = open(isPara);
-      if (!def && lastPara && isBare(block.attrs)) {
-        append(lastPara, block);
-        continue;
-      }
+    const def = routeBlock(block.kind, defs, (name) => fills.has(name));
+    if (!def && block.kind !== 'list' && block.kind !== 'image' && lastPara && isBare(block.attrs)) {
+      append(lastPara, block);
+      continue;
     }
     if (def) fill(def, block);
     else free.push(block);
@@ -258,7 +258,6 @@ function assignSlots(blocks, layout, at, ctx) {
   return { fills, free };
 }
 
-const isPara = (d) => d.kind === 'text' && d.name !== 'title' && d.name !== 'quote';
 const isBare = ({ id, classes, kv }) => id === undefined && !classes.length && !Object.keys(kv).length;
 const fits = (def, block) => (def.kind === 'image') === (block.kind === 'image')
   && !(def.kind === 'text' && block.kind === 'list');
@@ -384,46 +383,66 @@ function restoreKept(kept, from, ctx) {
       + 'into the same zine');
     return;
   }
-  const pages = Array.isArray(from.pages) ? from.pages.slice(0, PAGE_COUNT) : [];
-  for (const id of kept) {
-    const p = pages.findIndex((pg) => Array.isArray(pg?.items) && pg.items.some((i) => i?.id === id));
-    if (p < 0) {
-      ctx.warn('kept', `kept item "${id}" is not in this zine`);
-    } else if (ctx.itemIds.has(id)) {
-      ctx.warn('kept', `kept item "${id}" has the same id as an item in the text; it is not restored`);
-    } else {
-      const item = structuredClone(pages[p].items.find((i) => i?.id === id));
-      const asset = typeof item.asset === 'string' ? from.assets?.[item.asset] : undefined;
-      if (asset && !Object.hasOwn(ctx.dog.assets, item.asset)) ctx.dog.assets[item.asset] = structuredClone(asset);
-      ctx.dog.pages[p].items.push(item);
-      ctx.itemIds.add(id);
+  /** id → [page, index] in the zine being re-imported into. */
+  const where = new Map();
+  (Array.isArray(from.pages) ? from.pages.slice(0, PAGE_COUNT) : []).forEach((pg, p) => {
+    (Array.isArray(pg?.items) ? pg.items : []).forEach((item, i) => {
+      if (typeof item?.id === 'string' && !where.has(item.id)) where.set(item.id, [p, i]);
+    });
+  });
+  const wanted = kept.filter((id) => {
+    if (!where.has(id)) ctx.warn('kept', `kept item "${id}" is not in this zine`);
+    else if (ctx.itemIds.has(id)) ctx.warn('kept', `kept item "${id}" shares an id with the text; not restored`);
+    else return true;
+    return false;
+  });
+  // In the zine's own order, each goes straight after the nearest earlier item that is on the page, so z-order holds.
+  wanted.sort((a, b) => where.get(a)[0] - where.get(b)[0] || where.get(a)[1] - where.get(b)[1]);
+  for (const id of wanted) {
+    const [p, i] = where.get(id);
+    const before = from.pages[p].items;
+    const item = structuredClone(before[i]);
+    const asset = typeof item.asset === 'string' ? from.assets?.[item.asset] : undefined;
+    if (asset && !Object.hasOwn(ctx.dog.assets, item.asset)) ctx.dog.assets[item.asset] = structuredClone(asset);
+    const items = ctx.dog.pages[p].items;
+    let at = 0;
+    for (let j = i - 1; j >= 0; j -= 1) {
+      const k = items.findIndex((x) => x.id === before[j]?.id);
+      if (k >= 0) {
+        at = k + 1;
+        break;
+      }
     }
+    items.splice(at, 0, item);
+    ctx.itemIds.add(id);
   }
 }
 
+
 // ---------------------------------------------------------------------------------------------------------------
-// Blocks and attributes
+// Blocks
 
 /**
  * A page's lines as blocks: heading, image, quote, list, paragraph. Each block's trailing `{…}` on its last line is
- * its attribute block. Block text: soft line breaks join with a space, a trailing `\` is a hard break, a blank `>`
- * line in a quote is a paragraph break, and a leading `\` escapes a block marker.
+ * its attribute block. A blank `>` line in a quote is a paragraph break; other text rules are in mustard-syntax.js.
+ * A line that starts like an image but does not parse is reported through problem() and read as text.
  */
-function readBlocks(lines) {
+function readBlocks(lines, problem) {
   const blocks = [];
   let cur = null;
   for (const { text, n } of lines) {
     const line = text.trim();
     let m;
+    const image = line.startsWith('![') ? splitAttrs(line) : null;
+    const parsed = image && parseImage(image.text);
+    if (image && !parsed) problem('this line starts like an image ![alt](name) but does not parse; read as text', n);
     if (line === '') {
       cur = null;
     } else if ((m = /^#{1,6}(?:\s+(.*))?$/.exec(line))) {
       blocks.push({ kind: 'heading', lines: [m[1] ?? ''], line: n });
       cur = null;
-    } else if (isImage(line)) {
-      const { text: body, attrs } = splitAttrs(line);
-      m = /^!\[([^\]]*)\]\(([^)]*)\)$/.exec(body);
-      blocks.push({ kind: 'image', alt: m[1], src: m[2].trim(), attrs, line: n });
+    } else if (parsed) {
+      blocks.push({ kind: 'image', alt: parsed.alt, src: parsed.src, attrs: image.attrs, line: n });
       cur = null;
     } else if ((m = /^>\s?(.*)$/.exec(line))) {
       if (cur?.kind !== 'quote') blocks.push((cur = { kind: 'quote', lines: [], line: n }));
@@ -441,25 +460,11 @@ function readBlocks(lines) {
     const last = splitAttrs(b.lines[b.lines.length - 1]);
     b.lines[b.lines.length - 1] = last.text;
     b.attrs = last.attrs;
-    if (b.kind === 'list') b.items = b.lines.map((l) => unescape(l.trim()));
+    if (b.kind === 'list') b.items = b.lines.map((l) => unescapeLine(l.trim()));
     else if (b.kind === 'quote') b.text = splitOn(b.lines, (l) => l.trim() === '').map(inline).join('\n\n');
     else b.text = inline(b.lines);
   }
   return blocks;
-}
-
-const isImage = (line) => /^!\[([^\]]*)\]\(([^)]*)\)$/.test(splitAttrs(line).text);
-const unescape = (s) => s.replace(/^\\(?=[#>\-*+!:\\\d])/, '');
-
-function inline(lines) {
-  let out = '';
-  lines.forEach((raw, i) => {
-    let s = unescape(raw.trim());
-    const hard = i < lines.length - 1 && s.endsWith('\\');
-    if (hard) s = s.slice(0, -1).trimEnd();
-    out += s + (i < lines.length - 1 ? (hard ? '\n' : ' ') : '');
-  });
-  return out;
 }
 
 function splitOn(list, isBreak) {
@@ -471,278 +476,5 @@ function splitOn(list, isBreak) {
   return groups.filter((g) => g.length);
 }
 
-const emptyAttrs = () => ({ id: undefined, classes: [], kv: {} });
-
-/** A trailing `{…}` that parses as attributes is split off; anything else stays text. */
-function splitAttrs(s) {
-  const m = /\{([^{}]*)\}\s*$/.exec(s);
-  const attrs = m ? parseAttrs(m[1]) : null;
-  return attrs ? { text: s.slice(0, m.index).trimEnd(), attrs } : { text: s, attrs: emptyAttrs() };
-}
-
-const ATTR = /\s*(?:#([^\s{}#.="]+)|\.([^\s{}#.="]+)|([A-Za-z_][\w-]*)=("(?:[^"\\]|\\.)*"|[^\s{}"]*))/y;
-
-/**
- * Pandoc attributes: `#id .class key=value key="quoted value"`. Null when anything else is in there.
- * @returns {Attrs|null}
- */
-function parseAttrs(inner) {
-  const out = emptyAttrs();
-  let pos = 0;
-  while (!/^\s*$/.test(inner.slice(pos))) {
-    ATTR.lastIndex = pos;
-    const m = ATTR.exec(inner);
-    if (!m) return null;
-    pos = ATTR.lastIndex;
-    if (m[1] !== undefined) out.id = m[1];
-    else if (m[2] !== undefined) out.classes.push(m[2]);
-    else out.kv[m[3]] = m[4].startsWith('"') ? unquote(m[4].slice(1, -1)) : m[4];
-  }
-  return out;
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-// Front matter: a YAML subset of `key: value` lines with plain scalars, quoted strings, flow lists and comments.
-
-function readFrontMatter(lines, warn) {
-  const meta = {};
-  if (lines[0]?.trim() !== '---') return { meta, start: 0 };
-  const end = lines.findIndex((l, i) => i > 0 && l.trim() === '---');
-  if (end < 0) {
-    warn('', 'the front matter is not closed with ---', 1);
-    return { meta, start: 0 };
-  }
-  for (let i = 1; i < end; i += 1) {
-    const line = lines[i].trim();
-    if (line === '' || line.startsWith('#')) continue;
-    const m = /^([A-Za-z_][\w-]*)\s*:(?:\s+(.*))?$/.exec(line);
-    const value = m ? yamlValue(m[2] ?? '') : undefined;
-    if (value === undefined) warn('', `front matter line is not "key: value": ${line}`, i + 1);
-    else meta[m[1]] = { value, line: i + 1 };
-  }
-  return { meta, start: end + 1 };
-}
-
-const ESCAPES = { n: '\n', t: '\t', r: '\r', b: '\b', f: '\f', '"': '"', '\\': '\\', '/': '/' };
-const unquote = (s) => s.replace(/\\(u[0-9a-fA-F]{4}|.)/g, (_, c) => (c.length === 5
-  ? String.fromCharCode(parseInt(c.slice(1), 16))
-  : ESCAPES[c] ?? c));
-const commentOrEmpty = (s) => /^\s*(#.*)?$/.test(s);
-
-/** A YAML value, or undefined when it is not one this subset reads. */
-function yamlValue(raw) {
-  const s = raw.trim();
-  if (s.startsWith('[')) return yamlList(s.slice(1).trim());
-  const q = quoted(s);
-  if (q) return commentOrEmpty(q.rest) ? q.value : undefined;
-  return plainScalar(s.replace(/(^|\s+)#.*$/, '').trim());
-}
-
-function quoted(s) {
-  let m = /^"((?:[^"\\]|\\.)*)"/.exec(s);
-  if (m) return { value: unquote(m[1]), rest: s.slice(m[0].length) };
-  m = /^'((?:[^']|'')*)'/.exec(s);
-  if (m) return { value: m[1].replaceAll("''", "'"), rest: s.slice(m[0].length) };
-  return null;
-}
-
-function plainScalar(s) {
-  if (/^-?\d+(\.\d+)?$/.test(s)) return Number(s);
-  if (s === 'true' || s === 'false') return s === 'true';
-  if (s === '' || s === 'null' || s === '~') return null;
-  return s;
-}
-
-function yamlList(rest) {
-  const out = [];
-  if (rest.startsWith(']')) return commentOrEmpty(rest.slice(1)) ? out : undefined;
-  for (;;) {
-    const q = quoted(rest);
-    if (q) {
-      out.push(q.value);
-      rest = q.rest.trim();
-    } else {
-      const m = /^[^,\]]*/.exec(rest);
-      out.push(plainScalar(m[0].trim()));
-      rest = rest.slice(m[0].length);
-    }
-    if (rest.startsWith(',')) rest = rest.slice(1).trim();
-    else if (rest.startsWith(']')) return commentOrEmpty(rest.slice(1)) ? out : undefined;
-    else return undefined;
-  }
-}
-
-/** A scalar written plain when it reads back as the same string, double-quoted otherwise. */
-function yamlScalar(v) {
-  if (typeof v === 'number') return String(v);
-  const s = String(v);
-  const plain = s !== '' && s === s.trim() && plainScalar(s) === s && !/[:#"'[\]{},&*!|>%@`\\]|^[-?]/.test(s);
-  return plain ? s : JSON.stringify(s);
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-// Export
-
-/**
- * A Dog as Mustard. Slot items become markdown, moved items get `{.place}`, every item gets `{#id}`; ink, stickers
- * and shapes cannot be written and are listed (page order) in `kept`. Text styles, crops and rich runs are not kept.
- * @param {object} dog
- * @returns {{text: string, kept: string[]}}
- */
-export function exportMustard(dog) {
-  const kept = [];
-  const pages = (dog.pages ?? []).map((page, p) => exportPage(page, p, dog, kept));
-  const front = ['---'];
-  if (kept.length) front.push(KEPT_NOTE);
-  front.push(`mustard: ${MUSTARD_VERSION}`, `title: ${yamlScalar(dog.title ?? '')}`);
-  if (dog.issue !== undefined) front.push(`issue: ${yamlScalar(dog.issue)}`);
-  front.push(`paper: ${yamlScalar(dog.paper)}`);
-  if (dog.margin_mm !== DEFAULT_MARGIN_MM) front.push(`margin_mm: ${dog.margin_mm}`);
-  front.push(`look: ${yamlScalar(dog.look ?? 'kraft')}`);
-  if (kept.length) front.push(`kept: [${kept.map(yamlScalar).join(', ')}]`);
-  front.push('---');
-  return { text: `${[front.join('\n'), ...pages].join('\n\n')}\n`, kept };
-}
-
-function exportPage(page, p, dog, kept) {
-  const layout = LAYOUT_NAMES.includes(page.layout) ? page.layout : 'freeform';
-  const defs = LAYOUTS[layout].slots;
-  const bySlot = new Map();
-  const free = [];
-  for (const item of page.items ?? []) {
-    if (KEPT_TYPES.includes(item.type)) {
-      kept.push(item.id);
-      continue;
-    }
-    const def = defs.find((d) => d.name === item.slot);
-    if (def && !bySlot.has(def.name) && (def.kind === 'image') === (item.type === 'image')) bySlot.set(def.name, item);
-    else free.push(item);
-  }
-  const ctx = { dog, layout, paper: dog.paper, opts: { margin_mm: dog.margin_mm ?? DEFAULT_MARGIN_MM, page: p + 1 } };
-  const blocks = [];
-  defs.forEach((def, i) => {
-    const item = bySlot.get(def.name);
-    if (!item) return;
-    // Compile fills a kind's slots in layout order, so an empty earlier slot of the same kind needs slot=.
-    const pinned = defs.slice(0, i).some((d) => slotClass(d) === slotClass(def) && !bySlot.has(d.name));
-    blocks.push(slotBlock(item, def, pinned, ctx));
-  });
-  for (const item of free) blocks.push(freeBlock(item, layout !== 'freeform', ctx));
-
-  const head = [
-    page.id !== `p${p + 1}` ? `#${page.id}` : null,
-    `layout=${layout}`,
-    page.bg && page.bg !== 'paper' ? `bg=${attrValue(String(page.bg))}` : null,
-  ].filter(Boolean).join(' ');
-  return [`::: page {${head}}`, ...(blocks.length ? [blocks.join('\n\n')] : []), ':::'].join('\n');
-}
-
-function slotClass(def) {
-  if (def.kind !== 'text') return def.kind;
-  return def.name === 'title' || def.name === 'quote' ? def.name : 'para';
-}
-
-function slotBlock(item, def, pinned, ctx) {
-  const attrs = (slot) => itemAttrs(item, { slot: slot ? def.name : null, place: moved(item, def, ctx) });
-  if (def.kind === 'image') return imageBlock(item, ctx.dog, attrs(pinned));
-  if (def.kind === 'list') {
-    return item.runs?.length ? listBlock(item.runs, attrs(pinned)) : paragraphBlock('', attrs(true));
-  }
-  const text = runsText(item.runs);
-  if (def.name === 'title') {
-    return text.includes('\n') ? paragraphBlock(text, attrs(true)) : `# ${text} ${attrs(false)}`;
-  }
-  if (def.name === 'quote') return quoteBlock(text, attrs(false));
-  return paragraphBlock(text, attrs(pinned));
-}
-
-function freeBlock(item, markFree, ctx) {
-  const attrs = itemAttrs(item, { free: markFree, place: true });
-  if (item.type === 'image') return imageBlock(item, ctx.dog, attrs);
-  const runs = item.runs ?? [];
-  if (runs.length && runs.every((r) => r.text.startsWith(BULLET))) return listBlock(runs, attrs);
-  const text = runsText(runs);
-  if (item.font === 'display' && item.align === 'center') return quoteBlock(text, attrs);
-  if (item.font === 'display' && !text.includes('\n')) return `# ${text} ${attrs}`;
-  return paragraphBlock(text, attrs);
-}
-
-/** Whether an item sits anywhere but where its slot would put it on this page. */
-function moved(item, def, ctx) {
-  const dummy = def.kind === 'image' ? { asset: 'x' } : def.kind === 'list' ? { items: [] } : { text: '' };
-  const [home] = place(ctx.layout, { [def.name]: dummy }, ctx.paper, ctx.opts);
-  return BOX.some((k) => !(Math.abs(item[k] - home[k]) < EPS));
-}
-
-function itemAttrs(item, { slot = null, place: placed = false, free = false }) {
-  const parts = [`#${item.id}`];
-  if (free) parts.push('.free');
-  const geo = placed || (typeof item.rot === 'number' && item.rot !== 0);
-  if (geo) parts.push('.place');
-  const cls = item.attrs?.class;
-  if (typeof cls === 'string' && cls.trim()) parts.push(...cls.trim().split(/\s+/).map((c) => `.${c}`));
-  for (const [k, v] of Object.entries(item.attrs ?? {})) {
-    if (k === 'class' || (k === 'alt' && item.type === 'image') || !KEY.test(k)) continue;
-    parts.push(`${k}=${attrValue(String(v))}`);
-  }
-  if (geo) {
-    parts.push(...BOX.map((k) => `${k}=${num(item[k])}`));
-    if (typeof item.rot === 'number' && item.rot !== 0) parts.push(`rot=${num(item.rot)}`);
-  }
-  if (slot) parts.push(`slot=${slot}`);
-  if (item.by && item.by !== 'import') parts.push(`by=${item.by}`);
-  if (item.locked === true) parts.push('locked=true');
-  if (item.type === 'image' && Array.isArray(item.focus) && (item.focus[0] !== 0.5 || item.focus[1] !== 0.5)) {
-    parts.push(`focus=${item.focus.map(num).join(',')}`);
-  }
-  return `{${parts.join(' ')}}`;
-}
-
-function imageBlock(item, dog, attrs) {
-  const asset = dog.assets?.[item.asset];
-  let name = item.asset ?? '';
-  if (typeof asset?.name === 'string' && asset.name !== '') name = asset.name;
-  else if (asset?.file_id != null) name = `file:${asset.file_id}`;
-  const alt = typeof item.attrs?.alt === 'string' ? item.attrs.alt : '';
-  return `![${alt}](${name})${attrs}`;
-}
-
-function listBlock(runs, attrs) {
-  const lines = runs.map((r) => `- ${r.text.replace(new RegExp(`^${BULLET}\\s?`), '').replace(/\s*\n\s*/g, ' ')}`);
-  lines[lines.length - 1] += ` ${attrs}`;
-  return lines.join('\n');
-}
-
-function quoteBlock(text, attrs) {
-  return withAttrs(textLines(text), attrs).map((l) => `> ${l}`).join('\n');
-}
-
-function paragraphBlock(text, attrs) {
-  return withAttrs(textLines(text), attrs).join('\n');
-}
-
-function withAttrs(lines, attrs) {
-  const out = [...lines];
-  out[out.length - 1] = out[out.length - 1] === '' ? attrs : `${out[out.length - 1]} ${attrs}`;
-  return out;
-}
-
-/** Text as markdown lines: each newline a hard break (trailing `\`), block markers escaped. */
-function textLines(text) {
-  const lines = text.split('\n');
-  return lines.map((l, i) => {
-    const s = l.trim();
-    const escaped = /^(#{1,6}(\s|$)|>|[-*+]\s|\d+[.)]\s|!\[|:::|\\)/.test(s) ? `\\${s}` : s;
-    return i < lines.length - 1 ? `${escaped}\\` : escaped;
-  });
-}
-
-const runsText = (runs) => (runs ?? []).map((r) => r.text).join('');
-const attrValue = (v) => (/^[^\s{}"]+$/.test(v) ? v : JSON.stringify(v));
-/** Six decimals: well inside the 1e-6 a round trip keeps; tiny non-zero values keep full precision. */
-function num(n) {
-  const r = Number(n.toFixed(6));
-  return String(r !== 0 || n === 0 ? r : n);
-}
 /** Characters as code points, the Dog's own measure. */
 const codePoints = (s) => { let n = 0; for (const _ of s) n += 1; return n; };
