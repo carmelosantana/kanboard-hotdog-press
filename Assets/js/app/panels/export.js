@@ -58,6 +58,8 @@ export function createExportPanel(app) {
   }
 
   async function savePdf() {
+    // The server names the file from its copy of the zine: bring that copy up to date first.
+    await app.autosave?.saved();
     const file = await makePdf();
     const body = new FormData();
     body.append('csrf_token', config.csrf_token);

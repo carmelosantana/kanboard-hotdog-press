@@ -179,6 +179,11 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
     get dirty() { return dirty; },
     flush,
 
+    /** Saves now and waits until the server has this tab's zine (a few tries; a failure or conflict ends it). */
+    async saved() {
+      for (let i = 0; i < 3 && !stopped && !conflict && (inFlight || dirty); i++) await flush();
+    },
+
     /** The tab is hidden or going away: send unsaved edits with a beacon, once per copy. */
     pagehide() {
       // In flight counts as unsaved: a fetch is cancelled when the page unloads, and a closed tab keeps no buffer.

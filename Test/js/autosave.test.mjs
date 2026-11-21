@@ -237,6 +237,16 @@ test('a tab closed while a save is in flight beacons that copy (the request may 
   assert.equal(t.beacons.length, 1, 'nothing once acknowledged');
 });
 
+test('saved() sends what is unsaved now, waits for the request in flight and the one after it', async () => {
+  const t = setup();
+  t.store.update((d) => titled(d, 'b'));
+  await t.autosave.saved();
+  assert.deepEqual(t.server.requests.map((r) => JSON.parse(r.document).title), ['b'], 'no 2 s wait');
+  assert.equal(t.states.at(-1), 'saved');
+  await t.autosave.saved();
+  assert.equal(t.server.requests.length, 1, 'nothing to send');
+});
+
 test('discard drops the buffer and stops saving (before a reload)', async () => {
   const t = setup();
   t.store.update((d) => titled(d, 'b'));
