@@ -59,9 +59,10 @@ function parse(text) {
 /**
  * @param {{store: any, config: {zine_id: number, revision: number, csrf_token: string,
  *   routes: {save: string, load: string}}, env: Env, onState?: (s: SaveState) => void,
- *   onConflict?: (c: {revision: number}) => void}} opts
+ *   onConflict?: (c: {revision: number}) => void, dirty?: boolean}} opts  `dirty`: the zine came from the buffer
+ *   (recoverBuffer), so it is saved without waiting for an edit
  */
-export function createAutosave({ store, config, env, onState = () => {}, onConflict = () => {} }) {
+export function createAutosave({ store, config, env, onState = () => {}, onConflict = () => {}, dirty: recovered = false }) {
   const key = bufferKey(config.zine_id);
   let dirty = false;
   let conflict = false;
@@ -100,6 +101,7 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
     if (!conflict) schedule(AUTOSAVE_DELAY_MS);
   };
   store.on('change', onChange);
+  if (recovered) onChange();
 
   /** The server copy, when it is exactly `text` (so a 409 is our own earlier save); else null. */
   async function sameOnServer(text) {

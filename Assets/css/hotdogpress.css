@@ -443,3 +443,71 @@
     align-items: start;
   }
 }
+
+/* ------------------------------------------------------------------ saving, export and the conflict prompt */
+
+.hdp-saving {
+  min-height: 1.2em;
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+.hdp-save-state[data-state="error"],
+.hdp-save-state[data-state="conflict"] {
+  color: var(--hdp-ketchup);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.hdp-export summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.hdp-export-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 2rem;
+  margin-top: 0.4rem;
+}
+
+.hdp-export-group h4 {
+  margin: 0 0 0.3rem;
+}
+
+.hdp-wrap {
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+
+.hdp-print-note {
+  margin: 0.4rem 0 0;
+  font-size: 0.85em;
+}
+
+.hdp-export-ready {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hdp-export-ready[hidden] {
+  display: none;
+}
+
+.hdp-dialog {
+  max-width: min(28rem, calc(100vw - 2rem));
+  border: 1px solid rgba(127, 127, 127, 0.5);
+  border-radius: 0.5rem;
+}
+
+.hdp-dialog::backdrop {
+  background: rgba(27, 26, 23, 0.5);
+}
+
+.hdp-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

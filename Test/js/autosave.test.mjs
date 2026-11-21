@@ -65,7 +65,7 @@ function fakeFetch(reply) {
   return { fetch, requests };
 }
 
-function setup({ reply, revision = 3 } = {}) {
+function setup({ reply, revision = 3, dirty } = {}) {
   const store = createStore(newDog({ title: 'a' }));
   const config = { zine_id: 7, revision, csrf_token: 'tok', routes: { save: '/save', load: '/load' } };
   const storage = memoryStorage();
@@ -87,6 +87,7 @@ function setup({ reply, revision = 3 } = {}) {
     },
     onState: (s) => states.push(s),
     onConflict: (c) => conflicts.push(c),
+    dirty,
   });
   return { store, config, storage, timers, server, beacons, states, conflicts, autosave };
 }
@@ -213,6 +214,14 @@ test('a storage that throws (private mode, full) does not stop saving', async ()
   t.store.update((d) => titled(d, 'b'));
   await t.timers.advance(AUTOSAVE_DELAY_MS);
   assert.equal(t.states.at(-1), 'saved');
+});
+
+test('a zine recovered from the buffer (dirty) is saved without waiting for an edit', async () => {
+  const t = setup({ dirty: true });
+  assert.equal(buffered(t.storage).doc.title, 'a', 'buffered again until the server has it');
+  await t.timers.advance(AUTOSAVE_DELAY_MS);
+  assert.deepEqual(t.server.requests.map((r) => [r.revision, JSON.parse(r.document).title]), [['3', 'a']]);
+  assert.equal(t.storage.getItem(bufferKey(7)), null);
 });
 
 test('recoverBuffer: none, already saved, unsaved, unreadable', () => {

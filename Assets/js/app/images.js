@@ -12,6 +12,8 @@ export function createImages(config, onReady) {
   const ready = {};
   /** asset id → the source key being loaded or loaded, so a changed asset reloads. */
   const keys = new Map();
+  /** Loads not finished yet. */
+  const pending = new Set();
 
   async function load(id, asset, key) {
     try {
@@ -45,8 +47,15 @@ export function createImages(config, onReady) {
         if (!key || keys.get(id) === key) continue;
         keys.set(id, key);
         delete ready[id];
-        load(id, asset, key);
+        const job = load(id, asset, key).finally(() => pending.delete(job));
+        pending.add(job);
       }
+    },
+
+    /** Starts loading the Dog's assets and resolves when every load has finished (loaded or failed): exports wait. */
+    async settled(doc) {
+      this.sync(doc);
+      while (pending.size) await Promise.all([...pending]);
     },
 
     /** An image decoded here already (a photo just uploaded), so it is not fetched again. */

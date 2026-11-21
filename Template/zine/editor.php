@@ -10,7 +10,7 @@ $main = 'plugins/HotDogPress/Assets/js/app/main.js';
         <li><?= $this->url->icon('download', t('Download .hotdog'), 'ZineController', 'export', ['plugin' => 'HotDogPress', 'zine_id' => $zine['id']]) ?></li>
     </ul>
 </div>
-<div id="hotdogpress-app" class="hotdogpress hotdogpress-editor">
+<div id="hotdogpress-app" class="hotdogpress hotdogpress-editor" data-error="<?= t('The editor could not start. Reload the page to try again.') ?>">
     <p class="hotdogpress-loading"><?= t('Loading the editor…') ?></p>
 </div>
 <script type="application/json" id="hotdogpress-config"><?= json_encode($config, \Kanboard\Plugin\HotDogPress\Controller\EditorConfig::FLAGS) ?></script>

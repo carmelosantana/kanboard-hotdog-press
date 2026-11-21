@@ -16,6 +16,8 @@ import { createSettings } from './panels/settings.js';
 import { createProps } from './panels/props.js';
 import { createStrip } from './panels/strip.js';
 import { createMustardPanel } from './panels/mustard.js';
+import { createExportPanel } from './panels/export.js';
+import { startSaving } from './saving.js';
 import { selectTool } from './tools/select.js';
 import { textTool } from './tools/text.js';
 import { shapeTool } from './tools/shape.js';
@@ -28,8 +30,9 @@ const FONT_PROBES = ['20px "Anton"', '20px "Courier Prime"', '20px "Atkinson Hyp
  * @param {HTMLElement} root
  * @param {import('./config.js').EditorConfig} config
  * @param {any} dog the loaded Dog
+ * @param {{dirty?: boolean}} [opts] `dirty`: the Dog came from this tab's unsaved buffer
  */
-export function mountEditor(root, config, dog) {
+export function mountEditor(root, config, dog, { dirty = false } = {}) {
   const strings = config.strings;
   const store = createStore(dog);
   let frame = 0;
@@ -41,6 +44,8 @@ export function mountEditor(root, config, dog) {
     fill,
     ui: { view: 'pages', tool: 'select', shapeKind: 'rect', inkColor: 'toner', safeArea: false, mustard: false },
     images: /** @type {any} */ (null),
+    /** The autosave client (members only), set once mounted. */
+    autosave: /** @type {any} */ (null),
     tool: () => CANVAS_TOOLS[app.ui.tool] ?? selectTool,
     render() {
       if (!frame) frame = requestAnimationFrame(draw);
@@ -79,6 +84,7 @@ export function mountEditor(root, config, dog) {
   const toolbar = createToolbar(app);
   const props = createProps(app);
   const settings = createSettings(app);
+  const exportPanel = createExportPanel(app);
   const pages = createPagesView(app);
   const views = { pages, sheet: createSheetView(app), booklet: createBookletView(app) };
   const mustard = createMustardPanel(app);
@@ -95,8 +101,10 @@ export function mountEditor(root, config, dog) {
     },
   }));
 
+  const saving = app.canEdit ? startSaving(app, { dirty }) : null;
+  app.autosave = saving?.autosave ?? null;
   root.replaceChildren(...[
-    toolbar.el, props.el, settings.el,
+    toolbar.el, saving?.el ?? null, props.el, settings.el, exportPanel.el,
     app.canEdit ? null : h('p', { class: 'hdp-read-only' }, strings.read_only),
     main, strip.el, statusLine, fileInput,
   ].filter((n) => n !== null));
@@ -129,6 +137,7 @@ export function mountEditor(root, config, dog) {
     toolbar.sync();
     props.sync();
     settings.sync();
+    exportPanel.sync();
     strip.sync();
     root.dataset.tool = app.ui.tool;
     root.dataset.view = app.ui.view;

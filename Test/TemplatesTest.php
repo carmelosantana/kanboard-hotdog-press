@@ -178,6 +178,7 @@ class TemplatesTest extends Base
         $html = $this->editorPage($id);
 
         $this->assertStringContainsString('<div id="hotdogpress-app"', $html);
+        $this->assertStringContainsString('data-error="The editor could not start. Reload the page to try again."', $html, 'the boot error is translated in the page');
         $this->assertMatchesRegularExpression('#<script type="module" src="/'.preg_quote(self::MAIN, '#').'\?\d+"></script>#', $html);
         $this->assertStringContainsString(self::CSS, $html);
         $this->assertCspSafe($html);
@@ -202,6 +203,7 @@ class TemplatesTest extends Base
         $this->assertSame(array_keys(EditorConfig::strings()), array_keys($config['strings']));
         $this->assertSame('Print at Actual size (100%), on %s, one side.', $config['strings']['print_note']);
         $this->assertSame('Couldn’t save. Retrying…', $config['strings']['save_failed']);
+        $this->assertSame('Made to order. Fold your own.', $config['strings']['story_caption']);
     }
 
     // Kills: can_edit true for a viewer (the app would offer tools that the server refuses).

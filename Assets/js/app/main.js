@@ -3,11 +3,12 @@
 import { readConfig } from './config.js';
 import { validateDog } from '../core/dog.js';
 import { mountEditor } from './editor.js';
-
-/** Shown only when the config itself cannot be read (so there are no translated strings). */
-const NO_CONFIG = 'The editor could not start. Reload the page to try again.';
+import { recoverBuffer } from './autosave.js';
+import { sessionStore } from './saving.js';
 
 const root = document.getElementById('hotdogpress-app');
+/** Shown when the config itself cannot be read: the template's translated line (English if even that is missing). */
+const NO_CONFIG = root?.dataset.error || 'The editor could not start. Reload the page to try again.';
 const block = document.getElementById('hotdogpress-config');
 
 /** The mounted editor (its store and UI state), for later tasks and tests; null until loaded. */
@@ -30,9 +31,12 @@ async function boot(root, text) {
     const body = await res.json();
     const checked = validateDog(body.document);
     if (!checked.ok) throw new Error(`load: ${JSON.stringify(checked.errors.slice(0, 3))}`);
-    config.revision = body.revision ?? config.revision;
     config.can_edit = body.can_edit === true && config.can_edit === true;
-    editor = mountEditor(root, config, checked.dog);
+    const loaded = { doc: checked.dog, revision: body.revision ?? config.revision };
+    // A member's tab may hold edits the server never acknowledged (a reload mid-edit): those win.
+    const { doc, revision, dirty } = config.can_edit ? recoverBuffer(sessionStore(), config.zine_id, loaded) : { ...loaded, dirty: false };
+    config.revision = revision;
+    editor = mountEditor(root, config, doc, { dirty });
     return true;
   } catch (err) {
     console.error('Hot Dog Press:', err);
