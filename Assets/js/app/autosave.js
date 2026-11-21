@@ -2,7 +2,9 @@
 // after the last one, with the revision it was based on. The buffer goes when the server acknowledges. On pagehide
 // unsaved edits go out with sendBeacon (the buffer stays: a beacon is never acknowledged, and one over the browser's
 // beacon size limit is dropped). A 409 opens the conflict prompt, unless the server copy is exactly what was sent
-// (a beacon landed first). The browser APIs come in through `env`, so this runs under Node for the tests.
+// (a beacon landed first). An error a retry cannot fix (TERMINAL_STATUS, a redirect, an answer that is not JSON)
+// stops saving: the buffer keeps every edit for a reload. The browser APIs come in through `env`, so this runs under
+// Node for the tests.
 import { validateDog } from '../core/dog.js';
 
 /** Debounce after the last edit. */
@@ -10,6 +12,12 @@ export const AUTOSAVE_DELAY_MS = 2000;
 /** First retry after a failed save; it doubles up to RETRY_MAX_MS. */
 export const RETRY_MS = 5000;
 export const RETRY_MAX_MS = 60000;
+/**
+ * Answers a retry cannot fix: the session ended (401, 403: a new session has a new CSRF token), the zine is too
+ * large (413) or not valid (422). A redirect (the login page; fetch does not follow it) and any answer under 500
+ * that is not JSON count the same. Server errors (5xx) and network failures are retried.
+ */
+export const TERMINAL_STATUS = Object.freeze([401, 403, 413, 422]);
 
 /** @param {number} zineId */
 export const bufferKey = (zineId) => `hotdogpress:zine:${zineId}`;
@@ -18,7 +26,7 @@ export const bufferKey = (zineId) => `hotdogpress:zine:${zineId}`;
  * @typedef {{getItem(k: string): string|null, setItem(k: string, v: string): void, removeItem(k: string): void}} Storage
  * @typedef {{fetch: typeof fetch, storage: Storage, sendBeacon: (url: string, body: FormData) => boolean,
  *   setTimeout: typeof setTimeout, clearTimeout: typeof clearTimeout}} Env
- * @typedef {'dirty'|'saving'|'saved'|'error'|'conflict'} SaveState
+ * @typedef {'dirty'|'saving'|'saved'|'error'|'conflict'|'stopped'} SaveState
  */
 
 /**
@@ -67,6 +75,8 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
   let dirty = false;
   let conflict = false;
   let stopped = false;
+  /** A terminal error: edits are still buffered, nothing is sent. */
+  let ended = false;
   /** @type {Promise<void>|null} */
   let inFlight = null;
   let timer = null;
@@ -99,6 +109,7 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
     if (stopped) return;
     dirty = true;
     writeBuffer();
+    if (ended) return onState('stopped');
     onState(conflict ? 'conflict' : 'dirty');
     if (!conflict) schedule(AUTOSAVE_DELAY_MS);
   };
@@ -108,7 +119,9 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
   /** The server's copy as {revision, text}, or null when it cannot be read. */
   async function serverCopy() {
     try {
-      const res = await env.fetch(config.routes.load, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+      const res = await env.fetch(config.routes.load, {
+        credentials: 'same-origin', redirect: 'manual', headers: { Accept: 'application/json' },
+      });
       const body = res.ok ? await res.json() : null;
       return body && Number.isInteger(body.revision) ? { revision: body.revision, text: JSON.stringify(body.document) } : null;
     } catch {
@@ -135,9 +148,14 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
     dirty = false;
     onState('saving');
     try {
-      const res = await env.fetch(config.routes.save, { method: 'POST', body: form(text), credentials: 'same-origin' });
-      const body = await res.json().catch(() => null);
+      const res = await env.fetch(config.routes.save, {
+        method: 'POST', body: form(text), credentials: 'same-origin', redirect: 'manual',
+      });
+      const body = await res.json().catch(() => undefined);
       if (res.ok && body?.ok === true && Number.isInteger(body.revision)) return acknowledged(body.revision);
+      if (res.type === 'opaqueredirect' || TERMINAL_STATUS.includes(res.status) || (body === undefined && res.status < 500)) {
+        return end();
+      }
       if (res.status === 409 && Number.isInteger(body?.revision)) {
         // Not a conflict when the newer server copy is this tab's own: this very text (an earlier request landed),
         // or the copy it beaconed when the tab was hidden (then this one goes again on top of it).
@@ -165,9 +183,17 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
     }
   }
 
+  function end() {
+    ended = true;
+    dirty = true;
+    env.clearTimeout(timer);
+    writeBuffer();
+    onState('stopped');
+  }
+
   /** Saves now if anything is unsaved; one request at a time, the next one follows the first. */
   async function flush() {
-    if (stopped || conflict) return;
+    if (stopped || conflict || ended) return;
     if (inFlight) return inFlight;
     if (!dirty) return;
     env.clearTimeout(timer);
@@ -181,13 +207,13 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
 
     /** Saves now and waits until the server has this tab's zine (a few tries; a failure or conflict ends it). */
     async saved() {
-      for (let i = 0; i < 3 && !stopped && !conflict && (inFlight || dirty); i++) await flush();
+      for (let i = 0; i < 3 && !stopped && !conflict && !ended && (inFlight || dirty); i++) await flush();
     },
 
     /** The tab is hidden or going away: send unsaved edits with a beacon, once per copy. */
     pagehide() {
       // In flight counts as unsaved: a fetch is cancelled when the page unloads, and a closed tab keeps no buffer.
-      if (stopped || conflict || (!dirty && !inFlight)) return;
+      if (stopped || conflict || ended || (!dirty && !inFlight)) return;
       const text = JSON.stringify(store.doc);
       if (text === beaconed) return;
       writeBuffer();

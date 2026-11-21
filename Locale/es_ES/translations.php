@@ -110,6 +110,7 @@ return [
     'Saved' => 'Guardado',
     'Fresh' => 'Recién hecho',
     'Couldn’t save. Retrying…' => 'No se pudo guardar. Reintentando…',
+    'Saving stopped. Reload to keep saving; your edits are kept in this tab.' => 'Se dejó de guardar. Recarga para seguir guardando; tus cambios se conservan en esta pestaña.',
     'Someone else changed this zine' => 'Otra persona ha cambiado este fanzine',
     'Reload to see their changes, or keep yours and save over them.' => 'Recarga para ver sus cambios, o quédate con los tuyos y guárdalos encima.',
     'Reload' => 'Recargar',

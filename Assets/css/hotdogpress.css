@@ -456,7 +456,8 @@
 }
 
 .hdp-save-state[data-state="error"],
-.hdp-save-state[data-state="conflict"] {
+.hdp-save-state[data-state="conflict"],
+.hdp-save-state[data-state="stopped"] {
   color: var(--hdp-ketchup);
   font-weight: 600;
   opacity: 1;

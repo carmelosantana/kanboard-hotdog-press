@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  AUTOSAVE_DELAY_MS, RETRY_MS, bufferKey, createAutosave, recoverBuffer,
+  AUTOSAVE_DELAY_MS, RETRY_MS, RETRY_MAX_MS, TERMINAL_STATUS, bufferKey, createAutosave, recoverBuffer,
 } from '../../Assets/js/app/autosave.js';
 import { createStore } from '../../Assets/js/app/store.js';
 import { newDog } from '../../Assets/js/core/dog.js';
@@ -55,6 +55,7 @@ function fakeFetch(reply) {
     const req = {
       url,
       method: init.method ?? 'GET',
+      redirect: init.redirect,
       csrf: form?.get?.('csrf_token'),
       revision: form?.get?.('revision'),
       document: form?.get?.('document'),
@@ -298,4 +299,103 @@ test('recoverBuffer: none, already saved, unsaved, unreadable', () => {
     assert.equal(storage.getItem(bufferKey(7)), null, `dropped: ${bad}`);
   }
   assert.deepEqual(recoverBuffer({ getItem: () => { throw new Error('denied'); } }, 7, loaded), { ...loaded, dirty: false });
+});
+
+// Errors a retry cannot fix: the session ended (401, 403, or a redirect to the login page), the zine is too large
+// (413) or not valid (422), or the answer is not JSON. Saving stops, the buffer stays for a reload, and the line
+// says so; nothing is retried.
+const TERMINAL = {
+  401: () => json(401, { error: 'unauthorized' }),
+  403: () => json(403, { error: 'forbidden' }),
+  413: () => json(413, { error: 'too_large' }),
+  422: () => json(422, { error: 'invalid', errors: [] }),
+  'a redirect (manual)': () => ({ ok: false, status: 0, type: 'opaqueredirect', json: async () => { throw new SyntaxError('opaque'); } }),
+  'a login page (200, not JSON)': () => ({ ok: true, status: 200, json: async () => { throw new SyntaxError('Unexpected token <'); } }),
+};
+test('the terminal statuses', () => assert.deepEqual(TERMINAL_STATUS, [401, 403, 413, 422]));
+for (const [name, reply] of Object.entries(TERMINAL)) {
+  test(`${name} stops saving, keeps the buffer and is not retried`, async () => {
+    const t = setup({ reply });
+    t.store.update((d) => titled(d, 'b'));
+    await t.timers.advance(AUTOSAVE_DELAY_MS);
+    assert.equal(t.states.at(-1), 'stopped');
+    assert.equal(buffered(t.storage).doc.title, 'b', 'the edit stays in this tab');
+    await t.timers.advance(RETRY_MAX_MS * 4);
+    assert.equal(t.server.requests.length, 1, 'no retry');
+    t.store.update((d) => titled(d, 'c'));
+    assert.equal(buffered(t.storage).doc.title, 'c', 'later edits are buffered too');
+    assert.equal(t.states.at(-1), 'stopped');
+    await t.timers.advance(AUTOSAVE_DELAY_MS * 3);
+    await t.autosave.saved();
+    t.autosave.pagehide();
+    assert.equal(t.server.requests.length, 1, 'nothing more is sent');
+    assert.equal(t.beacons.length, 0, 'no beacon either: it would fail the same way');
+  });
+}
+
+test('saves and the conflict check never follow a redirect (a login page would look like a 200)', async () => {
+  const t = setup({
+    reply: (req) => (req.method === 'GET' ? json(200, { revision: 9, document: newDog() }) : json(409, { error: 'conflict', revision: 9 })),
+  });
+  t.store.update((d) => titled(d, 'b'));
+  await t.timers.advance(AUTOSAVE_DELAY_MS);
+  assert.deepEqual(t.server.requests.map((r) => [r.method, r.redirect]), [['POST', 'manual'], ['GET', 'manual']]);
+});
+
+test('a server error (5xx) is retried with backoff', async () => {
+  let fail = true;
+  let rev = 3;
+  const t = setup({ reply: () => (fail ? { ok: false, status: 502, json: async () => { throw new SyntaxError('<html>'); } } : json(200, { ok: true, revision: ++rev })) });
+  t.store.update((d) => titled(d, 'b'));
+  await t.timers.advance(AUTOSAVE_DELAY_MS);
+  assert.equal(t.states.at(-1), 'error');
+  await t.timers.advance(RETRY_MS);
+  assert.equal(t.server.requests.length, 2, 'retried after RETRY_MS');
+  await t.timers.advance(RETRY_MS * 2);
+  assert.equal(t.server.requests.length, 3, 'then after twice as long');
+  fail = false;
+  await t.timers.advance(RETRY_MS * 4);
+  assert.equal(t.states.at(-1), 'saved');
+});
+
+test('saved() waits for the request in flight, then sends the edit made meanwhile', async () => {
+  const releases = [];
+  let rev = 3;
+  const t = setup({ reply: () => new Promise((r) => { releases.push(() => r(json(200, { ok: true, revision: ++rev }))); }) });
+  t.store.update((d) => titled(d, 'b'));
+  await t.timers.advance(AUTOSAVE_DELAY_MS);
+  t.store.update((d) => titled(d, 'c'));
+  let done = false;
+  const waiting = t.autosave.saved().then(() => { done = true; });
+  await settle();
+  releases.shift()();
+  await settle();
+  assert.equal(done, false, 'the edit made meanwhile is not on the server yet');
+  assert.equal(t.server.requests.length, 2);
+  releases.shift()();
+  await waiting;
+  assert.deepEqual(t.server.requests.map((r) => JSON.parse(r.document).title), ['b', 'c']);
+  assert.equal(t.autosave.dirty, false);
+});
+
+test('saved() ends at a conflict without saving over it', async () => {
+  const t = setup({
+    reply: (req) => (req.method === 'GET'
+      ? json(200, { revision: 9, document: titled(newDog(), 'theirs') })
+      : json(409, { error: 'conflict', revision: 9 })),
+  });
+  t.store.update((d) => titled(d, 'mine'));
+  await t.autosave.saved();
+  assert.equal(t.states.at(-1), 'conflict');
+  assert.equal(t.autosave.dirty, true);
+  assert.equal(t.server.requests.filter((r) => r.method === 'POST').length, 1);
+});
+
+test('saved() gives up after three tries when the save keeps failing', async () => {
+  const t = setup({ reply: () => Promise.reject(new TypeError('offline')) });
+  t.store.update((d) => titled(d, 'b'));
+  await t.autosave.saved();
+  assert.equal(t.server.requests.length, 3);
+  assert.equal(t.autosave.dirty, true, 'still unsaved: the caller can tell');
+  assert.equal(t.states.at(-1), 'error');
 });

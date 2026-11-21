@@ -34,7 +34,8 @@ export function startSaving(app, { dirty = false } = {}) {
   // Escape would leave the editor unsaved with no way back to the choice; the prompt stays until one is picked.
   dialog.addEventListener('cancel', (e) => e.preventDefault());
 
-  const text = { dirty: strings.saving, saving: strings.saving, saved: strings.saved, error: strings.save_failed, conflict: strings.conflict_title };
+  const text = { dirty: strings.saving, saving: strings.saving, saved: strings.saved, error: strings.save_failed, conflict: strings.conflict_title,
+    stopped: strings.save_stopped };
   const autosave = createAutosave({
     store: app.store,
     config: app.config,

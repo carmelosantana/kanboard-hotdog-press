@@ -140,6 +140,7 @@ class EditorConfig extends Base
             'saved' => e('Saved'),
             'saved_flavour' => e('Fresh'),
             'save_failed' => e('Couldn’t save. Retrying…'),
+            'save_stopped' => e('Saving stopped. Reload to keep saving; your edits are kept in this tab.'),
             'conflict_title' => e('Someone else changed this zine'),
             'conflict_body' => e('Reload to see their changes, or keep yours and save over them.'),
             'conflict_reload' => e('Reload'),
