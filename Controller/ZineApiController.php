@@ -4,6 +4,7 @@ namespace Kanboard\Plugin\HotDogPress\Controller;
 use Kanboard\Controller\BaseController;
 use Kanboard\Plugin\HotDogPress\Model\ZineImages;
 use Kanboard\Plugin\HotDogPress\Model\ZineModel;
+use Kanboard\Plugin\HotDogPress\Model\ZinePdf;
 use Kanboard\Plugin\HotDogPress\Model\ZineRejected;
 
 /**
@@ -13,6 +14,7 @@ use Kanboard\Plugin\HotDogPress\Model\ZineRejected;
  *   POST save                form: revision, document (Dog JSON text), csrf_token    (member)
  *                            → {ok: true, revision} | 409 {error: "conflict", revision}
  *   POST upload              multipart: image, csrf_token → {ok: true, file_id, mime, w, h}   (member)
+ *   POST pdf                 multipart: pdf, csrf_token → {ok: true, file_id, name}   (member)
  *   GET  image/:file_id      the project file's bytes, images only                    (viewer)
  *
  * Writes take the reusable CSRF token (the editor saves many times, and sendBeacon on pagehide). Errors are JSON:
@@ -75,22 +77,30 @@ class ZineApiController extends BaseController
         $this->json(function () {
             $this->checkReusableCSRFParam();
             $zine = $this->zineFor('upload');
-            $file = $this->request->getFileInfo('image');
-            $error = $file['error'] ?? null;
-            if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
-                throw new ZineRejected('too_large', 'An image must be at most 10 MB.');
-            }
-            if ($error !== UPLOAD_ERR_OK || ! is_file($file['tmp_name'] ?? '')) {
-                throw new ZineRejected('bad_request', 'Choose an image to upload.');
-            }
-            if (filesize($file['tmp_name']) > ZineImages::MAX_BYTES) {
-                throw new ZineRejected('too_large', 'An image must be at most 10 MB.');
-            }
+            $bytes = $this->uploaded('image', ZineImages::MAX_BYTES,
+                new ZineRejected('too_large', 'An image must be at most 10 MB.'),
+                new ZineRejected('bad_request', 'Choose an image to upload.'));
             $stored = (new ZineImages($this->container))->store(
                 (int) $zine['project_id'],
-                (string) file_get_contents($file['tmp_name']),
+                $bytes,
                 'hotdogpress-'.$zine['id'].'-'.ZineModel::randomId(8),
             );
+            $this->response->json(['ok' => true] + $stored);
+        });
+    }
+
+    public function pdf(): void
+    {
+        $this->json(function () {
+            $this->checkReusableCSRFParam();
+            $zine = $this->zineFor('pdf');
+            $bytes = $this->uploaded('pdf', ZinePdf::MAX_BYTES,
+                new ZineRejected('too_large', 'A PDF must be at most 10 MB.'),
+                new ZineRejected('bad_request', 'No PDF was sent.'));
+            $paper = json_decode((string) $zine['document'], true)['paper'] ?? null;
+            $name = 'hotdogpress-'.$zine['id'].'-'.ZineController::slug((string) $zine['title'])
+                .(in_array($paper, ['a4', 'letter'], true) ? '-'.$paper : '').'.pdf';
+            $stored = (new ZinePdf($this->container))->store((int) $zine['project_id'], $bytes, $name);
             $this->response->json(['ok' => true] + $stored);
         });
     }
@@ -115,6 +125,27 @@ class ZineApiController extends BaseController
                 ->withBody($image['bytes'])
                 ->send();
         });
+    }
+
+    /**
+     * The bytes of the uploaded file in form field $field.
+     *
+     * @throws ZineRejected $tooLarge (over $max, or over PHP's own upload limit) or $missing (nothing sent)
+     */
+    private function uploaded(string $field, int $max, ZineRejected $tooLarge, ZineRejected $missing): string
+    {
+        $file = $this->request->getFileInfo($field);
+        $error = $file['error'] ?? null;
+        if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
+            throw $tooLarge;
+        }
+        if ($error !== UPLOAD_ERR_OK || ! is_file($file['tmp_name'] ?? '')) {
+            throw $missing;
+        }
+        if (filesize($file['tmp_name']) > $max) {
+            throw $tooLarge;
+        }
+        return (string) file_get_contents($file['tmp_name']);
     }
 
     /** The name with anything but ASCII letters, digits, dot, dash and underscore replaced; never empty. */

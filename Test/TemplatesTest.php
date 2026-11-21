@@ -190,7 +190,7 @@ class TemplatesTest extends Base
         $this->assertSame('a4', $config['paper']);
         $this->assertSame('en_US', $config['user_lang']);
         $this->assertTrue($this->container['token']->validateReusableCSRFToken($config['csrf_token']));
-        foreach (['load', 'save', 'upload', 'export'] as $action) {
+        foreach (['load', 'save', 'upload', 'pdf', 'export'] as $action) {
             $controller = $action === 'export' ? 'ZineController' : 'ZineApiController';
             $this->assertSame($this->url($controller, $action, ['zine_id' => $id]), $config['routes'][$action], $action);
         }

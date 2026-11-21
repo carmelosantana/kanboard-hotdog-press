@@ -27,6 +27,7 @@ class EditorConfig extends Base
                 'load' => $route('ZineApiController', 'load'),
                 'save' => $route('ZineApiController', 'save'),
                 'upload' => $route('ZineApiController', 'upload'),
+                'pdf' => $route('ZineApiController', 'pdf'),
                 'image' => str_replace('%7Bfile_id%7D', '{file_id}', $route('ZineApiController', 'image', ['file_id' => '{file_id}'])),
                 'export' => $route('ZineController', 'export'),
                 'list' => $this->helper->url->to('ZineController', 'index', ['plugin' => 'HotDogPress', 'project_id' => (int) $zine['project_id']]),

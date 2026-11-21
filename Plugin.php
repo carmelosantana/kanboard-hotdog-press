@@ -22,13 +22,14 @@ class Plugin extends Base
         $this->route->addRoute('hotdogpress/zine/:zine_id/load', 'ZineApiController', 'load', 'HotDogPress');
         $this->route->addRoute('hotdogpress/zine/:zine_id/save', 'ZineApiController', 'save', 'HotDogPress');
         $this->route->addRoute('hotdogpress/zine/:zine_id/upload', 'ZineApiController', 'upload', 'HotDogPress');
+        $this->route->addRoute('hotdogpress/zine/:zine_id/pdf', 'ZineApiController', 'pdf', 'HotDogPress');
         $this->route->addRoute('hotdogpress/zine/:zine_id/image/:file_id', 'ZineApiController', 'image', 'HotDogPress');
         $this->route->addRoute('hotdogpress/mine', 'MyZinesController', 'index', 'HotDogPress');
 
         // Unlisted actions default to project viewer (index, editor, export, load, image).
         $this->projectAccessMap->add('ZineController', ['create', 'rename', 'import'], Role::PROJECT_MEMBER);
         $this->projectAccessMap->add('ZineController', ['confirm', 'remove'], Role::PROJECT_MANAGER);
-        $this->projectAccessMap->add('ZineApiController', ['save', 'upload'], Role::PROJECT_MEMBER);
+        $this->projectAccessMap->add('ZineApiController', ['save', 'upload', 'pdf'], Role::PROJECT_MEMBER);
 
         // "Zines" in the project's gear menu, its view tabs and its settings sidebar; "My zines" on the dashboard.
         // Only the plugin's pages load assets: hotdogpress.css via the controllers (PluginPage), main.js via the editor.

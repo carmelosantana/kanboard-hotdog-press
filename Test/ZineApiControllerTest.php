@@ -6,6 +6,7 @@ use KanboardTests\units\Base;
 use Kanboard\Plugin\HotDogPress\Controller\ZineApiController;
 use Kanboard\Plugin\HotDogPress\Model\DogValidator;
 use Kanboard\Plugin\HotDogPress\Model\ZineImages;
+use Kanboard\Plugin\HotDogPress\Model\ZinePdf;
 
 // The editor's JSON API. Each test names the ZineApiController mutation it kills.
 class ZineApiControllerTest extends Base
@@ -41,6 +42,13 @@ class ZineApiControllerTest extends Base
     {
         return $this->api('upload', [], ['csrf_token' => $this->reusable()], ['image' => $this->upload($bytes, $name)]);
     }
+
+    private function uploadPdf(string $bytes, string $name = 'zine.pdf'): array
+    {
+        return $this->api('pdf', [], ['csrf_token' => $this->reusable()], ['pdf' => $this->upload($bytes, $name)]);
+    }
+
+    private const PDF = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n1 0 obj << >> endobj\ntrailer << >>\n%%EOF\n";
 
     // Kills: re-encoding the stored document (assets {} would come back as []), or a wrong can_edit.
     public function testLoadReturnsTheDocumentVerbatim(): void
@@ -220,5 +228,48 @@ class ZineApiControllerTest extends Base
         $this->assertJsonError($this->api('image', ['file_id' => (string) $theirs]), 404, 'not_found');
         $this->assertJsonError($this->api('image', ['file_id' => (string) $text]), 404, 'not_found');
         $this->assertJsonError($this->api('image', ['file_id' => '999']), 404, 'not_found');
+    }
+
+    // Kills: a PDF stored outside the zine's project, under a client-chosen name, or with its bytes changed.
+    public function testPdfIsStoredAsAProjectFileNamedAfterTheZine(): void
+    {
+        $this->loginAs('member');
+
+        $out = $this->uploadPdf(self::PDF, '../../evil.php');
+
+        $this->assertSame(200, $out['status'], $out['body']);
+        $this->assertTrue($out['json']['ok']);
+        $file = $this->container['projectFileModel']->getById($out['json']['file_id']);
+        $this->assertSame($this->project, (int) $file['project_id']);
+        $this->assertSame(self::PDF, $this->container['objectStorage']->get($file['path']));
+        $this->assertSame('hotdogpress-'.$this->zine.'-first-issue-letter.pdf', $file['name']);
+        $this->assertSame($file['name'], $out['json']['name']);
+    }
+
+    // Kills: storing anything that is not a PDF (the header is sniffed, the name and client type are ignored).
+    public function testNonPdfsAreRejected(): void
+    {
+        $this->loginAs('member');
+        foreach ([self::png(), '<html>%PDF-1.4</html>', '', 'PDF-1.4'] as $bytes) {
+            $this->assertJsonError($this->uploadPdf($bytes), 415, 'unsupported');
+        }
+        $this->assertJsonError($this->api('pdf', [], ['csrf_token' => $this->reusable()]), 400, 'bad_request');
+        $this->assertSame([], $this->container['projectFileModel']->getAll($this->project));
+    }
+
+    // Kills: a missing or off-by-one size cap (the same cap as an image), or a PDF stored by a viewer or without CSRF.
+    public function testPdfCapRoleAndToken(): void
+    {
+        $this->assertSame(ZineImages::MAX_BYTES, ZinePdf::MAX_BYTES);
+        $this->loginAs('member');
+        $big = self::PDF.str_repeat(' ', ZinePdf::MAX_BYTES + 1 - strlen(self::PDF));
+        $this->assertJsonError($this->uploadPdf($big), 413, 'too_large');
+        $this->assertJsonError($this->api('pdf', [], ['csrf_token' => $this->reusable()], ['pdf' => $this->upload('', 'a.pdf', UPLOAD_ERR_INI_SIZE)]), 413, 'too_large');
+        $this->assertJsonError($this->api('pdf', [], ['csrf_token' => 'nope'], ['pdf' => $this->upload(self::PDF)]), 403, 'forbidden');
+        $this->loginAs('viewer');
+        $this->assertJsonError($this->uploadPdf(self::PDF), 403, 'forbidden');
+        $this->assertSame([], $this->container['projectFileModel']->getAll($this->project));
+        $this->loginAs('member');
+        $this->assertSame(200, $this->uploadPdf(substr($big, 0, ZinePdf::MAX_BYTES))['status'], 'exactly the cap is fine');
     }
 }

@@ -40,6 +40,10 @@ return [
     'This is not a .hotdog file.' => 'Esto no es un archivo .hotdog.',
     'The zine is not valid.' => 'El fanzine no es válido.',
     'The image could not be stored, try again.' => 'No se pudo guardar la imagen; inténtalo de nuevo.',
+    'No PDF was sent.' => 'No se ha enviado ningún PDF.',
+    'A PDF must be at most 10 MB.' => 'Un PDF no puede pasar de 10 MB.',
+    'Only a PDF made by the editor can be saved here.' => 'Aquí solo se puede guardar un PDF hecho con el editor.',
+    'The PDF could not be stored, try again.' => 'No se pudo guardar el PDF; inténtalo de nuevo.',
     'A zine must be at most 2 MiB of JSON.' => 'Un fanzine no puede pasar de 2 MiB de JSON.',
     'The zine must be a JSON object.' => 'El fanzine debe ser un objeto JSON.',
 

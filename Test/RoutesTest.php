@@ -19,6 +19,7 @@ class RoutesTest extends Base
         'hotdogpress/zine/3/load' => ['ZineApiController', 'load', ['zine_id' => 3]],
         'hotdogpress/zine/3/save' => ['ZineApiController', 'save', ['zine_id' => 3]],
         'hotdogpress/zine/3/upload' => ['ZineApiController', 'upload', ['zine_id' => 3]],
+        'hotdogpress/zine/3/pdf' => ['ZineApiController', 'pdf', ['zine_id' => 3]],
         'hotdogpress/zine/3/image/12' => ['ZineApiController', 'image', ['zine_id' => 3, 'file_id' => 12]],
         'hotdogpress/mine' => ['MyZinesController', 'index', []],
     ];

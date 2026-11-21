@@ -33,6 +33,7 @@ class PermissionsTest extends Base
         ['ZineController', 'import', 'member'],
         ['ZineApiController', 'save', 'member'],
         ['ZineApiController', 'upload', 'member'],
+        ['ZineApiController', 'pdf', 'member'],
         ['ZineController', 'confirm', 'manager'],
         ['ZineController', 'remove', 'manager'],
     ];
