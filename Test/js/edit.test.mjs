@@ -183,3 +183,13 @@ test('applyLayout keeps a hand photo as a free item when the new layout has no p
   assert.equal(kept.by, 'hand');
   strictOk(dog);
 });
+
+test('applyLayout carries a list slot with a plain line as separate lines, not merged', () => {
+  let dog = applyLayout(newDog(), 0, 'list');
+  const list = dog.pages[0].items.find((i) => i.slot === 'list');
+  dog = updateItem(dog, list.id, { runs: [{ text: '• a' }, { text: 'note' }], by: 'hand' });
+  dog = applyLayout(dog, 0, 'headline-body');
+  const body = dog.pages[0].items.find((i) => i.slot === 'body');
+  assert.equal(body.runs.map((r) => r.text).join(''), 'a\nnote');
+  strictOk(dog);
+});

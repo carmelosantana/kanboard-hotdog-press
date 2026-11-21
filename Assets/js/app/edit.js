@@ -1,7 +1,8 @@
 // Document edits the editor makes, as pure functions: each takes a (frozen) Dog and returns a new one, or the same Dog
 // when nothing changes. Item factories make hand-made items. No DOM.
 import { randomId } from '../core/dog.js';
-import { LAYOUTS, place, BULLET } from '../core/layouts.js';
+import { LAYOUTS, place } from '../core/layouts.js';
+import { textLines } from '../core/runs.js';
 import { clampMargin } from '../core/paper.js';
 
 /** The shared placeholder asset an empty image slot points at until a photo replaces it. */
@@ -151,10 +152,7 @@ function contentOf(it) {
     return { item: it, slot: it.slot, image: true, asset, by: it.by };
   }
   if (it.type !== 'text') return null;
-  const texts = (it.runs ?? []).map((r) => String(r.text ?? ''));
-  const lines = texts.every((t) => t.startsWith(BULLET)) && texts.length
-    ? texts.map((t) => t.slice(BULLET.length).trim())
-    : texts.join('').split('\n');
+  const lines = textLines(it);
   const kept = lines.filter((l, i) => l !== '' || i < lines.length - 1);
   return { item: it, slot: it.slot, image: false, lines: kept, by: it.by };
 }
