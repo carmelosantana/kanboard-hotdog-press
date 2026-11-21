@@ -46,6 +46,8 @@ export function mountEditor(root, config, dog, { dirty = false } = {}) {
     images: /** @type {any} */ (null),
     /** The autosave client (members only), set once mounted. */
     autosave: /** @type {any} */ (null),
+    /** Settles once the bundled fonts are loaded (or failed): exports wait for it, so no file bakes in a fallback face. */
+    fontsReady: /** @type {Promise<void>} */ (Promise.resolve()),
     tool: () => CANVAS_TOOLS[app.ui.tool] ?? selectTool,
     render() {
       if (!frame) frame = requestAnimationFrame(draw);
@@ -187,7 +189,8 @@ export function mountEditor(root, config, dog, { dirty = false } = {}) {
 
   new ResizeObserver(() => layout()).observe(stage);
   // Draw again once the bundled fonts are in, so text measures and renders in its real face.
-  Promise.all(FONT_PROBES.map((f) => document.fonts.load(f))).catch(() => {}).finally(() => app.render());
+  app.fontsReady = Promise.all(FONT_PROBES.map((f) => document.fonts.load(f))).then(() => {}, () => {});
+  app.fontsReady.finally(() => app.render());
   document.fonts.addEventListener?.('loadingdone', () => app.render());
 
   layout();

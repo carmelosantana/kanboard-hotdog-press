@@ -5,7 +5,8 @@
 //   reaches the server → two tabs: the stale one gets "Someone else changed this zine"; Keep mine saves over, Reload
 //   takes the server copy → the carousel ZIP holds 8 PNGs at 1080 × 1440 in page order; 4:5, cover, pin, story,
 //   sheet and Bluesky sizes → the print PDF (with the "Actual size" note) and its B&W panels are gray → the LinkedIn
-//   PDF has 8 pages → "Save PDF to project files" stores a PDF in the project.
+//   PDF has 8 pages → "Save PDF to project files" stores a PDF in the project → a session that ends (403 on save)
+//   stops autosave, keeps the edit in the tab, and Save PDF reports the failure without uploading.
 // Every page must log no console error, no page error and no CSP violation, and request nothing from another origin.
 // Run from the harness root: node HotDogPress/Test/e2e/exports.e2e.mjs [shots-dir]
 import { chromium } from 'playwright';
@@ -203,6 +204,26 @@ try {
   assert.equal(stored[0].name, `hotdogpress-${zineId}-${zslug}-a4.pdf`);
   assert.equal(stored[0].head, '%PDF-1.4');
   await page.screenshot({ path: join(SHOTS, 'exports-02-menu.png'), fullPage: true });
+
+  // A session that ended: autosave stops (no retry loop) and keeps the edit; Save PDF then says it failed and
+  // uploads nothing, since the server's copy (which names the file) is stale. In its own, unwatched tab: the 403s
+  // and their console lines are the point here.
+  const ended = await ctx.newPage();
+  await ended.goto(page.url());
+  await ended.waitForSelector('#hotdogpress-app[data-ready="true"]');
+  const posts = [];
+  ended.on('request', (r) => { if (r.method() === 'POST') posts.push(new URL(r.url()).pathname); });
+  await ended.route('**/hotdogpress/zine/*/save', (route) => route.fulfill({ status: 403, contentType: 'application/json', body: '{"error":"forbidden"}' }));
+  await addText(ended, 'After the session ended', 0.2, 0.6);
+  await ended.waitForSelector('.hdp-save-state[data-state="stopped"]', { timeout: 15000 });
+  assert.equal(await ended.locator('.hdp-save-state').textContent(), 'Saving stopped. Reload to keep saving; your edits are kept in this tab.');
+  assert.ok((await ended.evaluate((id) => sessionStorage.getItem(`hotdogpress:zine:${id}`), zineId))?.includes('After the session ended'), 'the edit is kept in the tab');
+  await ended.click('.hdp-export summary');
+  await ended.click('[data-export="save-pdf"]');
+  await ended.waitForFunction(() => document.querySelector('.hdp-status')?.textContent === 'Couldn’t save the PDF to the project files.', null, { timeout: 30000 });
+  assert.deepEqual(posts.filter((p) => !p.endsWith('/save')), [], 'no PDF upload');
+  assert.equal(posts.filter((p) => p.endsWith('/save')).length, 1, 'the 403 is not retried');
+  await ended.close();
 
   await cspCheck(page, 'tab one');
   await ctx.close();

@@ -58,8 +58,10 @@ export function createExportPanel(app) {
   }
 
   async function savePdf() {
-    // The server names the file from its copy of the zine: bring that copy up to date first.
+    // The server names the file from its copy of the zine: bring that copy up to date first, and stop if it cannot be
+    // (a conflict, a save that keeps failing or has stopped), so a stale copy never names the file.
     await app.autosave?.saved();
+    if (app.autosave?.dirty) throw Object.assign(new Error('save pdf: the zine is not saved'), { key: 'pdf_save_failed' });
     const file = await makePdf();
     const body = new FormData();
     body.append('csrf_token', config.csrf_token);
@@ -71,12 +73,13 @@ export function createExportPanel(app) {
     return null;
   }
 
-  /** Makes a file (all images loaded first), then downloads it or offers Download and Share. */
+  /** Makes a file (the fonts and all images loaded first), then downloads it or offers Download and Share. */
   async function run(job) {
     for (const b of buttons) if (b) b.disabled = true;
     ready.hidden = true;
     app.status(strings.export_working);
     try {
+      await app.fontsReady;
       await app.images.settled(store.doc);
       const file = await job();
       if (file) deliver(file);
