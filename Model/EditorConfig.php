@@ -53,7 +53,6 @@ class EditorConfig extends Base
     public static function strings(): array
     {
         return [
-            'loading' => e('Loading the editor…'),
             'read_only' => e('You can view this zine but not change it.'),
             // Views
             'view_pages' => e('Pages'),
@@ -73,7 +72,6 @@ class EditorConfig extends Base
             'redo' => e('Redo'),
             'lock' => e('Lock'),
             'unlock' => e('Unlock'),
-            'tools' => e('Tools'),
             // Pickers
             'paper' => e('Paper'),
             'paper_letter' => e('Letter'),
@@ -140,7 +138,6 @@ class EditorConfig extends Base
             // Autosave and the 409 prompt
             'saving' => e('Saving…'),
             'saved' => e('Saved'),
-            'saved_flavour' => e('Fresh'),
             'save_failed' => e('Couldn’t save. Retrying…'),
             'save_stopped' => e('Saving stopped. Reload to keep saving; your edits are kept in this tab.'),
             'conflict_title' => e('Someone else changed this zine'),
@@ -160,8 +157,6 @@ class EditorConfig extends Base
             'bw' => e('Black and white'),
             'save_pdf_to_files' => e('Save PDF to project files'),
             'print_note' => e('Print at Actual size (100%%), on %s, one side.', '%s'),
-            'fold_title' => e('How to fold'),
-            'fold_flavour' => e('Fold it like a hot dog'),
             // Social
             'social' => e('Social'),
             'carousel' => e('Carousel (ZIP)'),
@@ -177,7 +172,6 @@ class EditorConfig extends Base
             'bluesky' => e('Bluesky set'),
             'share' => e('Share'),
             'download' => e('Download'),
-            'download_hotdog' => e('Download .hotdog'),
         ];
     }
 }

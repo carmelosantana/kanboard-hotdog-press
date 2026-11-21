@@ -59,7 +59,6 @@ return [
     'Drag a page to move it.' => 'Arrastra una página para moverla.',
 
     // Editor: tools
-    'Tools' => 'Herramientas',
     'Select' => 'Seleccionar',
     'Text' => 'Texto',
     'Photo' => 'Foto',
@@ -110,7 +109,6 @@ return [
     // Editor: autosave and the conflict prompt
     'Saving…' => 'Guardando…',
     'Saved' => 'Guardado',
-    'Fresh' => 'Recién hecho',
     'Couldn’t save. Retrying…' => 'No se pudo guardar. Reintentando…',
     'Saving stopped. Reload to keep saving; your edits are kept in this tab.' => 'Se dejó de guardar. Recarga para seguir guardando; tus cambios se conservan en esta pestaña.',
     'Someone else changed this zine' => 'Otra persona ha cambiado este fanzine',
@@ -131,8 +129,6 @@ return [
     'Black and white' => 'Blanco y negro',
     'Save PDF to project files' => 'Guardar el PDF en los archivos del proyecto',
     'Print at Actual size (100%%), on %s, one side.' => 'Imprime a tamaño real (100%%), en %s, a una cara.',
-    'How to fold' => 'Cómo plegarlo',
-    'Fold it like a hot dog' => 'Dóblalo como un perrito caliente',
 
     // Editor: social
     'Social' => 'Redes sociales',
