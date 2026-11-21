@@ -1,0 +1,12 @@
+{
+    "name": "HotDogPress",
+    "description": "Make a single-sheet, eight-page zine and print it at home.",
+    "version": "0.1.0",
+    "author": "Carmelo Santana",
+    "homepage": "https://github.com/carmelosantana/kanboard-hotdog-press",
+    "license": "MIT",
+    "kanboard_version": ">=1.2.47",
+    "php_version": ">=8.4",
+    "requires": [],
+    "recommends": []
+}
