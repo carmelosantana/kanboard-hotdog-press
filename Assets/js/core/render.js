@@ -2,7 +2,8 @@
 // the PDF rasteriser and the social frames all draw through here. Pure, no DOM: the caller hands in the context and
 // the decoded images; nothing here loads fonts or files.
 import { panelRect } from './impose.js';
-import { BULLET, LINE_HEIGHT } from './layouts.js';
+import { LINE_HEIGHT } from './layouts.js';
+import { joinRuns } from './runs.js';
 import { colorOf, grayHex, grayLevelHex, lookOf } from './looks.js';
 import { resolvePaper } from './paper.js';
 import { guideLines, PT_PER_MM } from './pdf.js';
@@ -102,7 +103,7 @@ export function renderSheet(ctx, dog, { px_per_mm: k, images = {}, guides = true
 
 /**
  * Wrap a text item's runs to its box: greedy by words, measured with ctx.measureText at the item's font (it sets
- * ctx.font), breaking at newlines and before each bullet run of a list, and splitting words wider than the box.
+ * ctx.font), breaking at newlines and between the runs of a list item (runs.js), and splitting words wider than the box.
  * `visible` counts the lines that fit the box height (a last line needs only the font size); the rest are not drawn,
  * and `overflow` says so.
  * @param {CanvasRenderingContext2D|any} ctx
@@ -122,9 +123,7 @@ export function layoutText(ctx, item, px_w, px_h, lookName = 'kraft') {
   ctx.font = font;
   const fits = (s) => ctx.measureText(s).width <= box_w;
 
-  // Runs are spans of one paragraph, except list items: a run that starts with the bullet starts its own line.
-  const text = (Array.isArray(item.runs) ? item.runs : []).map((r) => (typeof r?.text === 'string' ? r.text : ''))
-    .reduce((acc, t, i) => (i > 0 && t.startsWith(BULLET) && !acc.endsWith('\n') ? `${acc}\n${t}` : acc + t), '');
+  const text = joinRuns(item);
   const lines = [];
   if (text !== '') {
     for (const para of text.split('\n')) {

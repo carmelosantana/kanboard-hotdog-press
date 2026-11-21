@@ -442,4 +442,6 @@ test('layoutText puts each bullet run of a list on its own line, and keeps "\\n"
   // Plain runs still join with nothing between them (they are spans of one paragraph).
   assert.deepEqual(layoutText(ctx, text({ runs: [{ text: 'He' }, { text: 'llo' }] }), PX_W, PX_H).lines, ['Hello']);
   assert.deepEqual(layoutText(ctx, text({ runs: [{ text: 'a\nb' }] }), PX_W, PX_H).lines, ['a', 'b']);
+  // A styled run that happens to start with the bullet in a non-list item stays on its line.
+  assert.deepEqual(layoutText(ctx, text({ runs: [{ text: 'Hi ' }, { text: '• x' }] }), PX_W, PX_H).lines, ['Hi • x']);
 });
