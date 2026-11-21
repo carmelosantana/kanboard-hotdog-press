@@ -25,26 +25,23 @@ export function cell(page) {
 }
 
 /**
- * The page's panel on the sheet, mm from the top-left corner.
+ * The page's physical panel on the sheet, mm from the top-left corner.
  * @param {Paper} paper
- * @param {unknown} margin_mm
  * @param {number} page
  * @returns {{x: number, y: number, w: number, h: number, rotate: 0|180}}
  */
-export function panelRect(paper, margin_mm, page) {
+export function panelRect(paper, page) {
   const { col, row, rotate } = cell(page);
-  const m = clampMargin(margin_mm);
-  const { w, h } = panelSize(paper, m);
-  return { x: m + col * w, y: m + row * h, w, h, rotate };
+  const { w, h } = panelSize(paper);
+  return { x: col * w, y: row * h, w, h, rotate };
 }
 
 /**
- * Cut and fold lines in sheet mm, each [x1, y1, x2, y2].
+ * Cut and fold lines in sheet mm, each [x1, y1, x2, y2]. They lie on panel edges.
  * @param {Paper} paper
- * @param {unknown} _margin_mm unused: the lines are fixed fractions of the sheet
  * @returns {{cut: number[], folds: number[][]}}
  */
-export function guides(paper, _margin_mm) {
+export function guides(paper) {
   const { w_mm: W, h_mm: H } = resolvePaper(paper);
   return {
     cut: [W / 4, H / 2, (3 * W) / 4, H / 2],
@@ -59,7 +56,7 @@ export function guides(paper, _margin_mm) {
 
 /**
  * The area to keep content in, in panel units (0..1) and the page's own reading orientation.
- * Edges on a fold or the cut get SAFE_MM; edges on the sheet margin get 0.
+ * Edges at the sheet edge get the margin (clamped); edges on a fold or the cut get SAFE_MM.
  * @param {Paper} paper
  * @param {unknown} margin_mm
  * @param {number} page
@@ -67,13 +64,14 @@ export function guides(paper, _margin_mm) {
  */
 export function safeArea(paper, margin_mm, page) {
   const { col, row, rotate } = cell(page);
-  const { w, h } = panelSize(paper, margin_mm);
+  const { w, h } = panelSize(paper);
+  const m = clampMargin(margin_mm);
   // Insets in sheet orientation.
   const sheet = {
-    left: col === 0 ? 0 : SAFE_MM,
-    right: col === COLS - 1 ? 0 : SAFE_MM,
-    top: row === 0 ? 0 : SAFE_MM,
-    bottom: row === ROWS - 1 ? 0 : SAFE_MM,
+    left: col === 0 ? m : SAFE_MM,
+    right: col === COLS - 1 ? m : SAFE_MM,
+    top: row === 0 ? m : SAFE_MM,
+    bottom: row === ROWS - 1 ? m : SAFE_MM,
   };
   // A 180 degree turn swaps top with bottom and left with right.
   const r = rotate === 180

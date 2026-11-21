@@ -34,21 +34,15 @@ test('clampMargin keeps 0..10 and defaults non-numbers to 6', () => {
   assert.equal(clampMargin(Infinity), 6);
 });
 
-test('panelSize is ((W - 2m) / 4, (H - 2m) / 2)', () => {
-  assert.deepEqual(panelSize('a4', 0), { w: 74.25, h: 105 });
-  const p = panelSize('letter', 6);
-  assert.ok(Math.abs(p.w - (279.4 - 12) / 4) < 1e-9);
-  assert.ok(Math.abs(p.h - (215.9 - 12) / 2) < 1e-9);
+test('panelSize is the physical page: (W / 4, H / 2)', () => {
+  assert.deepEqual(panelSize('a4'), { w: 74.25, h: 105 });
+  assert.deepEqual(panelSize('letter'), { w: 279.4 / 4, h: 215.9 / 2 });
+  assert.deepEqual(panelSize({ w_mm: 297, h_mm: 210 }), { w: 74.25, h: 105 });
 });
 
-test('panelSize accepts a size object and clamps the margin', () => {
-  assert.deepEqual(panelSize({ w_mm: 297, h_mm: 210 }, 0), { w: 74.25, h: 105 });
-  assert.deepEqual(panelSize('a4', 99), panelSize('a4', 10));
-});
-
-test('panel aspect h/w: A4 is root 2, Letter is 1.545 (margin 0)', () => {
-  const a4 = panelSize('a4', 0);
-  const letter = panelSize('letter', 0);
+test('panel aspect h/w: A4 is root 2, Letter is 1.545', () => {
+  const a4 = panelSize('a4');
+  const letter = panelSize('letter');
   assert.equal((a4.h / a4.w).toFixed(3), '1.414');
   assert.equal((letter.h / letter.w).toFixed(3), '1.545');
 });

@@ -24,34 +24,30 @@ test('cell throws outside 1..8', () => {
   }
 });
 
-test('panelRect places panels inside the margin, sharing edges', () => {
-  // Letter, margin 6: panel 66.85 x 101.95.
-  const w = (279.4 - 12) / 4;
-  const h = (215.9 - 12) / 2;
-  closeAll(panelRect('letter', 6, 1), { x: 6 + 3 * w, y: 6 + h, w, h });
-  assert.equal(panelRect('letter', 6, 1).rotate, 0);
-  closeAll(panelRect('letter', 6, 5), { x: 6, y: 6, w, h });
-  assert.equal(panelRect('letter', 6, 5).rotate, 180);
-  closeAll(panelRect('letter', 6, 3), { x: 6 + 2 * w, y: 6, w, h });
-  // The last column ends exactly at the right margin.
-  const p2 = panelRect('letter', 6, 2);
-  close(p2.x + p2.w, 279.4 - 6, 'right edge');
-  close(p2.y, 6, 'top edge');
-});
+// Letter: panel w = 69.85, h = 107.95.
+const LW = 279.4 / 4;
+const LH = 215.9 / 2;
 
-test('panelRect on A4 margin 0 tiles the sheet', () => {
-  assert.deepEqual(panelRect('a4', 0, 7), { x: 74.25, y: 105, w: 74.25, h: 105, rotate: 0 });
+test('panelRect is the physical quarter-by-half of the sheet', () => {
+  closeAll(panelRect('letter', 1), { x: 3 * LW, y: LH, w: LW, h: LH });
+  assert.equal(panelRect('letter', 1).rotate, 0);
+  closeAll(panelRect('letter', 5), { x: 0, y: 0, w: LW, h: LH });
+  assert.equal(panelRect('letter', 5).rotate, 180);
+  closeAll(panelRect('letter', 3), { x: 2 * LW, y: 0, w: LW, h: LH });
+  const p2 = panelRect('letter', 2);
+  close(p2.x + p2.w, 279.4, 'right edge');
+  assert.deepEqual(panelRect('a4', 7), { x: 74.25, y: 105, w: 74.25, h: 105, rotate: 0 });
 });
 
 test('guides: the cut runs along H/2 from W/4 to 3W/4', () => {
-  assert.deepEqual(guides('a4', 6).cut, [297 / 4, 105, 297 * 3 / 4, 105]);
-  const { cut } = guides('letter', 6);
+  assert.deepEqual(guides('a4').cut, [297 / 4, 105, 297 * 3 / 4, 105]);
+  const { cut } = guides('letter');
   close(cut[0], 279.4 / 4, 'x1'); close(cut[1], 215.9 / 2, 'y1');
   close(cut[2], 279.4 * 3 / 4, 'x2'); close(cut[3], 215.9 / 2, 'y2');
 });
 
 test('guides: four folds, the full-width centre line and three full-height verticals', () => {
-  const { folds } = guides('a4', 6);
+  const { folds } = guides('a4');
   assert.equal(folds.length, 4);
   assert.deepEqual(folds, [
     [0, 105, 297, 105],
@@ -61,43 +57,66 @@ test('guides: four folds, the full-width centre line and three full-height verti
   ]);
 });
 
-// Letter, margin 6: panel w = 66.85, h = 101.95. Safe area is in the page's reading orientation.
-const LW = (279.4 - 12) / 4;
-const LH = (215.9 - 12) / 2;
+test('guides coincide with panel edges: every fold and the cut lie on a shared panel edge', () => {
+  for (const paper of ['a4', 'letter']) {
+    const { cut, folds } = guides(paper);
+    const xs = new Set();
+    const ys = new Set();
+    for (let page = 1; page <= 8; page++) {
+      const r = panelRect(paper, page);
+      xs.add(r.x); xs.add(r.x + r.w);
+      ys.add(r.y); ys.add(r.y + r.h);
+    }
+    const onX = (x) => [...xs].some((e) => Math.abs(e - x) < 1e-9);
+    const onY = (y) => [...ys].some((e) => Math.abs(e - y) < 1e-9);
+    const [hz, ...verticals] = folds;
+    assert.ok(onY(hz[1]) && onY(hz[3]), `${paper} centre fold`);
+    for (const v of verticals) assert.ok(onX(v[0]) && onX(v[2]), `${paper} fold at ${v[0]}`);
+    assert.ok(onY(cut[1]) && onX(cut[0]) && onX(cut[2]), `${paper} cut`);
+  }
+});
+
+// Safe area on Letter, margin 6, in the page's reading orientation: margin at the sheet edge, 3 mm at folds/cut.
 const s = SAFE_MM;
+const m = 6;
 
 test('safe area inset is 3 mm', () => {
   assert.equal(SAFE_MM, 3);
 });
 
-test('safeArea page 1 (bottom right, upright): fold on its left, centre line on its top', () => {
-  // Sheet edges: left = vertical fold, right = margin, top = centre line, bottom = margin.
-  closeAll(safeArea('letter', 6, 1), { x: s / LW, y: s / LH, w: 1 - s / LW, h: 1 - s / LH });
+test('safeArea page 1 (bottom right, upright): fold left, centre line top, sheet edge right and bottom', () => {
+  closeAll(safeArea('letter', m, 1), { x: s / LW, y: s / LH, w: 1 - (s + m) / LW, h: 1 - (s + m) / LH });
 });
 
 test('safeArea page 5 (top left, rotated 180): sheet edges flip into its reading frame', () => {
-  // Sheet edges: left = margin, right = fold, top = margin, bottom = centre line.
-  // Rotated 180, the sheet-right fold is its reading left, the centre line its reading top.
-  closeAll(safeArea('letter', 6, 5), { x: s / LW, y: s / LH, w: 1 - s / LW, h: 1 - s / LH });
+  // Sheet: left = edge, right = fold, top = edge, bottom = centre line. Turned 180: reading left = fold, top = centre.
+  closeAll(safeArea('letter', m, 5), { x: s / LW, y: s / LH, w: 1 - (s + m) / LW, h: 1 - (s + m) / LH });
 });
 
-test('safeArea page 6 (bottom left, upright): fold on its right, centre line on its top', () => {
-  closeAll(safeArea('letter', 6, 6), { x: 0, y: s / LH, w: 1 - s / LW, h: 1 - s / LH });
+test('safeArea page 6 (bottom left, upright): sheet edge left, fold right', () => {
+  closeAll(safeArea('letter', m, 6), { x: m / LW, y: s / LH, w: 1 - (m + s) / LW, h: 1 - (s + m) / LH });
 });
 
-test('safeArea page 2 (top right, rotated 180): sheet-left fold becomes its reading right', () => {
-  closeAll(safeArea('letter', 6, 2), { x: 0, y: s / LH, w: 1 - s / LW, h: 1 - s / LH });
+test('safeArea page 2 (top right, rotated 180): sheet-right edge becomes its reading left', () => {
+  closeAll(safeArea('letter', m, 2), { x: m / LW, y: s / LH, w: 1 - (m + s) / LW, h: 1 - (s + m) / LH });
 });
 
 test('safeArea inner pages 3 and 7: folds on both sides', () => {
-  const inner = { x: s / LW, y: s / LH, w: 1 - 2 * s / LW, h: 1 - s / LH };
-  closeAll(safeArea('letter', 6, 3), inner);
-  closeAll(safeArea('letter', 6, 7), inner);
+  const inner = { x: s / LW, y: s / LH, w: 1 - 2 * s / LW, h: 1 - (s + m) / LH };
+  closeAll(safeArea('letter', m, 3), inner);
+  closeAll(safeArea('letter', m, 7), inner);
 });
 
-test('safeArea: every page keeps its reading bottom at the sheet margin', () => {
+test('safeArea: every page has 3 mm at its reading top and the margin at its reading bottom', () => {
   for (let page = 1; page <= 8; page++) {
-    const a = safeArea('letter', 6, page);
-    close(a.y + a.h, 1, `page ${page} bottom`);
+    const a = safeArea('letter', m, page);
+    close(a.y, s / LH, `page ${page} top`);
+    close(a.y + a.h, 1 - m / LH, `page ${page} bottom`);
   }
+});
+
+test('safeArea clamps the margin: 0 leaves sheet edges uninset, a bad value means 6', () => {
+  closeAll(safeArea('letter', 0, 6), { x: 0, y: s / LH, w: 1 - s / LW, h: 1 - s / LH });
+  assert.deepEqual(safeArea('letter', 'x', 6), safeArea('letter', 6, 6));
+  assert.deepEqual(safeArea('letter', 50, 6), safeArea('letter', 10, 6));
 });

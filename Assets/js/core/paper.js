@@ -1,4 +1,4 @@
-// Paper sizes and margins: the single source of the sheet dimensions. Pure, no DOM.
+// Paper sizes, the margin (the printer's unprintable border) and the page size: the single source of the sheet dimensions. Pure, no DOM.
 
 /** @typedef {{w_mm: number, h_mm: number}} PaperSize */
 /** @typedef {'a4'|'letter'} PaperId */
@@ -40,13 +40,11 @@ export function resolvePaper(paper) {
 }
 
 /**
- * One panel of the 4x2 grid inside the margin, in mm.
+ * One physical page of the 4x2 grid in mm: a quarter of the width by half the height, so its edges sit on the folds.
  * @param {PaperId|PaperSize} paper
- * @param {unknown} margin_mm
  * @returns {{w: number, h: number}}
  */
-export function panelSize(paper, margin_mm) {
+export function panelSize(paper) {
   const { w_mm, h_mm } = resolvePaper(paper);
-  const m = clampMargin(margin_mm);
-  return { w: (w_mm - 2 * m) / 4, h: (h_mm - 2 * m) / 2 };
+  return { w: w_mm / 4, h: h_mm / 2 };
 }
