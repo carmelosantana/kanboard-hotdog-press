@@ -1,0 +1,139 @@
+<?php
+
+// Spanish. Test/TranslationsTest.php keeps this in step with the source: every key used, none stale, no lone %.
+return [
+    // Plugin
+    'Make a single-sheet, eight-page zine and print it at home.' => 'Haz un fanzine de ocho páginas en una sola hoja e imprímelo en casa.',
+    'Zines' => 'Fanzines',
+    'My zines' => 'Mis fanzines',
+
+    // List, My zines and the empty state
+    'Title' => 'Título',
+    'Project' => 'Proyecto',
+    'Last changed' => 'Último cambio',
+    'Actions' => 'Acciones',
+    'No zines yet' => 'Aún no hay fanzines',
+    'The griddle’s cold. Make your first zine.' => 'La plancha está fría. Haz tu primer fanzine.',
+    'Remove' => 'Eliminar',
+    'Rename' => 'Renombrar',
+    'Save' => 'Guardar',
+    'New zine' => 'Nuevo fanzine',
+    'Create' => 'Crear',
+    'Import a .hotdog file' => 'Importar un archivo .hotdog',
+    'Import' => 'Importar',
+    'Download .hotdog' => 'Descargar .hotdog',
+    'Remove a zine' => 'Eliminar un fanzine',
+    'Do you really want to remove this zine: "%s"?' => '¿De verdad quieres eliminar este fanzine: «%s»?',
+
+    // Flash messages and refusals
+    'Zine renamed.' => 'Fanzine renombrado.',
+    'The zine changed while renaming it, try again.' => 'El fanzine cambió mientras lo renombrabas; inténtalo de nuevo.',
+    'Zine removed.' => 'Fanzine eliminado.',
+    'Unable to remove this zine.' => 'No se pudo eliminar este fanzine.',
+    'A save needs a revision and a document.' => 'Para guardar hacen falta una revisión y un documento.',
+    'No such zine.' => 'Ese fanzine no existe.',
+    'Someone else changed this zine.' => 'Otra persona ha cambiado este fanzine.',
+    'Choose an image to upload.' => 'Elige una imagen para subir.',
+    'No such image.' => 'Esa imagen no existe.',
+    'A .hotdog file must be at most 16 MB.' => 'Un archivo .hotdog no puede pasar de 16 MB.',
+    'Choose a .hotdog file to import.' => 'Elige un archivo .hotdog para importar.',
+    'This is not a .hotdog file.' => 'Esto no es un archivo .hotdog.',
+    'The zine is not valid.' => 'El fanzine no es válido.',
+    'The image could not be stored, try again.' => 'No se pudo guardar la imagen; inténtalo de nuevo.',
+    'A zine must be at most 2 MiB of JSON.' => 'Un fanzine no puede pasar de 2 MiB de JSON.',
+    'The zine must be a JSON object.' => 'El fanzine debe ser un objeto JSON.',
+
+    // Editor: status
+    'Loading the editor…' => 'Cargando el editor…',
+    'You can view this zine but not change it.' => 'Puedes ver este fanzine, pero no cambiarlo.',
+
+    // Editor: views
+    'Pages' => 'Páginas',
+    'Sheet' => 'Hoja',
+    'Booklet' => 'Cuadernillo',
+    'Page %s' => 'Página %s',
+    'Drag a page to move it.' => 'Arrastra una página para moverla.',
+
+    // Editor: tools
+    'Tools' => 'Herramientas',
+    'Select' => 'Seleccionar',
+    'Text' => 'Texto',
+    'Photo' => 'Foto',
+    'Shape' => 'Forma',
+    'Sticker' => 'Pegatina',
+    'Ink' => 'Tinta',
+    'Delete' => 'Borrar',
+    'Undo' => 'Deshacer',
+    'Redo' => 'Rehacer',
+    'Lock' => 'Bloquear',
+    'Unlock' => 'Desbloquear',
+
+    // Editor: pickers
+    'Paper' => 'Papel',
+    'Letter' => 'Carta',
+    'A4' => 'A4',
+    'Margin (mm)' => 'Margen (mm)',
+    'Layout' => 'Diseño',
+    'Look' => 'Estilo',
+    'Safe area' => 'Zona segura',
+    'Cover' => 'Portada',
+    'Back cover' => 'Contraportada',
+    'Headline and body' => 'Titular y texto',
+    'Full photo' => 'Foto completa',
+    'Photo and caption' => 'Foto y pie',
+    'List' => 'Lista',
+    'Quote' => 'Cita',
+    'Two up' => 'Dos en una',
+    'Freeform' => 'Libre',
+    'Kraft' => 'Kraft',
+    'Copy shop' => 'Copistería',
+    'Night' => 'Noche',
+
+    // Editor: Mustard panel
+    'Write in Mustard' => 'Escribir en Mustard',
+    'Apply' => 'Aplicar',
+    'Warnings' => 'Avisos',
+    'Close' => 'Cerrar',
+
+    // Editor: photos
+    'Uploading…' => 'Subiendo…',
+    'Only JPEG, PNG and WebP images are accepted.' => 'Solo se aceptan imágenes JPEG, PNG y WebP.',
+    'An image must be at most 10 MB.' => 'Una imagen no puede pasar de 10 MB.',
+    'Couldn’t upload the photo.' => 'No se pudo subir la foto.',
+
+    // Editor: autosave and the conflict prompt
+    'Saving…' => 'Guardando…',
+    'Saved' => 'Guardado',
+    'Fresh' => 'Recién hecho',
+    'Couldn’t save. Retrying…' => 'No se pudo guardar. Reintentando…',
+    'Someone else changed this zine' => 'Otra persona ha cambiado este fanzine',
+    'Reload to see their changes, or keep yours and save over them.' => 'Recarga para ver sus cambios, o quédate con los tuyos y guárdalos encima.',
+    'Reload' => 'Recargar',
+    'Keep mine' => 'Quedarme con los míos',
+
+    // Editor: print
+    'Export' => 'Exportar',
+    'Export PDF' => 'Exportar PDF',
+    'Order up' => '¡Marchando!',
+    'Fold and cut guides' => 'Guías de plegado y corte',
+    'Black and white' => 'Blanco y negro',
+    'Save PDF to project files' => 'Guardar el PDF en los archivos del proyecto',
+    'Print at Actual size (100%%), on %s, one side.' => 'Imprime a tamaño real (100%%), en %s, a una cara.',
+    'How to fold' => 'Cómo plegarlo',
+    'Fold it like a hot dog' => 'Dóblalo como un perrito caliente',
+
+    // Editor: social
+    'Social' => 'Redes sociales',
+    'Carousel (ZIP)' => 'Carrusel (ZIP)',
+    '3:4' => '3:4',
+    '4:5' => '4:5',
+    'Cover image' => 'Imagen de portada',
+    'Pin' => 'Pin',
+    'Story' => 'Historia',
+    'Fold your own.' => 'Dobla el tuyo.',
+    'Sheet image' => 'Imagen de la hoja',
+    'LinkedIn PDF' => 'PDF para LinkedIn',
+    'Bluesky set' => 'Serie para Bluesky',
+    'Share' => 'Compartir',
+    'Download' => 'Descargar',
+];

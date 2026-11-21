@@ -3,6 +3,7 @@ namespace Kanboard\Plugin\HotDogPress;
 
 use Kanboard\Core\Plugin\Base;
 use Kanboard\Core\Security\Role;
+use Kanboard\Core\Translator;
 
 class Plugin extends Base
 {
@@ -28,6 +29,18 @@ class Plugin extends Base
         $this->projectAccessMap->add('ZineController', ['create', 'rename', 'import'], Role::PROJECT_MEMBER);
         $this->projectAccessMap->add('ZineController', ['confirm', 'remove'], Role::PROJECT_MANAGER);
         $this->projectAccessMap->add('ZineApiController', ['save', 'upload'], Role::PROJECT_MEMBER);
+
+        // "Zines" in the project's gear menu, its view tabs and its settings sidebar; "My zines" on the dashboard.
+        // Only the plugin's pages load assets: hotdogpress.css via the controllers (PluginPage), main.js via the editor.
+        $this->hook->on('template:project:dropdown', ['template' => 'HotDogPress:project/menu_item']);
+        $this->hook->on('template:project-header:view-switcher', ['template' => 'HotDogPress:project/menu_item']);
+        $this->hook->on('template:project:sidebar', ['template' => 'HotDogPress:project/menu_item']);
+        $this->hook->on('template:dashboard:sidebar', ['template' => 'HotDogPress:dashboard/sidebar']);
+    }
+
+    public function onStartup(): void
+    {
+        Translator::load($this->languageModel->getCurrentLanguage(), __DIR__.'/Locale');
     }
 
     public function getPluginName(): string        { return 'HotDogPress'; }

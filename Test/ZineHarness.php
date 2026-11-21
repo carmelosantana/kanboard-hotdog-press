@@ -129,6 +129,7 @@ trait ZineHarness
     private function call(string $controller, string $action, array $get = [], ?array $post = null, array $files = []): array
     {
         $server = ['REQUEST_METHOD' => $post === null ? 'GET' : 'POST'];
+        unset($this->container['request'], $this->container['response']); // Pimple freezes a service once it is read
         $this->container['request'] = new Request($this->container, $server, $get, $post ?? [], $files, []);
         $resp = $this->getMockBuilder(Response::class)->setConstructorArgs([$this->container])->onlyMethods(['send'])->getMock();
         $this->container['response'] = $resp;

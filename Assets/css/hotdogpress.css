@@ -1,0 +1,81 @@
+/* Hot Dog Press: loaded only on the plugin's pages (Controller/PluginPage.php). Kanboard/ShadcnTheme classes style
+   the chrome; the brand colours appear only in the empty state, the mark and (Task 11) the zine canvas. */
+
+.hotdogpress {
+  --hdp-mustard: #E8B517;
+  --hdp-ketchup: #C8322B;
+  --hdp-kraft: #D9C4A0;
+  --hdp-copy: #FAF7F0;
+  --hdp-toner: #1B1A17;
+  --hdp-relish: #4E7D32;
+}
+
+/* Empty state: Toner on Kraft (never white on a brand tint). */
+.hotdogpress-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 1rem 0;
+  padding: 2rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--hdp-kraft);
+  color: var(--hdp-toner);
+  text-align: center;
+}
+
+.hotdogpress-empty-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.hotdogpress-empty-flavour {
+  margin: 0;
+  font-style: italic;
+}
+
+.hotdogpress-rename {
+  display: inline-block;
+  margin-left: 0.5rem;
+}
+
+.hotdogpress-rename summary {
+  cursor: pointer;
+}
+
+.hotdogpress-rename form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.hotdogpress-forms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.hotdogpress-forms form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hotdogpress-forms label {
+  font-weight: 600;
+}
+
+/* The editor root: full width, the app (Task 11) fills it. */
+.hotdogpress-editor {
+  min-height: 60vh;
+}
+
+.hotdogpress-loading {
+  padding: 2rem 0;
+  text-align: center;
+  opacity: 0.7;
+}

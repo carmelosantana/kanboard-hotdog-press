@@ -15,27 +15,35 @@ use Kanboard\Plugin\HotDogPress\Model\ZineRejected;
  */
 class ZineController extends BaseController
 {
+    use PluginPage;
     use ZineAccess;
 
     public function index(): void
     {
         $project = $this->projectFor('index');
+        $this->withStylesheet();
         $this->response->html($this->helper->layout->project('HotDogPress:zine/list', [
             'title' => t('Zines'),
             'project' => $project,
             'zines' => $this->zines()->getAllByProject((int) $project['id']),
             'can_create' => $this->can('ZineController', 'create', (int) $project['id']),
+            'can_rename' => $this->can('ZineController', 'rename', (int) $project['id']),
+            'can_remove' => $this->can('ZineController', 'remove', (int) $project['id']),
         ]));
     }
 
     public function editor(): void
     {
         $zine = $this->zineFor('editor');
-        $this->response->html($this->helper->layout->project('HotDogPress:zine/editor', [
-            'title' => $zine['title'],
-            'project' => $this->projectModel->getById((int) $zine['project_id']),
+        $project = $this->projectModel->getById((int) $zine['project_id']);
+        $canEdit = $this->can('ZineApiController', 'save', (int) $zine['project_id']);
+        $this->withStylesheet();
+        // The app layout, not the project one: the editor needs the full width (mobile-first), not the settings sidebar.
+        $this->response->html($this->helper->layout->app('HotDogPress:zine/editor', [
+            'title' => $project['name'].' > '.$zine['title'],
+            'project' => $project,
             'zine' => $zine,
-            'can_edit' => $this->can('ZineApiController', 'save', (int) $zine['project_id']),
+            'config' => (new EditorConfig($this->container))->forZine($zine, $canEdit),
         ]));
     }
 
