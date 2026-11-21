@@ -171,6 +171,11 @@ try {
   const sticker = items(s).find((i) => i.type === 'sticker');
   assert.ok(sticker, JSON.stringify(items(s).map((i) => i.type)) + ' page ' + s.page);
   assert.match(s.doc.assets[sticker.asset].data, /^data:image\/svg\+xml;base64,/);
+  await page.click('.hdp-toolbar button:has-text("Undo")');
+  s = await state(page);
+  assert.ok(!items(s).some((i) => i.type === 'sticker') && !(sticker.asset in s.doc.assets), 'one undo removes sticker and asset');
+  await page.click('.hdp-toolbar button:has-text("Redo")');
+  s = await state(page);
 
 
   // Select, move, resize, rotate the shape; undo and redo; lock.
@@ -209,14 +214,13 @@ try {
   const stc = box.at(sticker.x + sticker.w / 2, sticker.y + sticker.h / 2);
   await page.mouse.click(stc.x, stc.y);
   s = await state(page);
-  if (s.selection[0] === sticker.id) {
-    await page.keyboard.press('Delete');
-    s = await state(page);
-    assert.ok(!items(s).some((i) => i.id === sticker.id), 'deleted');
-    await page.keyboard.press('Control+z');
-    s = await state(page);
-    assert.ok(items(s).some((i) => i.id === sticker.id), 'undo brings it back');
-  }
+  assert.deepEqual(s.selection, [sticker.id], 'the sticker is picked');
+  await page.keyboard.press('Delete');
+  s = await state(page);
+  assert.ok(!items(s).some((i) => i.id === sticker.id), 'deleted');
+  await page.keyboard.press('Control+z');
+  s = await state(page);
+  assert.ok(items(s).some((i) => i.id === sticker.id), 'undo brings it back');
 
   // Photo: through the file input, downscaled and uploaded; drawn from an ImageBitmap.
   await page.locator('.hdp-file').setInputFiles(PHOTO);
@@ -266,6 +270,24 @@ try {
   assert.ok(await page.locator('.hdp-note-warning li').count() > 0, 'warnings listed (unknown photos, short zine)');
   await shot(page, 'desktop-04-mustard-applied');
   await page.click('.hdp-mustard button:has-text("Close")');
+
+  // Edit the list on page 3 in place: one bullet per line comes back as one run per line.
+  await page.locator('.hdp-thumb').nth(2).click();
+  s = await state(page);
+  const list = items(s).find((i) => i.slot === 'list');
+  assert.equal(list.runs.length, 3);
+  box = await overlayBox(page);
+  const lc = box.at(list.x + list.w / 2, list.y + 0.02);
+  await page.mouse.dblclick(lc.x, lc.y);
+  await page.waitForSelector('.hdp-text-edit:not([hidden])');
+  assert.equal(await page.inputValue('.hdp-text-edit'), '• Calendula\n• Lemon balm\n• Chamomile');
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type('\n• Mint');
+  await page.keyboard.press('Escape');
+  s = await state(page);
+  assert.deepEqual(items(s).find((i) => i.id === list.id).runs.map((r) => r.text),
+    ['• Calendula', '• Lemon balm', '• Chamomile', '• Mint'], 'a list edited in place keeps one run per line');
+  await page.locator('.hdp-thumb').nth(0).click();
 
   // Reorder: drag page 1's thumbnail onto page 3.
   const ids = (await state(page)).doc.pages.map((p) => p.id);
