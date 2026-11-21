@@ -222,6 +222,21 @@ test('a beacon sent when the tab was hidden, then more edits: the 409 against th
   assert.equal(t.states.at(-1), 'saved');
 });
 
+test('a tab closed while a save is in flight beacons that copy (the request may be cancelled on unload)', async () => {
+  let release;
+  const t = setup({ reply: () => new Promise((r) => { release = () => r(json(200, { ok: true, revision: 4 })); }) });
+  t.store.update((d) => titled(d, 'b'));
+  await t.timers.advance(AUTOSAVE_DELAY_MS);
+  assert.equal(t.server.requests.length, 1, 'in flight');
+  t.autosave.pagehide();
+  assert.equal(t.beacons.length, 1, 'sent but not acknowledged still goes out');
+  assert.deepEqual([t.beacons[0].body.get('revision'), t.beacons[0].body.get('document')], ['3', JSON.stringify(t.store.doc)]);
+  release();
+  await settle();
+  t.autosave.pagehide();
+  assert.equal(t.beacons.length, 1, 'nothing once acknowledged');
+});
+
 test('discard drops the buffer and stops saving (before a reload)', async () => {
   const t = setup();
   t.store.update((d) => titled(d, 'b'));

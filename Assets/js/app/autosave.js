@@ -181,7 +181,8 @@ export function createAutosave({ store, config, env, onState = () => {}, onConfl
 
     /** The tab is hidden or going away: send unsaved edits with a beacon, once per copy. */
     pagehide() {
-      if (stopped || conflict || !dirty) return;
+      // In flight counts as unsaved: a fetch is cancelled when the page unloads, and a closed tab keeps no buffer.
+      if (stopped || conflict || (!dirty && !inFlight)) return;
       const text = JSON.stringify(store.doc);
       if (text === beaconed) return;
       writeBuffer();
