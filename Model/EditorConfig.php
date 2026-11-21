@@ -1,5 +1,5 @@
 <?php
-namespace Kanboard\Plugin\HotDogPress\Controller;
+namespace Kanboard\Plugin\HotDogPress\Model;
 
 use Kanboard\Core\Base;
 

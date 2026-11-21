@@ -2,6 +2,7 @@
 namespace Kanboard\Plugin\HotDogPress\Controller;
 
 use Kanboard\Controller\BaseController;
+use Kanboard\Plugin\HotDogPress\Model\EditorConfig;
 use Kanboard\Plugin\HotDogPress\Model\HotdogFile;
 use Kanboard\Plugin\HotDogPress\Model\ZineModel;
 use Kanboard\Plugin\HotDogPress\Model\ZineRejected;
@@ -105,7 +106,7 @@ class ZineController extends BaseController
     {
         $zine = $this->zineFor('export');
         $this->response
-            ->withFileDownload(self::slug($zine['title']).'.hotdog')
+            ->withFileDownload(ZineModel::fileSlug($zine['title']).'.hotdog')
             ->withContentType('application/json')
             ->withHeader('X-Content-Type-Options', 'nosniff')
             ->withoutCache()
@@ -139,16 +140,6 @@ class ZineController extends BaseController
             return;
         }
         $this->toEditor($id);
-    }
-
-    /**
-     * A file name from the title: lowercase ASCII letters and digits joined by dashes; "zine" when none are left.
-     * No iconv transliteration: musl's (the Alpine image) turns accents into "?".
-     */
-    public static function slug(string $title): string
-    {
-        $slug = trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower($title)), '-');
-        return $slug === '' ? 'zine' : substr($slug, 0, 80);
     }
 
     private function zines(): ZineModel

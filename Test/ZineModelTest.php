@@ -173,6 +173,15 @@ class ZineModelTest extends Base
         }
     }
 
+    // Kills: a file name with spaces, accents turned into "?", an empty name, or no length cap.
+    public function testFileSlug(): void
+    {
+        $this->assertSame('plant-medicine-no-2', ZineModel::fileSlug('  Plant Medicine — No. 2!  '));
+        $this->assertSame('caf-ma-ana', ZineModel::fileSlug('Café Mañana'));
+        $this->assertSame('zine', ZineModel::fileSlug('¡¿…?!'));
+        $this->assertSame(80, strlen(ZineModel::fileSlug(str_repeat('ab ', 60))));
+    }
+
     // Kills: reading the Dog with json_decode(…, true), where "assets": [] passes as {} and is stored, and the editor
     // (JS validator) then refuses to open the zine.
     public function testDocumentRefusesAJsonArrayWhereDogOneHasAnObject(): void

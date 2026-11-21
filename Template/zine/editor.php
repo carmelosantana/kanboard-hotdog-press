@@ -15,5 +15,5 @@ $js = $this->url->dir().'plugins/HotDogPress/Assets/js/';
 <div id="hotdogpress-app" class="hotdogpress hotdogpress-editor" data-error="<?= t('The editor could not start. Reload the page to try again.') ?>">
     <p class="hotdogpress-loading"><?= t('Loading the editor…') ?></p>
 </div>
-<script type="application/json" id="hotdogpress-config"><?= json_encode($config, \Kanboard\Plugin\HotDogPress\Controller\EditorConfig::FLAGS) ?></script>
+<script type="application/json" id="hotdogpress-config"><?= json_encode($config, \Kanboard\Plugin\HotDogPress\Model\EditorConfig::FLAGS) ?></script>
 <script src="<?= $js.'boot.js'.$v ?>" data-main="<?= $js.'app/main.js'.$v ?>" defer></script>

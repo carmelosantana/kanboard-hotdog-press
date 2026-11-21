@@ -145,6 +145,16 @@ class ZineModel extends Base
         return $title === '' ? 'Untitled' : mb_substr($title, 0, self::TITLE_MAX, 'UTF-8');
     }
 
+    /**
+     * A file name from the title: lowercase ASCII letters and digits joined by dashes; "zine" when none are left.
+     * No iconv transliteration: musl's (the Alpine image) turns accents into "?".
+     */
+    public static function fileSlug(string $title): string
+    {
+        $slug = trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower($title)), '-');
+        return $slug === '' ? 'zine' : substr($slug, 0, 80);
+    }
+
     public static function randomId(int $length): string
     {
         $alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';

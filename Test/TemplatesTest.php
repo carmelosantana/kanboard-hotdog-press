@@ -3,7 +3,7 @@ require_once 'tests/units/Base.php';
 require_once __DIR__.'/ZineHarness.php';
 
 use KanboardTests\units\Base;
-use Kanboard\Plugin\HotDogPress\Controller\EditorConfig;
+use Kanboard\Plugin\HotDogPress\Model\EditorConfig;
 use Kanboard\Plugin\HotDogPress\Controller\MyZinesController;
 use Kanboard\Plugin\HotDogPress\Controller\ZineController;
 

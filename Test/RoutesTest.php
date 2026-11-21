@@ -36,4 +36,29 @@ class RoutesTest extends Base
             $this->assertSame($path, $route->findUrl($controller, $action, $params, 'HotDogPress'), "$controller::$action");
         }
     }
+
+    // Kills: a public helper in Controller/ (Kanboard's Runner calls any public method of a class there, so a helper
+    // like a static slug() or a config builder answers ?controller=…&action=… with a 500).
+    public function testControllerClassesExposeOnlyTheirRoutedActions(): void
+    {
+        $actions = [];
+        foreach (self::ROUTES as [$controller, $action]) {
+            $actions[$controller][] = $action;
+        }
+        $exposed = [];
+        foreach (glob(__DIR__.'/../Controller/*.php') as $file) {
+            $class = 'Kanboard\\Plugin\\HotDogPress\\Controller\\'.basename($file, '.php');
+            if (! class_exists($class)) {
+                continue; // a trait
+            }
+            $reflection = new \ReflectionClass($class);
+            foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+                if ($method->getDeclaringClass()->getName() === $class && ! $method->isConstructor()
+                    && ! in_array($method->getName(), $actions[$reflection->getShortName()] ?? [], true)) {
+                    $exposed[] = $reflection->getShortName().'::'.$method->getName();
+                }
+            }
+        }
+        $this->assertSame([], $exposed);
+    }
 }

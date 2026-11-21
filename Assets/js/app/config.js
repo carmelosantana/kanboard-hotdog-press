@@ -1,4 +1,4 @@
-// The editor's boot config, written by Template/zine/editor.php as a JSON block (Controller/EditorConfig.php builds
+// The editor's boot config, written by Template/zine/editor.php as a JSON block (Model/EditorConfig.php builds
 // it). No DOM here: main.js finds the block and hands its text over.
 
 /**

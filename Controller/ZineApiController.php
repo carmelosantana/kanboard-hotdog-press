@@ -98,7 +98,7 @@ class ZineApiController extends BaseController
                 new ZineRejected('too_large', 'A PDF must be at most 10 MB.'),
                 new ZineRejected('bad_request', 'No PDF was sent.'));
             $paper = json_decode((string) $zine['document'], true)['paper'] ?? null;
-            $name = 'hotdogpress-'.$zine['id'].'-'.ZineController::slug((string) $zine['title'])
+            $name = 'hotdogpress-'.$zine['id'].'-'.ZineModel::fileSlug((string) $zine['title'])
                 .(in_array($paper, ['a4', 'letter'], true) ? '-'.$paper : '').'.pdf';
             $stored = (new ZinePdf($this->container))->store((int) $zine['project_id'], $bytes, $name);
             $this->response->json(['ok' => true] + $stored);
