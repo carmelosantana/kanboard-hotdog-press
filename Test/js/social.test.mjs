@@ -3,15 +3,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  SOCIAL_PRESETS, SOCIAL_PADDING, slug, frameRect, socialPlan, renderFrame, linkedInPdf,
+  SOCIAL_PRESETS, SOCIAL_PADDING, STORY_CAPTION_BAND, slug, frameRect, socialPlan, renderFrame, linkedInPdf,
 } from '../../Assets/js/core/social.js';
 import { panelSize, paperSize } from '../../Assets/js/core/paper.js';
 import { panelRect } from '../../Assets/js/core/impose.js';
-import { colorOf, grayHex } from '../../Assets/js/core/looks.js';
+import { colorOf, grayHex, LOOKS } from '../../Assets/js/core/looks.js';
+import { LINE_HEIGHT } from '../../Assets/js/core/layouts.js';
 import { PT_PER_MM } from '../../Assets/js/core/pdf.js';
 import { newDog } from '../../Assets/js/core/dog.js';
 import { readPdf } from './helpers/pdf-reader.mjs';
-import { fakeContext, callsOf, setsOf } from './helpers/fake-ctx.mjs';
+import { fakeContext, callsOf, setsOf, FAKE_EM } from './helpers/fake-ctx.mjs';
 
 const JPEG = new Uint8Array(readFileSync(new URL('../fixtures/pdf/two-tone.jpg', import.meta.url)));
 const close = (a, b, msg, eps = 1e-3) => assert.ok(Math.abs(a - b) < eps, `${msg}: ${a} !== ${b}`);
@@ -26,6 +27,7 @@ test('SOCIAL_PRESETS holds exactly the sizes in the global constraints', () => {
     pin: [1000, 1500],
     story: [1080, 1920],
     sheet: [2160, 1528],
+    bluesky: [1080, 1440],
   });
   assert.ok(Object.isFrozen(SOCIAL_PRESETS));
 });
@@ -171,4 +173,98 @@ test('linkedInPdf: 8 upright pages at the panel size in points, one JPEG filling
 
 test('linkedInPdf needs exactly 8 panels', () => {
   assert.throws(() => linkedInPdf(newDog(), []), /8 panels/);
+});
+
+// ---------------------------------------------------------------- Bluesky
+
+test('socialPlan: bluesky is 4 frames of pages 1, 2, 3 and 8 by default, named -bluesky-01..04.png', () => {
+  const dog = newDog({ title: 'Ketchup', paper: 'letter' });
+  const frames = socialPlan(dog, 'bluesky');
+  assert.deepEqual(frames.map((f) => f.name), [1, 2, 3, 4].map((n) => `hotdog-ketchup-bluesky-0${n}.png`));
+  assert.deepEqual(frames.map((f) => f.source), [0, 1, 2, 7].map((index) => ({ kind: 'page', index })));
+  for (const f of frames) {
+    assert.deepEqual([f.w, f.h], [1080, 1440]);
+    assert.deepEqual(f.rect, frameRect('bluesky', aspectOf(panelSize('letter'))));
+  }
+});
+
+test('socialPlan: bluesky takes 4 picked page numbers, in the order given', () => {
+  const frames = socialPlan(newDog(), 'bluesky', { pages: [1, 5, 4, 7] });
+  assert.deepEqual(frames.map((f) => f.source.index), [0, 4, 3, 6]);
+});
+
+test('socialPlan: bluesky pages must be exactly 4 distinct page numbers 1..8', () => {
+  const dog = newDog();
+  for (const pages of [[1, 2, 3], [1, 2, 3, 4, 5], [1, 1, 2, 3], [0, 1, 2, 3], [1, 2, 3, 9], [1, 2, 3, 2.5],
+    ['1', 2, 3, 4], 'one']) {
+    assert.throws(() => socialPlan(dog, 'bluesky', { pages }), /4 distinct pages/, JSON.stringify(pages));
+  }
+  assert.throws(() => socialPlan(dog, 'cover', { pages: [1, 2, 3, 4] }), /only for bluesky/);
+});
+
+// ---------------------------------------------------------------- story caption
+
+test('socialPlan: a story without a caption is unchanged; a caption fits the page above a caption band', () => {
+  const dog = newDog({ title: 'Relish', paper: 'letter' });
+  const [plain] = socialPlan(dog, 'story');
+  assert.equal(plain.caption, undefined);
+  assert.deepEqual(socialPlan(dog, 'story', { caption: '   ' }), [plain], 'a blank caption is no caption');
+
+  const [f] = socialPlan(dog, 'story', { caption: '  Fold your own  ' });
+  const { w: W, h: H } = SOCIAL_PRESETS.story;
+  const pad = Math.round(SOCIAL_PADDING * Math.min(W, H));
+  const band = Math.round(STORY_CAPTION_BAND * H);
+  assert.equal(f.caption.text, 'Fold your own');
+  assert.deepEqual(f.caption.rect, { x: pad, y: H - band, w: W - 2 * pad, h: band - pad });
+  // The page: fitted inside the padding in the area above the band, centred across.
+  const r = f.rect;
+  const aspect = aspectOf(panelSize('letter'));
+  assert.ok(r.y >= pad && r.y + r.h <= H - band - pad, 'page sits above the band with padding');
+  assert.ok(r.x >= pad && Math.abs(r.x - (W - r.x - r.w)) <= 1, 'centred across');
+  assert.ok(Math.min(r.x, r.y) === pad, 'touches the padding on the limiting axis');
+  assert.ok(Math.abs(r.w / r.h - aspect) < 2 / Math.min(r.w, r.h), 'page aspect kept');
+  assert.ok(r.h < plain.rect.h, 'smaller than without a caption');
+});
+
+test('socialPlan: a caption is only for the story, and must be a string', () => {
+  assert.throws(() => socialPlan(newDog(), 'cover', { caption: 'Hi' }), /only for story/);
+  assert.throws(() => socialPlan(newDog(), 'story', { caption: 42 }), /string/);
+});
+
+test('renderFrame draws the story caption centred in its band, display font, the look text colour', () => {
+  const dog = newDog();
+  dog.look = 'night';
+  const [frame] = socialPlan(dog, 'story', { caption: 'Fold your own' });
+  const ctx = fakeContext();
+  renderFrame(ctx, dog, frame, {});
+  const texts = callsOf(ctx, 'fillText');
+  assert.equal(texts.length, 1, 'one short line');
+  const c = frame.caption.rect;
+  const [line, x, y] = texts[0];
+  assert.equal(line, 'Fold your own');
+  assert.equal(x, c.x + c.w / 2, 'centred across the band');
+  const size = Number(/^(\d+(?:\.\d+)?)px/.exec(setsOf(ctx, 'font').at(-1))[1]);
+  close(y, c.y + (c.h - size) / 2, 'one line centred down the band', 0.51);
+  assert.ok(setsOf(ctx, 'font').at(-1).includes(LOOKS.night.fonts.display), 'display font');
+  assert.equal(setsOf(ctx, 'textAlign').at(-1), 'center');
+  assert.equal(setsOf(ctx, 'fillStyle').at(-1), colorOf('night', LOOKS.night.text), 'look text colour');
+  assert.equal(callsOf(ctx, 'save').length, callsOf(ctx, 'restore').length, 'balanced save/restore');
+});
+
+test('renderFrame wraps a long caption to the band width and keeps it inside the band', () => {
+  const dog = newDog();
+  const [frame] = socialPlan(dog, 'story', { caption: 'Fold your own zine from one sheet of paper tonight' });
+  const ctx = fakeContext();
+  renderFrame(ctx, dog, frame, { bw: true });
+  const texts = callsOf(ctx, 'fillText');
+  assert.ok(texts.length >= 2, 'wrapped');
+  const c = frame.caption.rect;
+  const font = setsOf(ctx, 'font').at(-1);
+  const size = Number(/^(\d+(?:\.\d+)?)px/.exec(font)[1]);
+  for (const [line, , y] of texts) {
+    assert.ok([...line].length * FAKE_EM * size <= c.w, `"${line}" fits the width`);
+    assert.ok(y >= c.y - 0.5 && y + size <= c.y + c.h + 0.5, `"${line}" inside the band`);
+  }
+  assert.ok(texts[1][2] - texts[0][2] > size * (LINE_HEIGHT - 0.01), 'line spacing');
+  assert.equal(setsOf(ctx, 'fillStyle').at(-1), grayHex(colorOf('kraft', LOOKS.kraft.text)), 'bw caption is gray');
 });

@@ -2,13 +2,14 @@
 // plan, drawing one frame, and the LinkedIn document PDF. Pure, no DOM: the browser makes the canvases, loops over
 // socialPlan with renderFrame, encodes PNGs and zips them with zip.js.
 import { panelSize, resolvePaper } from './paper.js';
-import { colorOf, grayHex } from './looks.js';
-import { renderPage, renderSheet } from './render.js';
+import { colorOf, grayHex, lookOf } from './looks.js';
+import { layoutText, renderPage, renderSheet } from './render.js';
 import { buildPdf, PT_PER_MM } from './pdf.js';
 
 /**
- * Frame sizes in px. `source`: a carousel is every page, cover/pin/story are page 1, sheet is the imposed sheet.
- * @typedef {{w: number, h: number, source: 'pages'|'cover'|'sheet'}} SocialPreset
+ * Frame sizes in px. `source`: a carousel is every page, cover/pin/story are page 1, sheet is the imposed sheet,
+ * bluesky is four picked pages (1, 2, 3 and 8 unless the caller picks).
+ * @typedef {{w: number, h: number, source: 'pages'|'cover'|'sheet'|'pick'}} SocialPreset
  */
 export const SOCIAL_PRESETS = Object.freeze({
   'carousel-3x4': Object.freeze({ w: 1080, h: 1440, source: 'pages' }),
@@ -17,17 +18,27 @@ export const SOCIAL_PRESETS = Object.freeze({
   pin: Object.freeze({ w: 1000, h: 1500, source: 'cover' }),
   story: Object.freeze({ w: 1080, h: 1920, source: 'cover' }),
   sheet: Object.freeze({ w: 2160, h: 1528, source: 'sheet' }),
+  bluesky: Object.freeze({ w: 1080, h: 1440, source: 'pick' }),
 });
+
+/** Bluesky's default pick: the cover, the first spread and the back. */
+const BLUESKY_PAGES = Object.freeze([1, 2, 3, 8]);
 
 /** The least padding around the page, as a fraction of the frame's shorter side. */
 export const SOCIAL_PADDING = 0.06;
+
+/** A story caption's band at the foot of the frame, as a fraction of the frame height. */
+export const STORY_CAPTION_BAND = 0.18;
+/** The caption's font size as a fraction of its box height (two lines fit). */
+const CAPTION_SIZE = 0.4;
 
 const SLUG_MAX = 40;
 
 /**
  * @typedef {{x: number, y: number, w: number, h: number}} Rect integer px within the frame
  * @typedef {{name: string, w: number, h: number, background: string, source: {kind: 'page', index: number}
- *   | {kind: 'sheet'}, rect: Rect}} Frame
+ *   | {kind: 'sheet'}, rect: Rect, caption?: {text: string, rect: Rect}}} Frame
+ *   `caption` only on a story given one: the page sits above it.
  */
 
 /**
@@ -57,21 +68,48 @@ function presetOf(id) {
  */
 export function frameRect(presetId, aspect) {
   const { w: W, h: H } = presetOf(presetId);
+  return fit(W, H, aspect, padOf(W, H));
+}
+
+const padOf = (W, H) => Math.round(SOCIAL_PADDING * Math.min(W, H));
+
+/** Content of `aspect` fitted inside `pad` in a W x H area at the origin, centred, in whole pixels. */
+function fit(W, H, aspect, pad) {
   if (!(aspect > 0 && Number.isFinite(aspect))) throw new Error('frameRect needs a positive finite aspect');
-  const pad = Math.round(SOCIAL_PADDING * Math.min(W, H));
   const [iw, ih] = [W - 2 * pad, H - 2 * pad];
   const [w, h] = aspect > iw / ih ? [iw, Math.round(iw / aspect)] : [Math.round(ih * aspect), ih];
   return { x: Math.round((W - w) / 2), y: Math.round((H - h) / 2), w, h };
 }
 
+/** @param {unknown} pages */
+function pickedPages(pages) {
+  const ok = Array.isArray(pages) && pages.length === 4 && new Set(pages).size === 4
+    && pages.every((n) => Number.isInteger(n) && n >= 1 && n <= 8);
+  if (!ok) throw new Error('bluesky needs exactly 4 distinct pages, numbers 1..8');
+  return pages;
+}
+
+/** The trimmed caption, or undefined when there is none. @param {unknown} caption */
+function captionText(caption) {
+  if (caption === undefined || caption === null) return undefined;
+  if (typeof caption !== 'string') throw new Error('A story caption must be a string');
+  return caption.trim() || undefined;
+}
+
 /**
  * The frames of one preset, in posting order. Padding is the look's paper colour.
+ * - `caption` (story only): the page is fitted above a band at the foot of the frame and the caption sits in it.
+ *   A blank caption is none.
+ * - `pages` (bluesky only): the 4 page numbers to post, in order; default 1, 2, 3, 8.
  * @param {any} dog
  * @param {string} presetId
+ * @param {{caption?: string, pages?: number[]}} [opts]
  * @returns {Frame[]}
  */
-export function socialPlan(dog, presetId) {
+export function socialPlan(dog, presetId, { caption, pages } = {}) {
   const preset = presetOf(presetId);
+  if (pages !== undefined && preset.source !== 'pick') throw new Error('pages is only for bluesky');
+  if (caption !== undefined && presetId !== 'story') throw new Error('caption is only for story');
   const paper = resolvePaper(dog.paper);
   const base = `hotdog-${slug(dog.title)}`;
   const frame = (name, source, aspect) => ({
@@ -79,14 +117,26 @@ export function socialPlan(dog, presetId) {
   });
   if (preset.source === 'sheet') return [frame(`${base}-${presetId}.png`, { kind: 'sheet' }, paper.w_mm / paper.h_mm)];
   const { w, h } = panelSize(paper);
+  const text = captionText(caption);
+  if (text) {
+    const { w: W, h: H } = preset;
+    const pad = padOf(W, H);
+    const band = Math.round(STORY_CAPTION_BAND * H);
+    return [{
+      ...frame(`${base}-${presetId}.png`, { kind: 'page', index: 0 }, w / h),
+      rect: fit(W, H - band, w / h, pad),
+      caption: { text, rect: { x: pad, y: H - band, w: W - 2 * pad, h: band - pad } },
+    }];
+  }
   if (preset.source === 'cover') return [frame(`${base}-${presetId}.png`, { kind: 'page', index: 0 }, w / h)];
-  return Array.from({ length: 8 }, (_, i) => frame(`${base}-${presetId}-${String(i + 1).padStart(2, '0')}.png`,
-    { kind: 'page', index: i }, w / h));
+  const numbers = preset.source === 'pick' ? pickedPages(pages ?? BLUESKY_PAGES) : [1, 2, 3, 4, 5, 6, 7, 8];
+  return numbers.map((n, i) => frame(`${base}-${presetId}-${String(i + 1).padStart(2, '0')}.png`,
+    { kind: 'page', index: n - 1 }, w / h));
 }
 
 /**
  * Draw one frame onto a context of frame.w x frame.h: the background, then the page (or the sheet, guides on)
- * into frame.rect. With `bw` the background is its gray as well.
+ * into frame.rect, then any caption. With `bw` the background and caption are their grays as well.
  * @param {CanvasRenderingContext2D|any} ctx
  * @param {any} dog
  * @param {Frame} frame
@@ -103,6 +153,27 @@ export function renderFrame(ctx, dog, frame, { images = {}, bw = false } = {}) {
   } else {
     renderPage(ctx, dog, source.index, { px_w: rect.w, px_h: rect.h, images, bw });
   }
+  ctx.restore();
+  if (frame.caption) drawCaption(ctx, dog, frame.caption, bw);
+}
+
+/**
+ * The caption centred in its box: the look's display font, its text colour, wrapped by render.js's layoutText;
+ * lines past the box height are dropped.
+ */
+function drawCaption(ctx, dog, { text, rect }, bw) {
+  const item = { font: 'display', size: CAPTION_SIZE, w: 1, h: 1, runs: [{ text }] };
+  const layout = layoutText(ctx, item, rect.w, rect.h, dog.look);
+  const block = layout.size_px + (layout.visible - 1) * layout.line_px;
+  const top = rect.y + (rect.h - block) / 2;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(rect.x, rect.y, rect.w, rect.h);
+  ctx.clip();
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = colorOf(dog.look, lookOf(dog.look).text, bw);
+  for (let i = 0; i < layout.visible; i++) ctx.fillText(layout.lines[i], rect.x + rect.w / 2, top + i * layout.line_px);
   ctx.restore();
 }
 
