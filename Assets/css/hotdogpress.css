@@ -90,10 +90,6 @@
 }
 
 /* The editor root: full width, the app (Task 11) fills it. */
-.hotdogpress-editor {
-  min-height: 60vh;
-}
-
 .hotdogpress-loading {
   padding: 2rem 0;
   text-align: center;
@@ -111,6 +107,7 @@
    beside the page. Chrome uses Kanboard/ShadcnTheme buttons and inputs; brand colours stay on the canvas. */
 
 .hotdogpress-editor {
+  min-height: 60vh;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
