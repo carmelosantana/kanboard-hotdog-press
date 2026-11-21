@@ -107,7 +107,10 @@ class DogValidator
             $this->error(['hotdog'], 'must be the integer 1');
         }
         if (array_key_exists('issue', $dog) && ! self::validIssue($dog['issue'])) {
-            $this->error(['issue'], 'must be a string of at most '.self::MAX_ISSUE_CHARS.' characters or an integer of 0 or more');
+            $this->error(
+                ['issue'],
+                'must be a string of at most '.self::MAX_ISSUE_CHARS.' characters or an integer of 0 or more',
+            );
         }
         if (! in_array($dog['paper'] ?? null, self::PAPERS, true)) {
             $this->error(['paper'], 'must be one of '.implode(', ', self::PAPERS));
