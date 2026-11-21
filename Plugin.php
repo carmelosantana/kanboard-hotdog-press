@@ -7,6 +7,9 @@ use Kanboard\Core\Translator;
 
 class Plugin extends Base
 {
+    /** plugin.json's version; also the ?v= on the editor's scripts and every import inside the app. */
+    public const VERSION = '0.1.0';
+
     public function initialize(): void
     {
         // Project-scoped pages: core's middleware checks the role for :project_id, and the controllers again.
@@ -47,7 +50,7 @@ class Plugin extends Base
     public function getPluginName(): string        { return 'HotDogPress'; }
     public function getPluginDescription(): string { return t('Make a single-sheet, eight-page zine and print it at home.'); }
     public function getPluginAuthor(): string      { return 'Carmelo Santana'; }
-    public function getPluginVersion(): string     { return '0.1.0'; }
+    public function getPluginVersion(): string     { return self::VERSION; }
     public function getPluginHomepage(): string    { return 'https://github.com/carmelosantana/kanboard-hotdog-press'; }
     public function getCompatibleVersion(): string { return '>=1.2.47'; }
 }

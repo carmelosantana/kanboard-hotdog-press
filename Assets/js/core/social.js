@@ -1,10 +1,10 @@
 // Social posts from the same eight pages: preset frame sizes, where the page sits in each frame, the ordered frame
 // plan, drawing one frame, and the LinkedIn document PDF. Pure, no DOM: the browser makes the canvases, loops over
 // socialPlan with renderFrame, encodes PNGs and zips them with zip.js.
-import { panelSize, resolvePaper } from './paper.js';
-import { colorOf, grayHex, lookOf } from './looks.js';
-import { layoutText, renderPage, renderSheet } from './render.js';
-import { buildPdf, PT_PER_MM } from './pdf.js';
+import { panelSize, resolvePaper } from './paper.js?v=0.1.0';
+import { colorOf, grayHex, lookOf } from './looks.js?v=0.1.0';
+import { layoutText, renderPage, renderSheet } from './render.js?v=0.1.0';
+import { buildPdf, PT_PER_MM } from './pdf.js?v=0.1.0';
 
 /**
  * Frame sizes in px. `source`: a carousel is every page, cover/pin/story are page 1, sheet is the imposed sheet,

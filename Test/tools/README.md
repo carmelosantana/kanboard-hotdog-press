@@ -1,5 +1,11 @@
 # Test tools
 
+## Versioned imports
+
+`node Test/tools/version-imports.mjs` puts `?v=<plugin.json version>` on every relative import in `Assets/js`. Run it
+after bumping the version (plugin.json, `Plugin::VERSION`): an upgrade then changes every module URL, so no browser
+mixes new modules with week-old cached ones. `Test/js/versioned-imports.test.mjs` fails until it has run.
+
 ## Print probe
 
 `node Test/tools/print-probe.mjs [out-dir]` writes `print-probe-letter.pdf` and `print-probe-a4.pdf`

@@ -1,9 +1,9 @@
 // Document edits the editor makes, as pure functions: each takes a (frozen) Dog and returns a new one, or the same Dog
 // when nothing changes. Item factories make hand-made items. No DOM.
-import { randomId } from '../core/dog.js';
-import { LAYOUTS, place } from '../core/layouts.js';
-import { textLines } from '../core/runs.js';
-import { clampMargin } from '../core/paper.js';
+import { randomId } from '../core/dog.js?v=0.1.0';
+import { LAYOUTS, place } from '../core/layouts.js?v=0.1.0';
+import { textLines } from '../core/runs.js?v=0.1.0';
+import { clampMargin } from '../core/paper.js?v=0.1.0';
 
 /** The shared placeholder asset an empty image slot points at until a photo replaces it. */
 export const PLACEHOLDER_ASSET = 'placeholder';

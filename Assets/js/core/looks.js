@@ -1,6 +1,6 @@
 // Looks: named themes that set colours by token, the font role stacks and the guide level. Pure, no DOM.
 // The renderer and the print sheet's guide layer both read them, so screen and paper agree.
-import { luminance } from './filters.js';
+import { luminance } from './filters.js?v=0.1.0';
 
 /**
  * Colour tokens. `paper` is the look's page colour and `toner` its ink (light on a dark look); the rest are the

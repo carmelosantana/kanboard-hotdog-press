@@ -1,10 +1,10 @@
 // The page strip: eight thumbnails in reading order. Tap one to open it. Reorder with the mouse by dragging, or on a
 // touch screen by holding a page and then tapping where it goes. Moving a page moves its contents.
-import { renderPage } from '../../core/render.js';
-import { panelSize } from '../../core/paper.js';
-import { movePage } from '../edit.js';
-import { dropIndex, fitInto } from '../viewmath.js';
-import { h, sizeCanvas } from '../dom.js';
+import { renderPage } from '../../core/render.js?v=0.1.0';
+import { panelSize } from '../../core/paper.js?v=0.1.0';
+import { movePage } from '../edit.js?v=0.1.0';
+import { dropIndex, fitInto } from '../viewmath.js?v=0.1.0';
+import { h, sizeCanvas } from '../dom.js?v=0.1.0';
 
 const DRAG_PX = 8;
 const HOLD_MS = 450;

@@ -1,16 +1,16 @@
 // Mustard (*.mustard.md): markdown for writing a zine. compileMustard turns it into the Dog (deterministic apart from
 // minted ids); exportMustard (mustard-export.js) writes a Dog back. Pure, no DOM. Format: hotdogpress-formats.md.
-import { newDog, validateDog, randomId, LAYOUT_NAMES, BY_VALUES, PAPER_IDS, MAX_DOG_BYTES } from './dog.js';
-import { LAYOUTS, place, budget, overflows, BULLET } from './layouts.js';
-import { safeArea } from './impose.js';
-import { DEFAULT_MARGIN_MM, MAX_MARGIN_MM } from './paper.js';
-import { readFrontMatter } from './frontmatter.js';
+import { newDog, validateDog, randomId, LAYOUT_NAMES, BY_VALUES, PAPER_IDS, MAX_DOG_BYTES } from './dog.js?v=0.1.0';
+import { LAYOUTS, place, budget, overflows, BULLET } from './layouts.js?v=0.1.0';
+import { safeArea } from './impose.js?v=0.1.0';
+import { DEFAULT_MARGIN_MM, MAX_MARGIN_MM } from './paper.js?v=0.1.0';
+import { readFrontMatter } from './frontmatter.js?v=0.1.0';
 import {
   MUSTARD_VERSION, emptyAttrs, parseAttrs, splitAttrs, parseImage, unescapeLine, inline, isPara, routeBlock,
-} from './mustard-syntax.js';
+} from './mustard-syntax.js?v=0.1.0';
 
-export { MUSTARD_VERSION } from './mustard-syntax.js';
-export { exportMustard } from './mustard-export.js';
+export { MUSTARD_VERSION } from './mustard-syntax.js?v=0.1.0';
+export { exportMustard } from './mustard-export.js?v=0.1.0';
 
 /** @typedef {{path: string, message: string, line?: number}} MustardProblem */
 

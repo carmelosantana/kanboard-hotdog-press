@@ -1,10 +1,10 @@
 // Zine settings: paper, margin, look, the current page's layout and the safe-area overlay. A <details> block that is
 // open on wide screens and folded away on a phone. Viewers see the values, disabled.
-import { h } from '../dom.js';
-import { applyLayout, setMargin } from '../edit.js';
-import { LAYOUT_NAMES, PAPER_IDS } from '../../core/dog.js';
-import { LOOKS } from '../../core/looks.js';
-import { MAX_MARGIN_MM } from '../../core/paper.js';
+import { h } from '../dom.js?v=0.1.0';
+import { applyLayout, setMargin } from '../edit.js?v=0.1.0';
+import { LAYOUT_NAMES, PAPER_IDS } from '../../core/dog.js?v=0.1.0';
+import { LOOKS } from '../../core/looks.js?v=0.1.0';
+import { MAX_MARGIN_MM } from '../../core/paper.js?v=0.1.0';
 
 /** @param {any} app */
 export function createSettings(app) {

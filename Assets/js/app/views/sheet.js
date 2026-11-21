@@ -1,10 +1,10 @@
 // The Sheet view: the true imposition as it prints (top row upside down) with the fold and cut guides. Tap a panel to
 // open that page in the Pages view.
-import { renderSheet } from '../../core/render.js';
-import { panelRect } from '../../core/impose.js';
-import { resolvePaper } from '../../core/paper.js';
-import { fitInto } from '../viewmath.js';
-import { h, sizeCanvas } from '../dom.js';
+import { renderSheet } from '../../core/render.js?v=0.1.0';
+import { panelRect } from '../../core/impose.js?v=0.1.0';
+import { resolvePaper } from '../../core/paper.js?v=0.1.0';
+import { fitInto } from '../viewmath.js?v=0.1.0';
+import { h, sizeCanvas } from '../dom.js?v=0.1.0';
 
 /** @param {any} app */
 export function createSheetView(app) {

@@ -1,7 +1,7 @@
 // The select tool: pick the topmost item, move it, drag a corner to resize, the top knob to rotate (Shift snaps to
 // 15°). Locked items can be picked (to unlock) but not moved. The page view opens a text box on double-click.
-import { hitTest, itemBox, toPx, toUnits, handleAt, resizeBox, rotateTo, moveBy, boxPatch } from '../geometry.js';
-import { findItem, updateItem } from '../edit.js';
+import { hitTest, itemBox, toPx, toUnits, handleAt, resizeBox, rotateTo, moveBy, boxPatch } from '../geometry.js?v=0.1.0';
+import { findItem, updateItem } from '../edit.js?v=0.1.0';
 
 const HANDLE_RADIUS = 14;
 let drags = 0;

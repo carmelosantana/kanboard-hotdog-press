@@ -1,7 +1,7 @@
 // Browser end-to-end run of the zine editor (Task 11) on the :8081 dev stack, headless Chromium via Playwright from
 // the harness root's node_modules. Desktop (1280) and phone (375) widths:
 //
-//   create a zine → add text (typed in place) → draw ink → a shape → a sticker → upload a photo → move, resize,
+//   create a zine (every script URL carries ?v=<version>; a module that fails to load shows the boot error) → add text (typed in place) → draw ink → a shape → a sticker → upload a photo → move, resize,
 //   rotate, undo/redo, lock → apply a layout (hand items stay) → change the look → paste Mustard and Apply (warnings
 //   shown, hand ink kept) → bad Mustard shows errors and changes nothing → reorder pages in the strip → Pages / Sheet /
 //   Booklet → autosave reaches the server and a reload brings the zine back (the strict validator accepts it) →
@@ -26,6 +26,7 @@ const PHOTO = join(PLUGIN, 'Test/fixtures/pdf/two-tone.jpg');
 const tag = randomBytes(3).toString('hex');
 const VIEWER = { username: `hdp-viewer-${tag}`, password: randomBytes(12).toString('base64url') };
 const MUSTARD = readFileSync(join(PLUGIN, 'Test/fixtures/mustard/example.mustard.md'), 'utf8');
+const VERSION = JSON.parse(readFileSync(join(PLUGIN, 'plugin.json'), 'utf8')).version;
 mkdirSync(SHOTS, { recursive: true });
 
 async function overlayBox(page) {
@@ -52,8 +53,22 @@ try {
   await ctx.addInitScript(CSP_PROBE);
   const page = await login(ctx, 'admin', 'admin');
   watch(page, 'desktop');
+  const scripts = [];
+  page.on('request', (r) => { if (/HotDogPress\/Assets\/js\//.test(r.url())) scripts.push(new URL(r.url())); });
   zineId = await createZine(page, `E2E zine ${tag}`);
   let s = await state(page);
+  // Cache-busting: boot.js, main.js and every module it imports carry the plugin version.
+  const unversioned = scripts.filter((u) => u.search !== `?v=${VERSION}`).map((u) => u.pathname + u.search);
+  assert.ok(scripts.length > 40, `the app's modules were requested (${scripts.length})`);
+  assert.deepEqual(unversioned, [], 'every script URL ends in ?v=<plugin version>');
+  // A module that fails to load (a broken upgrade) shows the translated boot error, not "Loading the editor…".
+  const broken = await ctx.newPage();
+  await broken.route('**/HotDogPress/Assets/js/core/render.js*', (route) => route.fulfill({ status: 404, body: '' }));
+  await broken.goto(page.url());
+  await broken.waitForSelector('#hotdogpress-app[data-ready="error"]');
+  assert.equal(await broken.locator('#hotdogpress-app [role=alert]').textContent(),
+    'The editor could not start. Reload the page to try again.');
+  await broken.close();
   assert.equal(s.doc.pages.length, 8);
   assert.equal(s.ui.view, 'pages');
   await page.waitForFunction(() => document.fonts.check('20px "Anton"') && document.fonts.check('20px "Atkinson Hyperlegible"'));
@@ -62,9 +77,9 @@ try {
   // Accents above capitals are drawn whole: "ÁÉÑ¿" in Anton through the renderer (clipped to its text box) inks as many
   // pixels as the same string drawn freely, and its top ink sits inside the box, above the capitals' cap line.
   const accents = await page.evaluate(async () => {
-    const base = document.querySelector('script[type=module][src*="HotDogPress/Assets/js/app/main.js"]').src;
-    const render = await import(new URL('../core/render.js', base).href);
-    const { newDog } = await import(new URL('../core/dog.js', base).href);
+    const base = new URL(document.querySelector('script[data-main*="HotDogPress/Assets/js/app/main.js"]').dataset.main, document.baseURI).href;
+    const render = await import(new URL('../core/render.js' + new URL(base).search, base).href);
+    const { newDog } = await import(new URL('../core/dog.js' + new URL(base).search, base).href);
     const W = 400;
     const H = 600;
     const ink = (draw) => {

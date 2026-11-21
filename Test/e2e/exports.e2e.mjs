@@ -94,7 +94,7 @@ try {
   await page.click('.hdp-mustard button:has-text("Close")');
   // A marker on every page, so no two pages look alike (the example leaves the last pages empty).
   await page.evaluate(async () => {
-    const m = await import(document.querySelector('script[type=module][src*="HotDogPress/Assets/js/app/main.js"]').src);
+    const m = await import(new URL(document.querySelector('script[data-main*="HotDogPress/Assets/js/app/main.js"]').dataset.main, document.baseURI).href);
     m.editor.store.update((d) => ({
       ...d,
       pages: d.pages.map((p, n) => ({
@@ -121,9 +121,9 @@ try {
   // index itself, not the frame plan's), and no two frames are alike.
   assert.equal(new Set(frames.map((f) => latin1(f.data))).size, 8, 'eight different pages');
   const alone = await page.evaluate(async () => {
-    const base = document.querySelector('script[type=module][src*="HotDogPress/Assets/js/app/main.js"]').src;
+    const base = new URL(document.querySelector('script[data-main*="HotDogPress/Assets/js/app/main.js"]').dataset.main, document.baseURI).href;
     const m = await import(base);
-    const social = await import(new URL('../core/social.js', base).href);
+    const social = await import(new URL('../core/social.js' + new URL(base).search, base).href);
     const doc = m.editor.store.doc;
     const [first] = social.socialPlan(doc, 'carousel-3x4');
     const out = [];
@@ -161,9 +161,9 @@ try {
   assert.ok(latin1(pdf.bytes).startsWith('%PDF-1.4'), 'a PDF');
   assert.match(await page.locator('.hdp-status').textContent(), /Order up · Print at Actual size \(100%\), on Letter, one side\./);
   const gray = await page.evaluate(async () => {
-    const base = document.querySelector('script[type=module][src*="HotDogPress/Assets/js/app/main.js"]').src;
+    const base = new URL(document.querySelector('script[data-main*="HotDogPress/Assets/js/app/main.js"]').dataset.main, document.baseURI).href;
     const m = await import(base);
-    const ex = await import(new URL('./exports.js', base).href);
+    const ex = await import(new URL('./exports.js' + new URL(base).search, base).href);
     const doc = m.editor.store.doc;
     const spread = async (bw) => {
       const [panel] = await ex.rasterPanels(doc, m.editor.images.map, { bw, dpi: 40 });

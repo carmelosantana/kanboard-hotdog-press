@@ -1,8 +1,8 @@
 // The Booklet view: flip through the folded zine — the cover alone, three spreads, the back cover alone.
-import { renderPage } from '../../core/render.js';
-import { panelSize } from '../../core/paper.js';
-import { fitInto, SPREADS } from '../viewmath.js';
-import { h, sizeCanvas } from '../dom.js';
+import { renderPage } from '../../core/render.js?v=0.1.0';
+import { panelSize } from '../../core/paper.js?v=0.1.0';
+import { fitInto, SPREADS } from '../viewmath.js?v=0.1.0';
+import { h, sizeCanvas } from '../dom.js?v=0.1.0';
 
 /** @param {any} app */
 export function createBookletView(app) {

@@ -1,12 +1,12 @@
 // Export: a Dog written back as Mustard, in the Dog's own item order (z-order). Never throws, whatever the Dog holds:
 // missing numbers are left out, ids an attribute block cannot carry are re-minted with a warning. Pure, no DOM.
-import { randomId, LAYOUT_NAMES, PAPER_IDS, BY_VALUES } from './dog.js';
-import { LAYOUTS, place, BULLET } from './layouts.js';
-import { DEFAULT_MARGIN_MM, MAX_MARGIN_MM } from './paper.js';
-import { yamlScalar } from './frontmatter.js';
+import { randomId, LAYOUT_NAMES, PAPER_IDS, BY_VALUES } from './dog.js?v=0.1.0';
+import { LAYOUTS, place, BULLET } from './layouts.js?v=0.1.0';
+import { DEFAULT_MARGIN_MM, MAX_MARGIN_MM } from './paper.js?v=0.1.0';
+import { yamlScalar } from './frontmatter.js?v=0.1.0';
 import {
   MUSTARD_VERSION, KEPT_TYPES, KEY, canName, attrValue, formatImage, textLines, routeBlock,
-} from './mustard-syntax.js';
+} from './mustard-syntax.js?v=0.1.0';
 
 const BOX = ['x', 'y', 'w', 'h'];
 const EPS = 1e-6;

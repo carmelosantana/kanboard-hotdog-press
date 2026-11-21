@@ -15,6 +15,7 @@ class TemplatesTest extends Base
 
     private const CSS = 'plugins/HotDogPress/Assets/css/hotdogpress.css';
     private const MAIN = 'plugins/HotDogPress/Assets/js/app/main.js';
+    private const BOOT = 'plugins/HotDogPress/Assets/js/boot.js';
 
     protected function setUp(): void
     {
@@ -179,7 +180,13 @@ class TemplatesTest extends Base
 
         $this->assertStringContainsString('<div id="hotdogpress-app"', $html);
         $this->assertStringContainsString('data-error="The editor could not start. Reload the page to try again."', $html, 'the boot error is translated in the page');
-        $this->assertMatchesRegularExpression('#<script type="module" src="/'.preg_quote(self::MAIN, '#').'\?\d+"></script>#', $html);
+        // A classic boot script imports the app: a module that fails to load or link shows data-error, not "Loading".
+        // Both URLs carry the plugin version, as every import inside the app does (Test/js/versioned-imports.test.mjs).
+        $v = \Kanboard\Plugin\HotDogPress\Plugin::VERSION;
+        $this->assertStringContainsString(
+            '<script src="/'.self::BOOT.'?v='.$v.'" data-main="/'.self::MAIN.'?v='.$v.'" defer></script>', $html
+        );
+        $this->assertStringNotContainsString('type="module"', $html);
         $this->assertStringContainsString(self::CSS, $html);
         $this->assertCspSafe($html);
 
@@ -227,6 +234,7 @@ class TemplatesTest extends Base
         $html = $this->listPage();
         $this->assertStringContainsString(self::CSS, $html);
         $this->assertStringNotContainsString('main.js', $html);
+        $this->assertStringNotContainsString('boot.js', $html);
     }
 
     // Kills: es_ES strings not reaching the editor config (the app would always be English).

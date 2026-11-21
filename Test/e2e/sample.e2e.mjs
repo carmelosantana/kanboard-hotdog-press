@@ -167,10 +167,10 @@ try {
   s = await untilSaved(page, 'zine A');
   // Nothing overflows: every text box of zine A holds all its lines in the real fonts, on Letter and on A4.
   const cut = await page.evaluate(async () => {
-    const base = document.querySelector('script[type=module][src*="HotDogPress/Assets/js/app/main.js"]').src;
+    const base = new URL(document.querySelector('script[data-main*="HotDogPress/Assets/js/app/main.js"]').dataset.main, document.baseURI).href;
     const m = await import(base);
-    const { layoutText } = await import(new URL('../core/render.js', base).href);
-    const { panelSize } = await import(new URL('../core/paper.js', base).href);
+    const { layoutText } = await import(new URL('../core/render.js' + new URL(base).search, base).href);
+    const { panelSize } = await import(new URL('../core/paper.js' + new URL(base).search, base).href);
     const g = new OffscreenCanvas(10, 10).getContext('2d');
     const doc = m.editor.store.doc;
     const out = [];

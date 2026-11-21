@@ -1,5 +1,5 @@
 // The 4x2 one-sheet imposition: where each page sits, the cut and folds, and each page's safe area. Pure, no DOM.
-import { clampMargin, panelSize, resolvePaper } from './paper.js';
+import { clampMargin, panelSize, resolvePaper } from './paper.js?v=0.1.0';
 
 /** @typedef {import('./paper.js').PaperId|import('./paper.js').PaperSize} Paper */
 

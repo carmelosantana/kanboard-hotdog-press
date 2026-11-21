@@ -1,9 +1,9 @@
 // "Write in Mustard": the zine as Mustard text (exportMustard). Apply compiles it; with no errors the pages are
 // replaced (hand-made and locked items stay, applyMustard) and warnings are listed; errors are listed and nothing
 // changes. Viewers read the text only.
-import { h } from '../dom.js';
-import { compileMustard, exportMustard } from '../../core/mustard.js';
-import { applyMustard } from '../edit.js';
+import { h } from '../dom.js?v=0.1.0';
+import { compileMustard, exportMustard } from '../../core/mustard.js?v=0.1.0';
+import { applyMustard } from '../edit.js?v=0.1.0';
 
 /** @param {any} app */
 export function createMustardPanel(app) {

@@ -61,7 +61,7 @@ export async function login(context, username, password) {
 
 /** The editor module's live state: the same module instance the page booted (same URL, query included). */
 export const state = (page) => page.evaluate(async () => {
-  const src = document.querySelector('script[type=module][src*="HotDogPress/Assets/js/app/main.js"]').src;
+  const src = new URL(document.querySelector('script[data-main*="HotDogPress/Assets/js/app/main.js"]').dataset.main, document.baseURI).href;
   const m = await import(src);
   await m.ready;
   const e = m.editor;
