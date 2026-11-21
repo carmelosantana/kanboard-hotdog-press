@@ -27,3 +27,34 @@ test('splitRuns gives a list one run per line and anything else one run', () => 
   assert.deepEqual(splitRuns(list, ''), [{ text: '' }]);
   assert.deepEqual(joinRuns({ ...list, runs: splitRuns(list, '• a\n• b') }), '• a\n• b', 'round trip');
 });
+
+/**
+ * One editing session the way the in-place editor runs it: the textarea is filled from joinRuns when it opens, holds
+ * its own value while typing, and every keystroke saves splitRuns(item, value).
+ */
+function typeInto(item, text) {
+  let it = item;
+  let value = joinRuns(it);
+  for (const ch of text) {
+    value += ch;
+    it = { ...it, runs: splitRuns(it, value) };
+  }
+  return it;
+}
+
+test('typing keystroke by keystroke never loses a line break (free box, then reopened and typed again)', () => {
+  let box = typeInto({ type: 'text', runs: [{ text: '' }] }, '• a\nb');
+  assert.equal(joinRuns(box), '• a\nb', 'a plain line under a bullet line stays its own line');
+  box = typeInto(box, '\nc');
+  assert.equal(joinRuns(box), '• a\nb\nc');
+  const bullets = typeInto({ type: 'text', runs: [{ text: '' }] }, '• a\n• b');
+  assert.equal(joinRuns(bullets), '• a\n• b');
+});
+
+test('a freed list (bullet runs, no slot) keeps its lines when a plain line is added', () => {
+  const freed = typeInto({ type: 'text', runs: [{ text: '• a' }, { text: '• b' }] }, '\nnote');
+  assert.equal(joinRuns(freed), '• a\n• b\nnote');
+  const slot = typeInto({ type: 'text', slot: 'list', runs: [{ text: '• a' }] }, '\nnote');
+  assert.deepEqual(slot.runs, [{ text: '• a' }, { text: 'note' }], 'a list slot keeps one run per line');
+  assert.equal(joinRuns(slot), '• a\nnote');
+});
