@@ -2,13 +2,13 @@
 // it). No DOM here: main.js finds the block and hands its text over.
 
 /**
- * @typedef {{load: string, save: string, upload: string, image: string, export: string, list: string}} Routes
+ * @typedef {{load: string, save: string, upload: string, pdf: string, image: string, export: string, list: string}} Routes
  * @typedef {{routes: Routes, csrf_token: string, zine_id: number, project_id: number, revision: number,
  *   can_edit: boolean, paper: string, user_lang: string, strings: Record<string, string>}} EditorConfig
  */
 
 const FIELDS = ['routes', 'csrf_token', 'zine_id', 'project_id', 'revision', 'can_edit', 'paper', 'user_lang', 'strings'];
-const ROUTES = ['load', 'save', 'upload', 'image', 'export', 'list'];
+const ROUTES = ['load', 'save', 'upload', 'pdf', 'image', 'export', 'list'];
 
 /**
  * Parses and checks the config text; throws naming the first missing field.

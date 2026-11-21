@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readConfig, imageUrl, fill } from '../../Assets/js/app/config.js';
 
 const good = {
-  routes: { load: '/l', save: '/s', upload: '/u', image: '/z/1/image/{file_id}', export: '/e', list: '/list' },
+  routes: { load: '/l', save: '/s', upload: '/u', pdf: '/p', image: '/z/1/image/{file_id}', export: '/e', list: '/list' },
   csrf_token: 'tok',
   zine_id: 1,
   project_id: 2,
