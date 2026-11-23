@@ -3,6 +3,7 @@ require_once 'tests/units/Base.php';
 
 use KanboardTests\units\Base;
 use Kanboard\Plugin\HotDogPress\Model\DogValidator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 // The PHP mirror of Assets/js/core/dog.js validateDog: same fixtures, same paths, same messages.
 class DogValidatorTest extends Base
@@ -58,6 +59,7 @@ class DogValidatorTest extends Base
     }
 
     /** @dataProvider validFixtures */
+    #[DataProvider('validFixtures')]
     public function testValidFixturePassesBothModes(string $name): void
     {
         foreach (['lenient', 'strict'] as $mode) {
@@ -69,6 +71,7 @@ class DogValidatorTest extends Base
     }
 
     /** @dataProvider invalidFixtures */
+    #[DataProvider('invalidFixtures')]
     public function testInvalidFixtureReportsExactlyItsErrors(string $name): void
     {
         $fixture = self::load($name);
