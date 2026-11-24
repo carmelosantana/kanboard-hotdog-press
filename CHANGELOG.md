@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — Unreleased
+## 0.1.0 — 2026-11-24
 
 - Zines in a project: a **Zines** page (from the project menu) to make, rename, remove, download and import zines,
   and **My zines** on the dashboard. Viewers open and export; members make and edit; managers remove.
