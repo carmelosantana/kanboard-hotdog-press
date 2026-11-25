@@ -5,6 +5,7 @@
 ### Security
 - An image asset's `file_id` must be a positive integer and never sits beside `data`; the editor URL-encodes it and fetches only valid ids, so a saved zine can no longer steer viewers' browsers to other routes.
 - A zine holds at most 500 assets, and the editor loads only the assets its pages use.
+- The editor fetches and decodes each image source once, however many asset ids name it, so a zine cannot make viewers repeat one credentialed fetch hundreds of times.
 
 ## 0.1.0 — 2026-11-24
 

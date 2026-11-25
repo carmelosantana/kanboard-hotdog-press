@@ -15,28 +15,36 @@ export function createImages(config, onReady) {
   const keys = new Map();
   /** Loads not finished yet. */
   const pending = new Set();
+  /** source key → promise of its decoded image (null on failure): many asset ids naming one source share one fetch. */
+  const sources = new Map();
+
+  function decode(asset) {
+    return (async () => {
+      try {
+        if (typeof asset.data === 'string' && asset.data.startsWith('data:image/')) {
+          const img = new Image();
+          img.src = asset.data;
+          await img.decode();
+          return img;
+        }
+        if (isFileId(asset.file_id)) {
+          const res = await fetch(imageUrl(config, asset.file_id), { credentials: 'same-origin' });
+          if (!res.ok) throw new Error(`image ${asset.file_id}: HTTP ${res.status}`);
+          return await createImageBitmap(await res.blob());
+        }
+      } catch (err) {
+        console.warn('Hot Dog Press: an image could not be loaded', err);
+      }
+      return null; // neither an image data: URL nor a project file, or it failed
+    })();
+  }
 
   async function load(id, asset, key) {
-    try {
-      let drawable;
-      if (typeof asset.data === 'string' && asset.data.startsWith('data:image/')) {
-        const img = new Image();
-        img.src = asset.data;
-        await img.decode();
-        drawable = img;
-      } else if (isFileId(asset.file_id)) {
-        const res = await fetch(imageUrl(config, asset.file_id), { credentials: 'same-origin' });
-        if (!res.ok) throw new Error(`image ${asset.file_id}: HTTP ${res.status}`);
-        drawable = await createImageBitmap(await res.blob());
-      } else {
-        return; // neither an image data: URL nor a project file
-      }
-      if (keys.get(id) !== key) return;
-      ready[id] = drawable;
-      onReady();
-    } catch (err) {
-      console.warn('Hot Dog Press: an image could not be loaded', err);
-    }
+    if (!sources.has(key)) sources.set(key, decode(asset));
+    const drawable = await sources.get(key);
+    if (!drawable || keys.get(id) !== key) return;
+    ready[id] = drawable;
+    onReady();
   }
 
   return {
@@ -49,7 +57,7 @@ export function createImages(config, onReady) {
         if (!Object.hasOwn(doc.assets ?? {}, id)) continue;
         const asset = doc.assets[id];
         const key = isFileId(asset?.file_id) ? `file:${asset.file_id}`
-          : asset?.file_id == null && typeof asset?.data === 'string' ? `data:${asset.data.length}:${asset.data.slice(-32)}`
+          : asset?.file_id == null && typeof asset?.data === 'string' ? `data:${asset.data}`
             : null; // a file_id that is not a positive integer is never filled into the route
         if (!key || keys.get(id) === key) continue;
         keys.set(id, key);
@@ -67,7 +75,9 @@ export function createImages(config, onReady) {
 
     /** An image decoded here already (a photo just uploaded), so it is not fetched again. */
     put(id, asset, drawable) {
-      keys.set(id, asset.file_id != null ? `file:${asset.file_id}` : `put:${id}`);
+      const key = asset.file_id != null ? `file:${asset.file_id}` : `put:${id}`;
+      keys.set(id, key);
+      sources.set(key, Promise.resolve(drawable));
       ready[id] = drawable;
       onReady();
     },

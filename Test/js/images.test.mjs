@@ -43,3 +43,36 @@ test('an asset whose file_id is not a positive integer is never fetched', async 
   const urls = await fetched(() => createImages(config, () => {}).settled(doc));
   assert.deepEqual(urls, []);
 });
+
+test('500 asset ids aliasing one file_id fetch it once and all draw it', async () => {
+  const ids = Array.from({ length: 500 }, (_, i) => `a${i}`);
+  const doc = {
+    assets: Object.fromEntries(ids.map((id) => [id, { kind: 'image', file_id: 9 }])),
+    pages: [page(ids.map((id, i) => item(`i${i}`, id)))],
+  };
+  const images = createImages(config, () => {});
+  const urls = await fetched(() => images.settled(doc));
+  assert.deepEqual(urls, ['/z/1/image/9']);
+  for (const id of ids) assert.ok(images.map[id], `${id} has the shared image`);
+  assert.equal(images.map.a0, images.map.a499);
+});
+
+test('two different file_ids fetch twice', async () => {
+  const doc = {
+    assets: { a: { kind: 'image', file_id: 1 }, b: { kind: 'image', file_id: 2 }, c: { kind: 'image', file_id: 2 } },
+    pages: [page([item('i1', 'a'), item('i2', 'b'), item('i3', 'c')])],
+  };
+  const urls = await fetched(() => createImages(config, () => {}).settled(doc));
+  assert.deepEqual(urls.sort(), ['/z/1/image/1', '/z/1/image/2']);
+});
+
+test('identical inline data under many asset ids decodes once', async () => {
+  const data = 'data:image/png;base64,AAAA';
+  const ids = Array.from({ length: 50 }, (_, i) => `s${i}`);
+  const doc = {
+    assets: Object.fromEntries(ids.map((id) => [id, { kind: 'sticker', data }])),
+    pages: [page(ids.map((id, i) => item(`i${i}`, id)))],
+  };
+  const urls = await fetched(() => createImages(config, () => {}).settled(doc));
+  assert.deepEqual(urls, [data]);
+});
