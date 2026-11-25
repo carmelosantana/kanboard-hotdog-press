@@ -36,6 +36,10 @@ test('imageUrl fills the file id into the pattern', () => {
   assert.equal(imageUrl(good, 42), '/z/1/image/42');
 });
 
+test('imageUrl encodes the file id, so it cannot add a query string to the route', () => {
+  assert.equal(imageUrl(good, '0?x=1&controller=C'), '/z/1/image/0%3Fx%3D1%26controller%3DC');
+});
+
 test('fill replaces each %s in order and leaves a literal % alone', () => {
   assert.equal(fill(good.strings.print_note, 'Letter'), 'Print at Actual size (100%), on Letter, one side.');
   assert.equal(fill('%s of %s', 1, 8), '1 of 8');
