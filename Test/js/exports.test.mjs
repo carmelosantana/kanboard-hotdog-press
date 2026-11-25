@@ -133,3 +133,15 @@ test('one-frame presets are a single PNG; the story carries its caption; B&W fil
   await socialFiles(dog(), 'cover', {}, { bw: true, canvas: bw.canvas, encode: bw.encode });
   assert.deepEqual(bw.log.map((e) => e[0]), ['get', 'put', 'encode']);
 });
+
+test('printPdf with inkSaver leaves every page white instead of the look\'s paper', async () => {
+  const plain = fakeCanvases();
+  await rasterPanels(dog(), {}, { canvas: plain.canvas, encode: plain.encode });
+  const firstFill = (c) => c.ctx.calls.find((e) => e[0] === 'set' && e[1] === 'fillStyle')[2];
+  assert.equal(firstFill(plain.made[0]), '#D9C4A0', 'kraft paper by default');
+  const f = fakeCanvases();
+  const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
+  await printPdf(dog(), {}, { inkSaver: true, canvas: f.canvas, encode: async (c) => { f.made.includes(c) || f.made.push(c); return jpeg; } });
+  assert.equal(f.made.length, 8);
+  for (const c of f.made) assert.equal(firstFill(c), '#FFFFFF');
+});

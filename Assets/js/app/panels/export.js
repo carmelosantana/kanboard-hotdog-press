@@ -1,4 +1,4 @@
-// Export: the print PDF (guides on or off, black and white), "Save PDF to project files" (members), and the social
+// Export: the print PDF (guides on or off, black and white, ink saver), "Save PDF to project files" (members), and the social
 // files (carousel ZIP at 3:4 or 4:5, cover, pin, story, sheet shot, Bluesky set, LinkedIn PDF). A file is downloaded
 // through an <a download> with a blob: href (never a blob: <img>); where the browser can share files (phones) it is
 // offered to the share sheet as well. Viewers may export; only members save to the project.
@@ -18,6 +18,7 @@ export function createExportPanel(app) {
   };
   const [guides, guidesField] = check('export_guides', true, strings.guides);
   const [bw, bwField] = check('export_bw', false, strings.bw);
+  const [ink, inkField] = check('export_ink_saver', false, strings.ink_saver);
   const ratio = /** @type {HTMLSelectElement} */ (h('select', { name: 'carousel_ratio', 'aria-label': strings.carousel_size },
     h('option', { value: 'carousel-3x4' }, strings.carousel_3x4), h('option', { value: 'carousel-4x5' }, strings.carousel_4x5)));
   const note = h('p', { class: 'hdp-print-note' });
@@ -37,7 +38,7 @@ export function createExportPanel(app) {
     h('summary', {}, strings.export),
     h('div', { class: 'hdp-export-body' },
       h('div', { class: 'hdp-export-group' },
-        h('h4', {}, strings.print), h('div', { class: 'hdp-fields' }, guidesField, bwField),
+        h('h4', {}, strings.print), h('div', { class: 'hdp-fields' }, guidesField, bwField, inkField),
         h('div', { class: 'hdp-group hdp-wrap' }, pdfButton, saveButton), note),
       h('div', { class: 'hdp-export-group' },
         h('h4', {}, strings.social),
@@ -48,7 +49,7 @@ export function createExportPanel(app) {
   const printNote = () => app.fill(strings.print_note, strings[`paper_${store.doc.paper}`] ?? store.doc.paper);
 
   async function makePdf() {
-    return { name: printName(store.doc), type: 'application/pdf', data: await printPdf(store.doc, app.images.map, { ...opts(), guides: guides.checked }) };
+    return { name: printName(store.doc), type: 'application/pdf', data: await printPdf(store.doc, app.images.map, { ...opts(), guides: guides.checked, inkSaver: ink.checked }) };
   }
 
   function social(presetId) {

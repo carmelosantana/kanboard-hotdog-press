@@ -155,6 +155,7 @@ class EditorConfig extends Base
             'print' => e('Print'),
             'guides' => e('Fold and cut guides'),
             'bw' => e('Black and white'),
+            'ink_saver' => e('Ink saver (no background)'),
             'save_pdf_to_files' => e('Save PDF to project files'),
             'print_note' => e('Print at Actual size (100%%), on %s, one side.', '%s'),
             // Social

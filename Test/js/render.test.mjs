@@ -485,3 +485,22 @@ test('an item whose type names an Object.prototype key is skipped, not called', 
     assert.doesNotThrow(() => render([{ ...text(), type }]), type);
   }
 });
+
+test('inkSaver: a copy on white paper with dark ink and no page backgrounds; the zine itself is untouched', async () => {
+  const { inkSaver, INK_SAVER, lookOf } = await import('../../Assets/js/core/looks.js');
+  const d = { ...newDog({ paper: 'letter' }), look: 'night' };
+  d.pages[0] = { ...d.pages[0], bg: 'mustard' };
+  const saved = inkSaver(d);
+  assert.equal(saved.look, INK_SAVER);
+  assert.equal(d.look, 'night', 'the zine keeps its look');
+  assert.equal(d.pages[0].bg, 'mustard', 'and its backgrounds');
+  assert.ok(saved.pages.every((p) => p.bg === undefined), 'no page backgrounds');
+  assert.equal(colorOf(INK_SAVER, 'paper'), '#FFFFFF');
+  assert.equal(colorOf(INK_SAVER, 'toner'), BRAND.toner, 'dark ink, even from a night zine');
+  assert.equal(colorOf(INK_SAVER, 'ketchup'), BRAND.ketchup, 'accents keep their colour');
+  assert.equal(lookOf(INK_SAVER).guide, 0, 'dark guides on white');
+  assert.equal(Object.hasOwn(LOOKS, INK_SAVER), false, 'not a look you can pick for a zine');
+  const ctx = fakeContext();
+  renderPage(ctx, saved, 0, { px_w: 100, px_h: 150 });
+  assert.equal(setsOf(ctx, 'fillStyle')[0], '#FFFFFF', 'the page is left white');
+});

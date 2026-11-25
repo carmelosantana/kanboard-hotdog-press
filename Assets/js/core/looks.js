@@ -39,11 +39,30 @@ export const LOOKS = Object.freeze({
   night: look(BRAND.toner, BRAND.copy, 1),
 });
 
+/** The ink-saver print look: white paper, dark ink, brand accents. Export only, never a zine's own look. */
+export const INK_SAVER = 'ink-saver';
+const PRINT_ONLY = Object.freeze({ [INK_SAVER]: look('#FFFFFF', BRAND.toner, 0) });
+
 /**
  * The named look; an unknown or missing name is kraft.
  * @param {unknown} name
  */
-export const lookOf = (name) => (typeof name === 'string' && Object.hasOwn(LOOKS, name) ? LOOKS[name] : LOOKS.kraft);
+export const lookOf = (name) => {
+  if (typeof name !== 'string') return LOOKS.kraft;
+  if (Object.hasOwn(LOOKS, name)) return LOOKS[name];
+  return Object.hasOwn(PRINT_ONLY, name) ? PRINT_ONLY[name] : LOOKS.kraft;
+};
+
+/**
+ * A copy of the zine to print with less ink: white paper (nothing printed behind the pages), dark ink even from a
+ * dark look, and no page backgrounds. Photos, shapes, stickers and ink keep their colours.
+ * @param {any} dog
+ */
+export const inkSaver = (dog) => ({
+  ...dog,
+  look: INK_SAVER,
+  pages: (Array.isArray(dog.pages) ? dog.pages : []).map(({ bg, ...page }) => page),
+});
 
 /**
  * A token's colour in a look (unknown look: kraft; unknown token: the look's text colour). With `bw` the colour is

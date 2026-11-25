@@ -128,6 +128,7 @@ return [
     'Print' => 'Imprimir',
     'Fold and cut guides' => 'Guías de plegado y corte',
     'Black and white' => 'Blanco y negro',
+    'Ink saver (no background)' => 'Ahorro de tinta (sin fondo)',
     'Save PDF to project files' => 'Guardar el PDF en los archivos del proyecto',
     'Print at Actual size (100%%), on %s, one side.' => 'Imprime a tamaño real (100%%), en %s, a una cara.',
 

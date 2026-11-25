@@ -7,6 +7,7 @@ import { renderPage } from '../core/render.js?v=0.1.1';
 import { exportPdf } from '../core/pdf.js?v=0.1.1';
 import { linkedInPdf, renderFrame, slug, socialPlan } from '../core/social.js?v=0.1.1';
 import { panelSize } from '../core/paper.js?v=0.1.1';
+import { inkSaver as saveInk } from '../core/looks.js?v=0.1.1';
 import { zipStore } from '../core/zip.js?v=0.1.1';
 
 export const PRINT_DPI = 300;
@@ -81,11 +82,12 @@ export const printName = (dog) => `hotdog-${slug(dog.title)}-${dog.paper}.pdf`;
 /**
  * The print PDF: one landscape sheet at the paper size.
  * @param {any} dog @param {Record<string, any>} images
- * @param {Surface & {bw?: boolean, guides?: boolean}} [opts]
+ * @param {Surface & {bw?: boolean, guides?: boolean, inkSaver?: boolean}} [opts] inkSaver prints no page backgrounds
  * @returns {Promise<Uint8Array>}
  */
-export async function printPdf(dog, images, { guides = true, ...opts } = {}) {
-  return exportPdf(dog, await rasterPanels(dog, images, opts), { guides });
+export async function printPdf(dog, images, { guides = true, inkSaver = false, ...opts } = {}) {
+  const sheet = inkSaver ? saveInk(dog) : dog;
+  return exportPdf(sheet, await rasterPanels(sheet, images, opts), { guides });
 }
 
 /**
