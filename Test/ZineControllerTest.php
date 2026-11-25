@@ -243,6 +243,40 @@ class ZineControllerTest extends Base
         $this->assertThrowsFor(AccessForbiddenException::class, fn () => $this->onProject('import', [], ['file' => $this->upload('{}')]));
     }
 
+    // Kills: an import that decodes, sniffs and keeps every inline image before the asset cap is checked.
+    public function testImportRejectsTooManyAssetsBeforeAnyImageWork(): void
+    {
+        $garbage = ['kind' => 'image', 'data' => 'data:image/png;base64,!!not-an-image!!'];
+        $assets = [];
+        for ($i = 0; $i <= DogValidator::MAX_ASSETS; $i++) {
+            $assets['a'.$i] = $garbage;
+        }
+        $file = new HotdogFile($this->container);
+        try {
+            $file->import(json_encode($this->dog('valid-minimal', ['assets' => $assets])), $this->project, $this->users['member']);
+            $this->fail('expected a rejection');
+        } catch (\Kanboard\Plugin\HotDogPress\Model\ZineRejected $e) {
+            $this->assertSame('invalid', $e->code);
+            $this->assertStringContainsString('at most 500 assets', $e->getMessage());
+        }
+        $this->assertSame(0, $this->zineCount());
+    }
+
+    // Kills: a cap that is off by one (exactly the maximum must go on to normal validation, here a bad image).
+    public function testImportAtTheAssetCapStillValidatesNormally(): void
+    {
+        $assets = [];
+        for ($i = 0; $i < DogValidator::MAX_ASSETS; $i++) {
+            $assets['a'.$i] = ['kind' => 'image', 'data' => 'data:image/png;base64,!!not-an-image!!'];
+        }
+        try {
+            (new HotdogFile($this->container))->import(json_encode($this->dog('valid-minimal', ['assets' => $assets])), $this->project, $this->users['member']);
+            $this->fail('expected a rejection');
+        } catch (\Kanboard\Plugin\HotDogPress\Model\ZineRejected $e) {
+            $this->assertSame('unsupported', $e->code);
+        }
+    }
+
     // Kills: an export → import round trip that loses an image or changes the pages.
     public function testExportImportRoundTrip(): void
     {

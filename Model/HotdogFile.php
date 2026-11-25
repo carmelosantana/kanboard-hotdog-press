@@ -68,6 +68,17 @@ class HotdogFile extends Base
         }
         $dog = DogValidator::decode($text) ?? throw new ZineRejected('bad_request', 'This is not a .hotdog file.');
 
+        // The asset cap is checked first, so a file of thousands of tiny images costs no image work before it is refused.
+        // The full validation below still decides everything else.
+        if (array_key_exists('assets', $dog)) {
+            if (! is_array($dog['assets'])) {
+                throw new ZineRejected('bad_request', 'This is not a .hotdog file.');
+            }
+            if (count($dog['assets']) > DogValidator::MAX_ASSETS) {
+                throw new ZineRejected('invalid', 'A zine must have at most 500 assets.'); // DogValidator::MAX_ASSETS
+            }
+        }
+
         // Inline images leave the Dog before it is checked; file_id 1 (a valid id, never kept) holds their place until
         // they are stored.
         // Other kinds with data (stickers) stay inline, as the editor saves them.
