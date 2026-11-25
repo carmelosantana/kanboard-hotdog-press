@@ -1,0 +1,1572 @@
+{
+  "mode": "lenient",
+  "errors": [
+    {
+      "path": "assets",
+      "message": "must have at most 500 assets"
+    }
+  ],
+  "dog": {
+    "hotdog": 1,
+    "id": "z_fixture1",
+    "title": "Fixture",
+    "paper": "letter",
+    "margin_mm": 6,
+    "look": "kraft",
+    "assets": {
+      "a0": {
+        "kind": "placeholder"
+      },
+      "a1": {
+        "kind": "placeholder"
+      },
+      "a2": {
+        "kind": "placeholder"
+      },
+      "a3": {
+        "kind": "placeholder"
+      },
+      "a4": {
+        "kind": "placeholder"
+      },
+      "a5": {
+        "kind": "placeholder"
+      },
+      "a6": {
+        "kind": "placeholder"
+      },
+      "a7": {
+        "kind": "placeholder"
+      },
+      "a8": {
+        "kind": "placeholder"
+      },
+      "a9": {
+        "kind": "placeholder"
+      },
+      "a10": {
+        "kind": "placeholder"
+      },
+      "a11": {
+        "kind": "placeholder"
+      },
+      "a12": {
+        "kind": "placeholder"
+      },
+      "a13": {
+        "kind": "placeholder"
+      },
+      "a14": {
+        "kind": "placeholder"
+      },
+      "a15": {
+        "kind": "placeholder"
+      },
+      "a16": {
+        "kind": "placeholder"
+      },
+      "a17": {
+        "kind": "placeholder"
+      },
+      "a18": {
+        "kind": "placeholder"
+      },
+      "a19": {
+        "kind": "placeholder"
+      },
+      "a20": {
+        "kind": "placeholder"
+      },
+      "a21": {
+        "kind": "placeholder"
+      },
+      "a22": {
+        "kind": "placeholder"
+      },
+      "a23": {
+        "kind": "placeholder"
+      },
+      "a24": {
+        "kind": "placeholder"
+      },
+      "a25": {
+        "kind": "placeholder"
+      },
+      "a26": {
+        "kind": "placeholder"
+      },
+      "a27": {
+        "kind": "placeholder"
+      },
+      "a28": {
+        "kind": "placeholder"
+      },
+      "a29": {
+        "kind": "placeholder"
+      },
+      "a30": {
+        "kind": "placeholder"
+      },
+      "a31": {
+        "kind": "placeholder"
+      },
+      "a32": {
+        "kind": "placeholder"
+      },
+      "a33": {
+        "kind": "placeholder"
+      },
+      "a34": {
+        "kind": "placeholder"
+      },
+      "a35": {
+        "kind": "placeholder"
+      },
+      "a36": {
+        "kind": "placeholder"
+      },
+      "a37": {
+        "kind": "placeholder"
+      },
+      "a38": {
+        "kind": "placeholder"
+      },
+      "a39": {
+        "kind": "placeholder"
+      },
+      "a40": {
+        "kind": "placeholder"
+      },
+      "a41": {
+        "kind": "placeholder"
+      },
+      "a42": {
+        "kind": "placeholder"
+      },
+      "a43": {
+        "kind": "placeholder"
+      },
+      "a44": {
+        "kind": "placeholder"
+      },
+      "a45": {
+        "kind": "placeholder"
+      },
+      "a46": {
+        "kind": "placeholder"
+      },
+      "a47": {
+        "kind": "placeholder"
+      },
+      "a48": {
+        "kind": "placeholder"
+      },
+      "a49": {
+        "kind": "placeholder"
+      },
+      "a50": {
+        "kind": "placeholder"
+      },
+      "a51": {
+        "kind": "placeholder"
+      },
+      "a52": {
+        "kind": "placeholder"
+      },
+      "a53": {
+        "kind": "placeholder"
+      },
+      "a54": {
+        "kind": "placeholder"
+      },
+      "a55": {
+        "kind": "placeholder"
+      },
+      "a56": {
+        "kind": "placeholder"
+      },
+      "a57": {
+        "kind": "placeholder"
+      },
+      "a58": {
+        "kind": "placeholder"
+      },
+      "a59": {
+        "kind": "placeholder"
+      },
+      "a60": {
+        "kind": "placeholder"
+      },
+      "a61": {
+        "kind": "placeholder"
+      },
+      "a62": {
+        "kind": "placeholder"
+      },
+      "a63": {
+        "kind": "placeholder"
+      },
+      "a64": {
+        "kind": "placeholder"
+      },
+      "a65": {
+        "kind": "placeholder"
+      },
+      "a66": {
+        "kind": "placeholder"
+      },
+      "a67": {
+        "kind": "placeholder"
+      },
+      "a68": {
+        "kind": "placeholder"
+      },
+      "a69": {
+        "kind": "placeholder"
+      },
+      "a70": {
+        "kind": "placeholder"
+      },
+      "a71": {
+        "kind": "placeholder"
+      },
+      "a72": {
+        "kind": "placeholder"
+      },
+      "a73": {
+        "kind": "placeholder"
+      },
+      "a74": {
+        "kind": "placeholder"
+      },
+      "a75": {
+        "kind": "placeholder"
+      },
+      "a76": {
+        "kind": "placeholder"
+      },
+      "a77": {
+        "kind": "placeholder"
+      },
+      "a78": {
+        "kind": "placeholder"
+      },
+      "a79": {
+        "kind": "placeholder"
+      },
+      "a80": {
+        "kind": "placeholder"
+      },
+      "a81": {
+        "kind": "placeholder"
+      },
+      "a82": {
+        "kind": "placeholder"
+      },
+      "a83": {
+        "kind": "placeholder"
+      },
+      "a84": {
+        "kind": "placeholder"
+      },
+      "a85": {
+        "kind": "placeholder"
+      },
+      "a86": {
+        "kind": "placeholder"
+      },
+      "a87": {
+        "kind": "placeholder"
+      },
+      "a88": {
+        "kind": "placeholder"
+      },
+      "a89": {
+        "kind": "placeholder"
+      },
+      "a90": {
+        "kind": "placeholder"
+      },
+      "a91": {
+        "kind": "placeholder"
+      },
+      "a92": {
+        "kind": "placeholder"
+      },
+      "a93": {
+        "kind": "placeholder"
+      },
+      "a94": {
+        "kind": "placeholder"
+      },
+      "a95": {
+        "kind": "placeholder"
+      },
+      "a96": {
+        "kind": "placeholder"
+      },
+      "a97": {
+        "kind": "placeholder"
+      },
+      "a98": {
+        "kind": "placeholder"
+      },
+      "a99": {
+        "kind": "placeholder"
+      },
+      "a100": {
+        "kind": "placeholder"
+      },
+      "a101": {
+        "kind": "placeholder"
+      },
+      "a102": {
+        "kind": "placeholder"
+      },
+      "a103": {
+        "kind": "placeholder"
+      },
+      "a104": {
+        "kind": "placeholder"
+      },
+      "a105": {
+        "kind": "placeholder"
+      },
+      "a106": {
+        "kind": "placeholder"
+      },
+      "a107": {
+        "kind": "placeholder"
+      },
+      "a108": {
+        "kind": "placeholder"
+      },
+      "a109": {
+        "kind": "placeholder"
+      },
+      "a110": {
+        "kind": "placeholder"
+      },
+      "a111": {
+        "kind": "placeholder"
+      },
+      "a112": {
+        "kind": "placeholder"
+      },
+      "a113": {
+        "kind": "placeholder"
+      },
+      "a114": {
+        "kind": "placeholder"
+      },
+      "a115": {
+        "kind": "placeholder"
+      },
+      "a116": {
+        "kind": "placeholder"
+      },
+      "a117": {
+        "kind": "placeholder"
+      },
+      "a118": {
+        "kind": "placeholder"
+      },
+      "a119": {
+        "kind": "placeholder"
+      },
+      "a120": {
+        "kind": "placeholder"
+      },
+      "a121": {
+        "kind": "placeholder"
+      },
+      "a122": {
+        "kind": "placeholder"
+      },
+      "a123": {
+        "kind": "placeholder"
+      },
+      "a124": {
+        "kind": "placeholder"
+      },
+      "a125": {
+        "kind": "placeholder"
+      },
+      "a126": {
+        "kind": "placeholder"
+      },
+      "a127": {
+        "kind": "placeholder"
+      },
+      "a128": {
+        "kind": "placeholder"
+      },
+      "a129": {
+        "kind": "placeholder"
+      },
+      "a130": {
+        "kind": "placeholder"
+      },
+      "a131": {
+        "kind": "placeholder"
+      },
+      "a132": {
+        "kind": "placeholder"
+      },
+      "a133": {
+        "kind": "placeholder"
+      },
+      "a134": {
+        "kind": "placeholder"
+      },
+      "a135": {
+        "kind": "placeholder"
+      },
+      "a136": {
+        "kind": "placeholder"
+      },
+      "a137": {
+        "kind": "placeholder"
+      },
+      "a138": {
+        "kind": "placeholder"
+      },
+      "a139": {
+        "kind": "placeholder"
+      },
+      "a140": {
+        "kind": "placeholder"
+      },
+      "a141": {
+        "kind": "placeholder"
+      },
+      "a142": {
+        "kind": "placeholder"
+      },
+      "a143": {
+        "kind": "placeholder"
+      },
+      "a144": {
+        "kind": "placeholder"
+      },
+      "a145": {
+        "kind": "placeholder"
+      },
+      "a146": {
+        "kind": "placeholder"
+      },
+      "a147": {
+        "kind": "placeholder"
+      },
+      "a148": {
+        "kind": "placeholder"
+      },
+      "a149": {
+        "kind": "placeholder"
+      },
+      "a150": {
+        "kind": "placeholder"
+      },
+      "a151": {
+        "kind": "placeholder"
+      },
+      "a152": {
+        "kind": "placeholder"
+      },
+      "a153": {
+        "kind": "placeholder"
+      },
+      "a154": {
+        "kind": "placeholder"
+      },
+      "a155": {
+        "kind": "placeholder"
+      },
+      "a156": {
+        "kind": "placeholder"
+      },
+      "a157": {
+        "kind": "placeholder"
+      },
+      "a158": {
+        "kind": "placeholder"
+      },
+      "a159": {
+        "kind": "placeholder"
+      },
+      "a160": {
+        "kind": "placeholder"
+      },
+      "a161": {
+        "kind": "placeholder"
+      },
+      "a162": {
+        "kind": "placeholder"
+      },
+      "a163": {
+        "kind": "placeholder"
+      },
+      "a164": {
+        "kind": "placeholder"
+      },
+      "a165": {
+        "kind": "placeholder"
+      },
+      "a166": {
+        "kind": "placeholder"
+      },
+      "a167": {
+        "kind": "placeholder"
+      },
+      "a168": {
+        "kind": "placeholder"
+      },
+      "a169": {
+        "kind": "placeholder"
+      },
+      "a170": {
+        "kind": "placeholder"
+      },
+      "a171": {
+        "kind": "placeholder"
+      },
+      "a172": {
+        "kind": "placeholder"
+      },
+      "a173": {
+        "kind": "placeholder"
+      },
+      "a174": {
+        "kind": "placeholder"
+      },
+      "a175": {
+        "kind": "placeholder"
+      },
+      "a176": {
+        "kind": "placeholder"
+      },
+      "a177": {
+        "kind": "placeholder"
+      },
+      "a178": {
+        "kind": "placeholder"
+      },
+      "a179": {
+        "kind": "placeholder"
+      },
+      "a180": {
+        "kind": "placeholder"
+      },
+      "a181": {
+        "kind": "placeholder"
+      },
+      "a182": {
+        "kind": "placeholder"
+      },
+      "a183": {
+        "kind": "placeholder"
+      },
+      "a184": {
+        "kind": "placeholder"
+      },
+      "a185": {
+        "kind": "placeholder"
+      },
+      "a186": {
+        "kind": "placeholder"
+      },
+      "a187": {
+        "kind": "placeholder"
+      },
+      "a188": {
+        "kind": "placeholder"
+      },
+      "a189": {
+        "kind": "placeholder"
+      },
+      "a190": {
+        "kind": "placeholder"
+      },
+      "a191": {
+        "kind": "placeholder"
+      },
+      "a192": {
+        "kind": "placeholder"
+      },
+      "a193": {
+        "kind": "placeholder"
+      },
+      "a194": {
+        "kind": "placeholder"
+      },
+      "a195": {
+        "kind": "placeholder"
+      },
+      "a196": {
+        "kind": "placeholder"
+      },
+      "a197": {
+        "kind": "placeholder"
+      },
+      "a198": {
+        "kind": "placeholder"
+      },
+      "a199": {
+        "kind": "placeholder"
+      },
+      "a200": {
+        "kind": "placeholder"
+      },
+      "a201": {
+        "kind": "placeholder"
+      },
+      "a202": {
+        "kind": "placeholder"
+      },
+      "a203": {
+        "kind": "placeholder"
+      },
+      "a204": {
+        "kind": "placeholder"
+      },
+      "a205": {
+        "kind": "placeholder"
+      },
+      "a206": {
+        "kind": "placeholder"
+      },
+      "a207": {
+        "kind": "placeholder"
+      },
+      "a208": {
+        "kind": "placeholder"
+      },
+      "a209": {
+        "kind": "placeholder"
+      },
+      "a210": {
+        "kind": "placeholder"
+      },
+      "a211": {
+        "kind": "placeholder"
+      },
+      "a212": {
+        "kind": "placeholder"
+      },
+      "a213": {
+        "kind": "placeholder"
+      },
+      "a214": {
+        "kind": "placeholder"
+      },
+      "a215": {
+        "kind": "placeholder"
+      },
+      "a216": {
+        "kind": "placeholder"
+      },
+      "a217": {
+        "kind": "placeholder"
+      },
+      "a218": {
+        "kind": "placeholder"
+      },
+      "a219": {
+        "kind": "placeholder"
+      },
+      "a220": {
+        "kind": "placeholder"
+      },
+      "a221": {
+        "kind": "placeholder"
+      },
+      "a222": {
+        "kind": "placeholder"
+      },
+      "a223": {
+        "kind": "placeholder"
+      },
+      "a224": {
+        "kind": "placeholder"
+      },
+      "a225": {
+        "kind": "placeholder"
+      },
+      "a226": {
+        "kind": "placeholder"
+      },
+      "a227": {
+        "kind": "placeholder"
+      },
+      "a228": {
+        "kind": "placeholder"
+      },
+      "a229": {
+        "kind": "placeholder"
+      },
+      "a230": {
+        "kind": "placeholder"
+      },
+      "a231": {
+        "kind": "placeholder"
+      },
+      "a232": {
+        "kind": "placeholder"
+      },
+      "a233": {
+        "kind": "placeholder"
+      },
+      "a234": {
+        "kind": "placeholder"
+      },
+      "a235": {
+        "kind": "placeholder"
+      },
+      "a236": {
+        "kind": "placeholder"
+      },
+      "a237": {
+        "kind": "placeholder"
+      },
+      "a238": {
+        "kind": "placeholder"
+      },
+      "a239": {
+        "kind": "placeholder"
+      },
+      "a240": {
+        "kind": "placeholder"
+      },
+      "a241": {
+        "kind": "placeholder"
+      },
+      "a242": {
+        "kind": "placeholder"
+      },
+      "a243": {
+        "kind": "placeholder"
+      },
+      "a244": {
+        "kind": "placeholder"
+      },
+      "a245": {
+        "kind": "placeholder"
+      },
+      "a246": {
+        "kind": "placeholder"
+      },
+      "a247": {
+        "kind": "placeholder"
+      },
+      "a248": {
+        "kind": "placeholder"
+      },
+      "a249": {
+        "kind": "placeholder"
+      },
+      "a250": {
+        "kind": "placeholder"
+      },
+      "a251": {
+        "kind": "placeholder"
+      },
+      "a252": {
+        "kind": "placeholder"
+      },
+      "a253": {
+        "kind": "placeholder"
+      },
+      "a254": {
+        "kind": "placeholder"
+      },
+      "a255": {
+        "kind": "placeholder"
+      },
+      "a256": {
+        "kind": "placeholder"
+      },
+      "a257": {
+        "kind": "placeholder"
+      },
+      "a258": {
+        "kind": "placeholder"
+      },
+      "a259": {
+        "kind": "placeholder"
+      },
+      "a260": {
+        "kind": "placeholder"
+      },
+      "a261": {
+        "kind": "placeholder"
+      },
+      "a262": {
+        "kind": "placeholder"
+      },
+      "a263": {
+        "kind": "placeholder"
+      },
+      "a264": {
+        "kind": "placeholder"
+      },
+      "a265": {
+        "kind": "placeholder"
+      },
+      "a266": {
+        "kind": "placeholder"
+      },
+      "a267": {
+        "kind": "placeholder"
+      },
+      "a268": {
+        "kind": "placeholder"
+      },
+      "a269": {
+        "kind": "placeholder"
+      },
+      "a270": {
+        "kind": "placeholder"
+      },
+      "a271": {
+        "kind": "placeholder"
+      },
+      "a272": {
+        "kind": "placeholder"
+      },
+      "a273": {
+        "kind": "placeholder"
+      },
+      "a274": {
+        "kind": "placeholder"
+      },
+      "a275": {
+        "kind": "placeholder"
+      },
+      "a276": {
+        "kind": "placeholder"
+      },
+      "a277": {
+        "kind": "placeholder"
+      },
+      "a278": {
+        "kind": "placeholder"
+      },
+      "a279": {
+        "kind": "placeholder"
+      },
+      "a280": {
+        "kind": "placeholder"
+      },
+      "a281": {
+        "kind": "placeholder"
+      },
+      "a282": {
+        "kind": "placeholder"
+      },
+      "a283": {
+        "kind": "placeholder"
+      },
+      "a284": {
+        "kind": "placeholder"
+      },
+      "a285": {
+        "kind": "placeholder"
+      },
+      "a286": {
+        "kind": "placeholder"
+      },
+      "a287": {
+        "kind": "placeholder"
+      },
+      "a288": {
+        "kind": "placeholder"
+      },
+      "a289": {
+        "kind": "placeholder"
+      },
+      "a290": {
+        "kind": "placeholder"
+      },
+      "a291": {
+        "kind": "placeholder"
+      },
+      "a292": {
+        "kind": "placeholder"
+      },
+      "a293": {
+        "kind": "placeholder"
+      },
+      "a294": {
+        "kind": "placeholder"
+      },
+      "a295": {
+        "kind": "placeholder"
+      },
+      "a296": {
+        "kind": "placeholder"
+      },
+      "a297": {
+        "kind": "placeholder"
+      },
+      "a298": {
+        "kind": "placeholder"
+      },
+      "a299": {
+        "kind": "placeholder"
+      },
+      "a300": {
+        "kind": "placeholder"
+      },
+      "a301": {
+        "kind": "placeholder"
+      },
+      "a302": {
+        "kind": "placeholder"
+      },
+      "a303": {
+        "kind": "placeholder"
+      },
+      "a304": {
+        "kind": "placeholder"
+      },
+      "a305": {
+        "kind": "placeholder"
+      },
+      "a306": {
+        "kind": "placeholder"
+      },
+      "a307": {
+        "kind": "placeholder"
+      },
+      "a308": {
+        "kind": "placeholder"
+      },
+      "a309": {
+        "kind": "placeholder"
+      },
+      "a310": {
+        "kind": "placeholder"
+      },
+      "a311": {
+        "kind": "placeholder"
+      },
+      "a312": {
+        "kind": "placeholder"
+      },
+      "a313": {
+        "kind": "placeholder"
+      },
+      "a314": {
+        "kind": "placeholder"
+      },
+      "a315": {
+        "kind": "placeholder"
+      },
+      "a316": {
+        "kind": "placeholder"
+      },
+      "a317": {
+        "kind": "placeholder"
+      },
+      "a318": {
+        "kind": "placeholder"
+      },
+      "a319": {
+        "kind": "placeholder"
+      },
+      "a320": {
+        "kind": "placeholder"
+      },
+      "a321": {
+        "kind": "placeholder"
+      },
+      "a322": {
+        "kind": "placeholder"
+      },
+      "a323": {
+        "kind": "placeholder"
+      },
+      "a324": {
+        "kind": "placeholder"
+      },
+      "a325": {
+        "kind": "placeholder"
+      },
+      "a326": {
+        "kind": "placeholder"
+      },
+      "a327": {
+        "kind": "placeholder"
+      },
+      "a328": {
+        "kind": "placeholder"
+      },
+      "a329": {
+        "kind": "placeholder"
+      },
+      "a330": {
+        "kind": "placeholder"
+      },
+      "a331": {
+        "kind": "placeholder"
+      },
+      "a332": {
+        "kind": "placeholder"
+      },
+      "a333": {
+        "kind": "placeholder"
+      },
+      "a334": {
+        "kind": "placeholder"
+      },
+      "a335": {
+        "kind": "placeholder"
+      },
+      "a336": {
+        "kind": "placeholder"
+      },
+      "a337": {
+        "kind": "placeholder"
+      },
+      "a338": {
+        "kind": "placeholder"
+      },
+      "a339": {
+        "kind": "placeholder"
+      },
+      "a340": {
+        "kind": "placeholder"
+      },
+      "a341": {
+        "kind": "placeholder"
+      },
+      "a342": {
+        "kind": "placeholder"
+      },
+      "a343": {
+        "kind": "placeholder"
+      },
+      "a344": {
+        "kind": "placeholder"
+      },
+      "a345": {
+        "kind": "placeholder"
+      },
+      "a346": {
+        "kind": "placeholder"
+      },
+      "a347": {
+        "kind": "placeholder"
+      },
+      "a348": {
+        "kind": "placeholder"
+      },
+      "a349": {
+        "kind": "placeholder"
+      },
+      "a350": {
+        "kind": "placeholder"
+      },
+      "a351": {
+        "kind": "placeholder"
+      },
+      "a352": {
+        "kind": "placeholder"
+      },
+      "a353": {
+        "kind": "placeholder"
+      },
+      "a354": {
+        "kind": "placeholder"
+      },
+      "a355": {
+        "kind": "placeholder"
+      },
+      "a356": {
+        "kind": "placeholder"
+      },
+      "a357": {
+        "kind": "placeholder"
+      },
+      "a358": {
+        "kind": "placeholder"
+      },
+      "a359": {
+        "kind": "placeholder"
+      },
+      "a360": {
+        "kind": "placeholder"
+      },
+      "a361": {
+        "kind": "placeholder"
+      },
+      "a362": {
+        "kind": "placeholder"
+      },
+      "a363": {
+        "kind": "placeholder"
+      },
+      "a364": {
+        "kind": "placeholder"
+      },
+      "a365": {
+        "kind": "placeholder"
+      },
+      "a366": {
+        "kind": "placeholder"
+      },
+      "a367": {
+        "kind": "placeholder"
+      },
+      "a368": {
+        "kind": "placeholder"
+      },
+      "a369": {
+        "kind": "placeholder"
+      },
+      "a370": {
+        "kind": "placeholder"
+      },
+      "a371": {
+        "kind": "placeholder"
+      },
+      "a372": {
+        "kind": "placeholder"
+      },
+      "a373": {
+        "kind": "placeholder"
+      },
+      "a374": {
+        "kind": "placeholder"
+      },
+      "a375": {
+        "kind": "placeholder"
+      },
+      "a376": {
+        "kind": "placeholder"
+      },
+      "a377": {
+        "kind": "placeholder"
+      },
+      "a378": {
+        "kind": "placeholder"
+      },
+      "a379": {
+        "kind": "placeholder"
+      },
+      "a380": {
+        "kind": "placeholder"
+      },
+      "a381": {
+        "kind": "placeholder"
+      },
+      "a382": {
+        "kind": "placeholder"
+      },
+      "a383": {
+        "kind": "placeholder"
+      },
+      "a384": {
+        "kind": "placeholder"
+      },
+      "a385": {
+        "kind": "placeholder"
+      },
+      "a386": {
+        "kind": "placeholder"
+      },
+      "a387": {
+        "kind": "placeholder"
+      },
+      "a388": {
+        "kind": "placeholder"
+      },
+      "a389": {
+        "kind": "placeholder"
+      },
+      "a390": {
+        "kind": "placeholder"
+      },
+      "a391": {
+        "kind": "placeholder"
+      },
+      "a392": {
+        "kind": "placeholder"
+      },
+      "a393": {
+        "kind": "placeholder"
+      },
+      "a394": {
+        "kind": "placeholder"
+      },
+      "a395": {
+        "kind": "placeholder"
+      },
+      "a396": {
+        "kind": "placeholder"
+      },
+      "a397": {
+        "kind": "placeholder"
+      },
+      "a398": {
+        "kind": "placeholder"
+      },
+      "a399": {
+        "kind": "placeholder"
+      },
+      "a400": {
+        "kind": "placeholder"
+      },
+      "a401": {
+        "kind": "placeholder"
+      },
+      "a402": {
+        "kind": "placeholder"
+      },
+      "a403": {
+        "kind": "placeholder"
+      },
+      "a404": {
+        "kind": "placeholder"
+      },
+      "a405": {
+        "kind": "placeholder"
+      },
+      "a406": {
+        "kind": "placeholder"
+      },
+      "a407": {
+        "kind": "placeholder"
+      },
+      "a408": {
+        "kind": "placeholder"
+      },
+      "a409": {
+        "kind": "placeholder"
+      },
+      "a410": {
+        "kind": "placeholder"
+      },
+      "a411": {
+        "kind": "placeholder"
+      },
+      "a412": {
+        "kind": "placeholder"
+      },
+      "a413": {
+        "kind": "placeholder"
+      },
+      "a414": {
+        "kind": "placeholder"
+      },
+      "a415": {
+        "kind": "placeholder"
+      },
+      "a416": {
+        "kind": "placeholder"
+      },
+      "a417": {
+        "kind": "placeholder"
+      },
+      "a418": {
+        "kind": "placeholder"
+      },
+      "a419": {
+        "kind": "placeholder"
+      },
+      "a420": {
+        "kind": "placeholder"
+      },
+      "a421": {
+        "kind": "placeholder"
+      },
+      "a422": {
+        "kind": "placeholder"
+      },
+      "a423": {
+        "kind": "placeholder"
+      },
+      "a424": {
+        "kind": "placeholder"
+      },
+      "a425": {
+        "kind": "placeholder"
+      },
+      "a426": {
+        "kind": "placeholder"
+      },
+      "a427": {
+        "kind": "placeholder"
+      },
+      "a428": {
+        "kind": "placeholder"
+      },
+      "a429": {
+        "kind": "placeholder"
+      },
+      "a430": {
+        "kind": "placeholder"
+      },
+      "a431": {
+        "kind": "placeholder"
+      },
+      "a432": {
+        "kind": "placeholder"
+      },
+      "a433": {
+        "kind": "placeholder"
+      },
+      "a434": {
+        "kind": "placeholder"
+      },
+      "a435": {
+        "kind": "placeholder"
+      },
+      "a436": {
+        "kind": "placeholder"
+      },
+      "a437": {
+        "kind": "placeholder"
+      },
+      "a438": {
+        "kind": "placeholder"
+      },
+      "a439": {
+        "kind": "placeholder"
+      },
+      "a440": {
+        "kind": "placeholder"
+      },
+      "a441": {
+        "kind": "placeholder"
+      },
+      "a442": {
+        "kind": "placeholder"
+      },
+      "a443": {
+        "kind": "placeholder"
+      },
+      "a444": {
+        "kind": "placeholder"
+      },
+      "a445": {
+        "kind": "placeholder"
+      },
+      "a446": {
+        "kind": "placeholder"
+      },
+      "a447": {
+        "kind": "placeholder"
+      },
+      "a448": {
+        "kind": "placeholder"
+      },
+      "a449": {
+        "kind": "placeholder"
+      },
+      "a450": {
+        "kind": "placeholder"
+      },
+      "a451": {
+        "kind": "placeholder"
+      },
+      "a452": {
+        "kind": "placeholder"
+      },
+      "a453": {
+        "kind": "placeholder"
+      },
+      "a454": {
+        "kind": "placeholder"
+      },
+      "a455": {
+        "kind": "placeholder"
+      },
+      "a456": {
+        "kind": "placeholder"
+      },
+      "a457": {
+        "kind": "placeholder"
+      },
+      "a458": {
+        "kind": "placeholder"
+      },
+      "a459": {
+        "kind": "placeholder"
+      },
+      "a460": {
+        "kind": "placeholder"
+      },
+      "a461": {
+        "kind": "placeholder"
+      },
+      "a462": {
+        "kind": "placeholder"
+      },
+      "a463": {
+        "kind": "placeholder"
+      },
+      "a464": {
+        "kind": "placeholder"
+      },
+      "a465": {
+        "kind": "placeholder"
+      },
+      "a466": {
+        "kind": "placeholder"
+      },
+      "a467": {
+        "kind": "placeholder"
+      },
+      "a468": {
+        "kind": "placeholder"
+      },
+      "a469": {
+        "kind": "placeholder"
+      },
+      "a470": {
+        "kind": "placeholder"
+      },
+      "a471": {
+        "kind": "placeholder"
+      },
+      "a472": {
+        "kind": "placeholder"
+      },
+      "a473": {
+        "kind": "placeholder"
+      },
+      "a474": {
+        "kind": "placeholder"
+      },
+      "a475": {
+        "kind": "placeholder"
+      },
+      "a476": {
+        "kind": "placeholder"
+      },
+      "a477": {
+        "kind": "placeholder"
+      },
+      "a478": {
+        "kind": "placeholder"
+      },
+      "a479": {
+        "kind": "placeholder"
+      },
+      "a480": {
+        "kind": "placeholder"
+      },
+      "a481": {
+        "kind": "placeholder"
+      },
+      "a482": {
+        "kind": "placeholder"
+      },
+      "a483": {
+        "kind": "placeholder"
+      },
+      "a484": {
+        "kind": "placeholder"
+      },
+      "a485": {
+        "kind": "placeholder"
+      },
+      "a486": {
+        "kind": "placeholder"
+      },
+      "a487": {
+        "kind": "placeholder"
+      },
+      "a488": {
+        "kind": "placeholder"
+      },
+      "a489": {
+        "kind": "placeholder"
+      },
+      "a490": {
+        "kind": "placeholder"
+      },
+      "a491": {
+        "kind": "placeholder"
+      },
+      "a492": {
+        "kind": "placeholder"
+      },
+      "a493": {
+        "kind": "placeholder"
+      },
+      "a494": {
+        "kind": "placeholder"
+      },
+      "a495": {
+        "kind": "placeholder"
+      },
+      "a496": {
+        "kind": "placeholder"
+      },
+      "a497": {
+        "kind": "placeholder"
+      },
+      "a498": {
+        "kind": "placeholder"
+      },
+      "a499": {
+        "kind": "placeholder"
+      },
+      "a500": {
+        "kind": "placeholder"
+      }
+    },
+    "pages": [
+      {
+        "id": "p1",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p2",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p3",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p4",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p5",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p6",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p7",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p8",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      }
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 // The Dog (*.hotdog): the exact zine document. New, migrate and validate. Pure, no DOM.
 // Model/DogValidator.php mirrors validateDog rule for rule; Test/fixtures/dog drives both.
 
-import { PAPERS, paperSize, DEFAULT_MARGIN_MM, MAX_MARGIN_MM } from './paper.js?v=0.1.0';
+import { PAPERS, paperSize, DEFAULT_MARGIN_MM, MAX_MARGIN_MM } from './paper.js?v=0.1.1';
 
 /** @typedef {{path: string, message: string}} DogError */
 /** @typedef {{ok: true, dog: object} | {ok: false, errors: DogError[]}} DogResult */
@@ -10,11 +10,15 @@ export const DOG_VERSION = 1;
 export const MAX_DOG_BYTES = 2 * 1024 * 1024;
 export const MAX_INK_POINTS = 5000;
 export const MAX_TEXT_CHARS = 2000;
+/** Far more than eight pages of photos and stickers use (the editor drops unused assets), far fewer than fit 2 MiB. */
+export const MAX_ASSETS = 500;
 /** An optional issue label: a string of at most this many characters, or a whole number of 0 or more. */
 export const MAX_ISSUE_CHARS = 32;
 /** Item geometry in panel units may reach a panel beyond either edge (bleed, drag-off). */
 export const MIN_UNIT = -1;
 export const MAX_UNIT = 2;
+/** An asset's file_id is a project file id: a whole number from 1 to 2^53 - 1. */
+export const MAX_FILE_ID = Number.MAX_SAFE_INTEGER;
 
 export const PAPER_IDS = Object.freeze(Object.keys(PAPERS));
 export const LAYOUT_NAMES = Object.freeze([
@@ -125,11 +129,15 @@ export function validateDog(input, { mode = 'lenient' } = {}) {
 
   const assets = isObject(dog.assets) ? dog.assets : {};
   if (!isObject(dog.assets)) err(['assets'], 'must be an object');
+  else if (Object.keys(assets).length > MAX_ASSETS) err(['assets'], `must have at most ${MAX_ASSETS} assets`);
   for (const [key, asset] of Object.entries(assets)) {
     // PHP decodes an object with only numeric keys as a list, so ids like "0" are refused in both languages.
     if (NUMERIC_ID.test(key)) err(['assets', key], 'must not be a numeric-only id');
     else if (!isObject(asset)) err(['assets', key], 'must be an object');
-    else unknown(asset, FIELDS.asset, ['assets', key]);
+    else {
+      unknown(asset, FIELDS.asset, ['assets', key]);
+      checkAsset(asset, ['assets', key], err);
+    }
   }
 
   if (!Array.isArray(dog.pages)) {
@@ -151,6 +159,21 @@ export function validateDog(input, { mode = 'lenient' } = {}) {
 
   return errors.length ? { ok: false, errors } : { ok: true, dog };
 }
+
+/**
+ * An asset is a project file (file_id), inline (data, a data URL) or neither (a placeholder), never both. The editor
+ * fills file_id into its image route, so it must be a plain positive integer.
+ */
+function checkAsset(asset, at, err) {
+  const fileId = Object.hasOwn(asset, 'file_id');
+  if (fileId && !isFileId(asset.file_id)) err([...at, 'file_id'], 'must be a positive integer');
+  const data = Object.hasOwn(asset, 'data');
+  if (data && typeof asset.data !== 'string') err([...at, 'data'], 'must be a string');
+  if (fileId && data) err(at, 'must not have both file_id and data');
+}
+
+/** A project file id as a Dog stores it: a whole number from 1 to MAX_FILE_ID. */
+export const isFileId = (v) => Number.isInteger(v) && v >= 1 && v <= MAX_FILE_ID;
 
 function checkItem(item, at, { assets, itemIds, err, unknown }) {
   if (!isObject(item)) return err(at, 'must be an object');

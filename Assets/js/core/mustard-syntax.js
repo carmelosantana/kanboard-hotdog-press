@@ -1,7 +1,7 @@
 // Mustard's inline syntax, both directions: attribute blocks, images, text escapes and how a block finds its slot.
 // Compile (mustard.js) and export (mustard-export.js) share it so what one writes the other reads. Pure, no DOM.
 // Linear time: scanners or anchored regexes only, nothing that backtracks over a long run.
-import { unquote } from './frontmatter.js?v=0.1.0';
+import { unquote } from './frontmatter.js?v=0.1.1';
 
 /** @typedef {{id?: string, classes: string[], kv: Record<string, string>}} Attrs */
 

@@ -2,12 +2,12 @@
 // ZIP of PNGs). Pages are drawn by core/render.js onto canvases; in black and white the drawn pixels then go through
 // core/filters.js (toGray, then levels) before they are encoded. Canvases and the encoder can be handed in, so this
 // runs under Node for the tests; in the browser they default to <canvas> and toBlob.
-import { toGray, levels } from '../core/filters.js?v=0.1.0';
-import { renderPage } from '../core/render.js?v=0.1.0';
-import { exportPdf } from '../core/pdf.js?v=0.1.0';
-import { linkedInPdf, renderFrame, slug, socialPlan } from '../core/social.js?v=0.1.0';
-import { panelSize } from '../core/paper.js?v=0.1.0';
-import { zipStore } from '../core/zip.js?v=0.1.0';
+import { toGray, levels } from '../core/filters.js?v=0.1.1';
+import { renderPage } from '../core/render.js?v=0.1.1';
+import { exportPdf } from '../core/pdf.js?v=0.1.1';
+import { linkedInPdf, renderFrame, slug, socialPlan } from '../core/social.js?v=0.1.1';
+import { panelSize } from '../core/paper.js?v=0.1.1';
+import { zipStore } from '../core/zip.js?v=0.1.1';
 
 export const PRINT_DPI = 300;
 export const JPEG_QUALITY = 0.9;

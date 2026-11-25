@@ -35,6 +35,7 @@ return [
     'Someone else changed this zine.' => 'Otra persona ha cambiado este fanzine.',
     'Choose an image to upload.' => 'Elige una imagen para subir.',
     'No such image.' => 'Esa imagen no existe.',
+    'A zine must have at most 500 assets.' => 'Un zine no puede tener más de 500 recursos.',
     'A .hotdog file must be at most 16 MB.' => 'Un archivo .hotdog no puede pasar de 16 MB.',
     'Choose a .hotdog file to import.' => 'Elige un archivo .hotdog para importar.',
     'This is not a .hotdog file.' => 'Esto no es un archivo .hotdog.',

@@ -1,7 +1,7 @@
 // .mustard.md files in the browser: the zine as a Mustard download, and a picked file's text for the Mustard panel
 // (which compiles and applies it as if it were typed). Mustard never goes to the server as Mustard.
-import { exportMustard, MAX_MUSTARD_BYTES, MUSTARD_TOO_LARGE } from '../core/mustard.js?v=0.1.0';
-import { slug } from '../core/social.js?v=0.1.0';
+import { exportMustard, MAX_MUSTARD_BYTES, MUSTARD_TOO_LARGE } from '../core/mustard.js?v=0.1.1';
+import { slug } from '../core/social.js?v=0.1.1';
 
 /**
  * The zine as a `.mustard.md` file named from its title.

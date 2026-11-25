@@ -1,8 +1,8 @@
 // A minimal PDF 1.4 writer (JPEG images, lines, rects; no fonts, no compression) and the one-sheet print export.
 // Pure, no DOM: the browser rasterises the panels to JPEG and hands the bytes in.
-import { clampMargin, panelSize, resolvePaper } from './paper.js?v=0.1.0';
-import { panelRect, guides as sheetGuides, readingToSheet, safeArea } from './impose.js?v=0.1.0';
-import { lookOf } from './looks.js?v=0.1.0';
+import { clampMargin, panelSize, resolvePaper } from './paper.js?v=0.1.1';
+import { panelRect, guides as sheetGuides, readingToSheet, safeArea } from './impose.js?v=0.1.1';
+import { lookOf } from './looks.js?v=0.1.1';
 
 /** 1 mm in PDF points. */
 export const PT_PER_MM = 72 / 25.4;

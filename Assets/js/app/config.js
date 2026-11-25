@@ -35,11 +35,11 @@ export function readConfig(text) {
 }
 
 /**
- * The URL of one uploaded image.
+ * The URL of one uploaded image. The id is encoded, so it can never add a query string or path to the route.
  * @param {EditorConfig} config
  * @param {number} fileId
  */
-export const imageUrl = (config, fileId) => config.routes.image.replace('{file_id}', String(fileId));
+export const imageUrl = (config, fileId) => config.routes.image.replace('{file_id}', encodeURIComponent(String(fileId)));
 
 /**
  * Fills each `%s` in a translated string, in order. The server already turned `%%` into `%`.

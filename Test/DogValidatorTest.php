@@ -58,6 +58,17 @@ class DogValidatorTest extends Base
         $this->assertNull(DogValidator::decode('{'));
     }
 
+    public function testADogMayHoldExactlyMaxAssetsAssets(): void
+    {
+        $this->assertSame(500, DogValidator::MAX_ASSETS);
+        $dog = self::dog('valid-minimal.json');
+        $dog['assets'] = [];
+        for ($i = 0; $i < DogValidator::MAX_ASSETS; $i++) {
+            $dog['assets']['a'.$i] = ['kind' => 'placeholder'];
+        }
+        $this->assertSame([], DogValidator::validate($dog, 'strict')['errors'] ?? []);
+    }
+
     /** @dataProvider validFixtures */
     #[DataProvider('validFixtures')]
     public function testValidFixturePassesBothModes(string $name): void
