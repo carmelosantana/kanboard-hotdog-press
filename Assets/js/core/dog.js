@@ -10,6 +10,8 @@ export const DOG_VERSION = 1;
 export const MAX_DOG_BYTES = 2 * 1024 * 1024;
 export const MAX_INK_POINTS = 5000;
 export const MAX_TEXT_CHARS = 2000;
+/** Far more than eight pages of photos and stickers use (the editor drops unused assets), far fewer than fit 2 MiB. */
+export const MAX_ASSETS = 500;
 /** An optional issue label: a string of at most this many characters, or a whole number of 0 or more. */
 export const MAX_ISSUE_CHARS = 32;
 /** Item geometry in panel units may reach a panel beyond either edge (bleed, drag-off). */
@@ -127,6 +129,7 @@ export function validateDog(input, { mode = 'lenient' } = {}) {
 
   const assets = isObject(dog.assets) ? dog.assets : {};
   if (!isObject(dog.assets)) err(['assets'], 'must be an object');
+  else if (Object.keys(assets).length > MAX_ASSETS) err(['assets'], `must have at most ${MAX_ASSETS} assets`);
   for (const [key, asset] of Object.entries(assets)) {
     // PHP decodes an object with only numeric keys as a list, so ids like "0" are refused in both languages.
     if (NUMERIC_ID.test(key)) err(['assets', key], 'must not be a numeric-only id');

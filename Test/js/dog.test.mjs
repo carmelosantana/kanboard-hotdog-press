@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import {
-  newDog, migrateDog, validateDog, FIELDS, LAYOUT_NAMES, ITEM_TYPES, BY_VALUES, PAPER_IDS, MAX_DOG_BYTES,
+  newDog, migrateDog, validateDog, FIELDS, LAYOUT_NAMES, ITEM_TYPES, BY_VALUES, PAPER_IDS, MAX_DOG_BYTES, MAX_ASSETS,
 } from '../../Assets/js/core/dog.js';
 
 const DIR = new URL('../fixtures/dog/', import.meta.url);
@@ -43,6 +43,13 @@ for (const name of fixtures('invalid-')) {
     }
   });
 }
+
+test('a Dog may hold exactly MAX_ASSETS assets', () => {
+  const dog = load('valid-minimal.json');
+  dog.assets = Object.fromEntries(Array.from({ length: MAX_ASSETS }, (_, i) => [`a${i}`, { kind: 'placeholder' }]));
+  assert.equal(MAX_ASSETS, 500);
+  assert.deepEqual(validateDog(dog, { mode: 'strict' }).errors ?? [], []);
+});
 
 test('the field lists and enums match the shared fields.json', () => {
   const shared = load('fields.json');

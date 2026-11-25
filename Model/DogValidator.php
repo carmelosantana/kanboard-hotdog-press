@@ -13,6 +13,8 @@ class DogValidator
     public const MAX_BYTES = 2 * 1024 * 1024;
     public const MAX_INK_POINTS = 5000;
     public const MAX_TEXT_CHARS = 2000;
+    // Far more than eight pages of photos and stickers use (the editor drops unused assets), far fewer than fit 2 MiB.
+    public const MAX_ASSETS = 500;
     // An optional issue label: a string of at most this many characters, or a whole number of 0 or more.
     public const MAX_ISSUE_CHARS = 32;
     public const MAX_MARGIN_MM = 10;
@@ -207,6 +209,9 @@ class DogValidator
         $assets = $dog['assets'] ?? null;
         if (is_array($assets)) {
             $this->assets = $assets;
+            if (count($assets) > self::MAX_ASSETS) {
+                $this->error(['assets'], 'must have at most '.self::MAX_ASSETS.' assets');
+            }
         } else {
             $this->error(['assets'], 'must be an object');
         }
