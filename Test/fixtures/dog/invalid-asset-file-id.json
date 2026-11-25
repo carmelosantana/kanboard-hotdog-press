@@ -1,0 +1,226 @@
+{
+  "mode": "lenient",
+  "errors": [
+    {
+      "path": "assets/inj/file_id",
+      "message": "must be a positive integer"
+    },
+    {
+      "path": "assets/zero/file_id",
+      "message": "must be a positive integer"
+    },
+    {
+      "path": "assets/neg/file_id",
+      "message": "must be a positive integer"
+    },
+    {
+      "path": "assets/frac/file_id",
+      "message": "must be a positive integer"
+    },
+    {
+      "path": "assets/bool/file_id",
+      "message": "must be a positive integer"
+    },
+    {
+      "path": "assets/nul/file_id",
+      "message": "must be a positive integer"
+    },
+    {
+      "path": "assets/str/file_id",
+      "message": "must be a positive integer"
+    },
+    {
+      "path": "assets/big/file_id",
+      "message": "must be a positive integer"
+    }
+  ],
+  "dog": {
+    "hotdog": 1,
+    "id": "z_fixture1",
+    "title": "Fixture",
+    "paper": "letter",
+    "margin_mm": 6,
+    "look": "kraft",
+    "assets": {
+      "inj": {
+        "kind": "image",
+        "file_id": "0?x=1&controller=WebNotificationController&action=redirect&plugin=&notification_id=123",
+        "w": 10,
+        "h": 10
+      },
+      "zero": {
+        "kind": "image",
+        "file_id": 0,
+        "w": 10,
+        "h": 10
+      },
+      "neg": {
+        "kind": "image",
+        "file_id": -3,
+        "w": 10,
+        "h": 10
+      },
+      "frac": {
+        "kind": "image",
+        "file_id": 1.5,
+        "w": 10,
+        "h": 10
+      },
+      "bool": {
+        "kind": "image",
+        "file_id": true,
+        "w": 10,
+        "h": 10
+      },
+      "nul": {
+        "kind": "image",
+        "file_id": null,
+        "w": 10,
+        "h": 10
+      },
+      "str": {
+        "kind": "image",
+        "file_id": "12",
+        "w": 10,
+        "h": 10
+      },
+      "big": {
+        "kind": "image",
+        "file_id": 9007199254740992,
+        "w": 10,
+        "h": 10
+      }
+    },
+    "pages": [
+      {
+        "id": "p1",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": [
+          {
+            "id": "i_inj",
+            "type": "image",
+            "asset": "inj",
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1,
+            "by": "hand"
+          },
+          {
+            "id": "i_zero",
+            "type": "image",
+            "asset": "zero",
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1,
+            "by": "hand"
+          },
+          {
+            "id": "i_neg",
+            "type": "image",
+            "asset": "neg",
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1,
+            "by": "hand"
+          },
+          {
+            "id": "i_frac",
+            "type": "image",
+            "asset": "frac",
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1,
+            "by": "hand"
+          },
+          {
+            "id": "i_bool",
+            "type": "image",
+            "asset": "bool",
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1,
+            "by": "hand"
+          },
+          {
+            "id": "i_nul",
+            "type": "image",
+            "asset": "nul",
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1,
+            "by": "hand"
+          },
+          {
+            "id": "i_str",
+            "type": "image",
+            "asset": "str",
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1,
+            "by": "hand"
+          },
+          {
+            "id": "i_big",
+            "type": "image",
+            "asset": "big",
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1,
+            "by": "hand"
+          }
+        ]
+      },
+      {
+        "id": "p2",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p3",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p4",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p5",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p6",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p7",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p8",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      }
+    ]
+  }
+}

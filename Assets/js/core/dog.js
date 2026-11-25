@@ -15,6 +15,8 @@ export const MAX_ISSUE_CHARS = 32;
 /** Item geometry in panel units may reach a panel beyond either edge (bleed, drag-off). */
 export const MIN_UNIT = -1;
 export const MAX_UNIT = 2;
+/** An asset's file_id is a project file id: a whole number from 1 to 2^53 - 1. */
+export const MAX_FILE_ID = Number.MAX_SAFE_INTEGER;
 
 export const PAPER_IDS = Object.freeze(Object.keys(PAPERS));
 export const LAYOUT_NAMES = Object.freeze([
@@ -129,7 +131,10 @@ export function validateDog(input, { mode = 'lenient' } = {}) {
     // PHP decodes an object with only numeric keys as a list, so ids like "0" are refused in both languages.
     if (NUMERIC_ID.test(key)) err(['assets', key], 'must not be a numeric-only id');
     else if (!isObject(asset)) err(['assets', key], 'must be an object');
-    else unknown(asset, FIELDS.asset, ['assets', key]);
+    else {
+      unknown(asset, FIELDS.asset, ['assets', key]);
+      checkAsset(asset, ['assets', key], err);
+    }
   }
 
   if (!Array.isArray(dog.pages)) {
@@ -151,6 +156,21 @@ export function validateDog(input, { mode = 'lenient' } = {}) {
 
   return errors.length ? { ok: false, errors } : { ok: true, dog };
 }
+
+/**
+ * An asset is a project file (file_id), inline (data, a data URL) or neither (a placeholder), never both. The editor
+ * fills file_id into its image route, so it must be a plain positive integer.
+ */
+function checkAsset(asset, at, err) {
+  const fileId = Object.hasOwn(asset, 'file_id');
+  if (fileId && !isFileId(asset.file_id)) err([...at, 'file_id'], 'must be a positive integer');
+  const data = Object.hasOwn(asset, 'data');
+  if (data && typeof asset.data !== 'string') err([...at, 'data'], 'must be a string');
+  if (fileId && data) err(at, 'must not have both file_id and data');
+}
+
+/** A project file id as a Dog stores it: a whole number from 1 to MAX_FILE_ID. */
+export const isFileId = (v) => Number.isInteger(v) && v >= 1 && v <= MAX_FILE_ID;
 
 function checkItem(item, at, { assets, itemIds, err, unknown }) {
   if (!isObject(item)) return err(at, 'must be an object');

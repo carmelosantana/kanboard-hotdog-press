@@ -19,6 +19,8 @@ class DogValidator
     // Item geometry in panel units may reach a panel beyond either edge (bleed, drag-off).
     public const MIN_UNIT = -1;
     public const MAX_UNIT = 2;
+    // An asset's file_id is a project file id: a whole number from 1 to 2^53 - 1, the largest JS reads exactly.
+    public const MAX_FILE_ID = 9007199254740991;
 
     public const PAPERS = ['a4', 'letter'];
     public const LAYOUTS = [
@@ -215,6 +217,7 @@ class DogValidator
                 $this->error(['assets', $key], 'must be an object');
             } else {
                 $this->unknown($asset, self::FIELDS['asset'], ['assets', $key]);
+                $this->checkAsset($asset, ['assets', $key]);
             }
         }
 
@@ -229,6 +232,25 @@ class DogValidator
         $pageIds = [];
         foreach ($pages as $p => $page) {
             $this->checkPage($page, ['pages', $p], $pageIds);
+        }
+    }
+
+    /**
+     * An asset is a project file (file_id), inline (data, a data URL) or neither (a placeholder), never both. The
+     * editor fills file_id into its image route, so it must be a plain positive integer.
+     */
+    private function checkAsset(array $asset, array $at): void
+    {
+        $fileId = array_key_exists('file_id', $asset);
+        if ($fileId && ! self::isPositiveId($asset['file_id'])) {
+            $this->error([...$at, 'file_id'], 'must be a positive integer');
+        }
+        $data = array_key_exists('data', $asset);
+        if ($data && ! is_string($asset['data'])) {
+            $this->error([...$at, 'data'], 'must be a string');
+        }
+        if ($fileId && $data) {
+            $this->error($at, 'must not have both file_id and data');
         }
     }
 
@@ -387,6 +409,11 @@ class DogValidator
     private static function isInteger(mixed $v): bool
     {
         return is_int($v) || (is_float($v) && is_finite($v) && floor($v) === $v);
+    }
+
+    private static function isPositiveId(mixed $v): bool
+    {
+        return self::isInteger($v) && $v >= 1 && $v <= self::MAX_FILE_ID;
     }
 
     private static function inRange(mixed $v, int|float $min, int|float $max): bool

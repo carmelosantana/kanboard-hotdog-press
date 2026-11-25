@@ -1,0 +1,107 @@
+{
+  "mode": "lenient",
+  "errors": [
+    {
+      "path": "assets/both",
+      "message": "must not have both file_id and data"
+    },
+    {
+      "path": "assets/num/data",
+      "message": "must be a string"
+    }
+  ],
+  "dog": {
+    "hotdog": 1,
+    "id": "z_fixture1",
+    "title": "Fixture",
+    "paper": "letter",
+    "margin_mm": 6,
+    "look": "kraft",
+    "assets": {
+      "both": {
+        "kind": "image",
+        "file_id": 4,
+        "data": "data:image/png;base64,iVBORw0KGgo=",
+        "w": 10,
+        "h": 10
+      },
+      "num": {
+        "kind": "sticker",
+        "data": 42,
+        "w": 10,
+        "h": 10
+      }
+    },
+    "pages": [
+      {
+        "id": "p1",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": [
+          {
+            "id": "i1",
+            "type": "image",
+            "asset": "both",
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1,
+            "by": "hand"
+          },
+          {
+            "id": "i2",
+            "type": "image",
+            "asset": "num",
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1,
+            "by": "hand"
+          }
+        ]
+      },
+      {
+        "id": "p2",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p3",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p4",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p5",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p6",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p7",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      },
+      {
+        "id": "p8",
+        "layout": "freeform",
+        "bg": "paper",
+        "items": []
+      }
+    ]
+  }
+}
