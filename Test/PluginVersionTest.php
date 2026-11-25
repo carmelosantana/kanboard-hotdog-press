@@ -37,9 +37,9 @@ class PluginVersionTest extends Base
         $version = json_decode(file_get_contents($root.'/plugin.json'), true)['version'];
         $this->assertMatchesRegularExpression('/^## '.preg_quote($version, '/').' — /m', (string) @file_get_contents($root.'/CHANGELOG.md'));
         $workflow = (string) @file_get_contents($root.'/.github/workflows/release.yml');
-        $this->assertStringContainsString('does not match plugin.json', $workflow, 'the tag must equal the version');
-        foreach (['.git', '.github', '.gitignore', 'Test', 'docs'] as $path) {
-            $this->assertStringContainsString("--exclude '$path'", $workflow, "$path stays out of the zip");
-        }
+        // The shared plugin-release.yml checks the tag against plugin.json and leaves .git, .github, Test and docs out of the zip.
+        $this->assertMatchesRegularExpression('#uses: carmelosantana/kanboard-plugin-ci/\.github/workflows/plugin-release\.yml@[0-9a-f]{40}\b#', $workflow, 'the release runs the pinned shared workflow');
+        $this->assertMatchesRegularExpression('/^\s*ship-docs:\s*false\s*$/m', $workflow, 'docs stay out of the zip');
+        $this->assertStringContainsString('needs: test', $workflow, 'the release waits for the tests');
     }
 }
