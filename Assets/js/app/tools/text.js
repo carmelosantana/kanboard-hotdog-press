@@ -1,6 +1,6 @@
 // The text tool: tap the page to put a text box there and type; tap a text box to type in it.
-import { hitTest } from '../geometry.js?v=0.1.0';
-import { addItem, findItem, textItem } from '../edit.js?v=0.1.0';
+import { hitTest } from '../geometry.js?v=0.1.1';
+import { addItem, findItem, textItem } from '../edit.js?v=0.1.1';
 
 export const textTool = {
   name: 'text',

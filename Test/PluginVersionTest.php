@@ -12,7 +12,7 @@ class PluginVersionTest extends Base
         $json = json_decode(file_get_contents(__DIR__.'/../plugin.json'), true);
         $plugin = new Plugin($this->container);
 
-        $this->assertSame('0.1.0', $json['version']);
+        $this->assertSame('0.1.1', $json['version']);
         $this->assertSame($json['version'], $plugin->getPluginVersion());
         $this->assertSame($json['version'], Plugin::VERSION, 'the ?v= on the editor scripts');
         $this->assertSame('HotDogPress', $json['name']);

@@ -8,7 +8,7 @@ use Kanboard\Core\Translator;
 class Plugin extends Base
 {
     /** plugin.json's version; also the ?v= on the editor's scripts and every import inside the app. */
-    public const VERSION = '0.1.0';
+    public const VERSION = '0.1.1';
 
     public function initialize(): void
     {

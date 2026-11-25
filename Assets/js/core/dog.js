@@ -1,7 +1,7 @@
 // The Dog (*.hotdog): the exact zine document. New, migrate and validate. Pure, no DOM.
 // Model/DogValidator.php mirrors validateDog rule for rule; Test/fixtures/dog drives both.
 
-import { PAPERS, paperSize, DEFAULT_MARGIN_MM, MAX_MARGIN_MM } from './paper.js?v=0.1.0';
+import { PAPERS, paperSize, DEFAULT_MARGIN_MM, MAX_MARGIN_MM } from './paper.js?v=0.1.1';
 
 /** @typedef {{path: string, message: string}} DogError */
 /** @typedef {{ok: true, dog: object} | {ok: false, errors: DogError[]}} DogResult */

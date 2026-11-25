@@ -1,7 +1,7 @@
 // The toolbar: view tabs, the tools (members only), undo/redo, delete, lock and the Mustard panel toggle. On a phone
 // it is one row that scrolls sideways.
-import { h } from '../dom.js?v=0.1.0';
-import { removeItems, toggleLock, findItem } from '../edit.js?v=0.1.0';
+import { h } from '../dom.js?v=0.1.1';
+import { removeItems, toggleLock, findItem } from '../edit.js?v=0.1.1';
 
 const TOOLS = ['select', 'text', 'photo', 'shape', 'sticker', 'ink'];
 const VIEWS = ['pages', 'sheet', 'booklet'];

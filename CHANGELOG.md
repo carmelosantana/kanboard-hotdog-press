@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 — 2026-11-25
+
+### Security
+- An image asset's `file_id` must be a positive integer and never sits beside `data`; the editor URL-encodes it and fetches only valid ids, so a saved zine can no longer steer viewers' browsers to other routes.
+- A zine holds at most 500 assets, and the editor loads only the assets its pages use.
+
 ## 0.1.0 — 2026-11-24
 
 - Zines in a project: a **Zines** page (from the project menu) to make, rename, remove, download and import zines,

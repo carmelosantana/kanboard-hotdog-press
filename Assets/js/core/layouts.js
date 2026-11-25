@@ -1,11 +1,11 @@
 // Layouts: each layout's named slots and where they sit, plus character budgets. Pure, no DOM.
 // Layouts own all slot geometry: boxes are fractions of a page's safe area, so nothing is placed off it.
-import { LAYOUT_NAMES, randomId } from './dog.js?v=0.1.0';
-import { safeArea } from './impose.js?v=0.1.0';
-import { panelSize } from './paper.js?v=0.1.0';
-import { linesThatFit, metricsOf, wrapText } from './textfit.js?v=0.1.0';
+import { LAYOUT_NAMES, randomId } from './dog.js?v=0.1.1';
+import { safeArea } from './impose.js?v=0.1.1';
+import { panelSize } from './paper.js?v=0.1.1';
+import { linesThatFit, metricsOf, wrapText } from './textfit.js?v=0.1.1';
 
-export { LINE_HEIGHT } from './textfit.js?v=0.1.0';
+export { LINE_HEIGHT } from './textfit.js?v=0.1.1';
 
 /** @typedef {import('./impose.js').Paper} Paper */
 /** @typedef {'text'|'list'|'image'} SlotKind */

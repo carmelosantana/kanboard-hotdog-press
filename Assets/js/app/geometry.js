@@ -1,6 +1,6 @@
 // Editor geometry: item boxes in panel units, and hit-testing, handles, resize and rotate in view px (x right, y down,
 // rot in degrees clockwise about the box centre, as render.js draws it). Pure, no DOM.
-import { MIN_UNIT, MAX_UNIT } from '../core/dog.js?v=0.1.0';
+import { MIN_UNIT, MAX_UNIT } from '../core/dog.js?v=0.1.1';
 
 /** @typedef {{x: number, y: number, w: number, h: number, rot: number}} Box */
 /** @typedef {{x: number, y: number}} Point */

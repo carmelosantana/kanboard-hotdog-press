@@ -1,8 +1,8 @@
 // Decoded images for the renderer, by asset id. Uploaded photos are fetched from the zine's image route and decoded
 // with createImageBitmap; inline (data: URL) assets such as stickers decode through an <img> with that data: URL.
 // Never a blob: URL in an <img>: Kanboard's CSP allows only `img-src * data:`.
-import { imageUrl } from './config.js?v=0.1.0';
-import { isFileId } from '../core/dog.js?v=0.1.0';
+import { imageUrl } from './config.js?v=0.1.1';
+import { isFileId } from '../core/dog.js?v=0.1.1';
 
 /**
  * @param {import('./config.js').EditorConfig} config

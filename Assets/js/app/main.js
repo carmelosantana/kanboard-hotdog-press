@@ -1,10 +1,10 @@
 // Boots the zine editor on Template/zine/editor.php: reads the JSON config, loads the zine, mounts the editor. A broken
 // config or a failed load shows a plain message instead of a stuck "Loading".
-import { readConfig } from './config.js?v=0.1.0';
-import { validateDog } from '../core/dog.js?v=0.1.0';
-import { mountEditor } from './editor.js?v=0.1.0';
-import { recoverBuffer } from './autosave.js?v=0.1.0';
-import { sessionStore } from './saving.js?v=0.1.0';
+import { readConfig } from './config.js?v=0.1.1';
+import { validateDog } from '../core/dog.js?v=0.1.1';
+import { mountEditor } from './editor.js?v=0.1.1';
+import { recoverBuffer } from './autosave.js?v=0.1.1';
+import { sessionStore } from './saving.js?v=0.1.1';
 
 const root = document.getElementById('hotdogpress-app');
 /** Shown when the config itself cannot be read: the template's translated line (English if even that is missing). */

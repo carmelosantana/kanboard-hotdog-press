@@ -1,6 +1,6 @@
 // A photo from the device to the zine: decode, downscale to at most UPLOAD_MAX_PX on the long edge, re-encode
 // (PNG stays PNG, the rest become JPEG at 0.9) and POST it to the upload route with the reusable CSRF token.
-import { downscale } from './viewmath.js?v=0.1.0';
+import { downscale } from './viewmath.js?v=0.1.1';
 
 const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_BYTES = 10 * 1024 * 1024;
