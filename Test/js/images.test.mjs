@@ -23,6 +23,19 @@ async function fetched(fn) {
 const page = (items) => ({ id: 'p', layout: 'freeform', bg: 'paper', items });
 const item = (id, asset) => ({ id, type: 'image', asset, x: 0, y: 0, w: 1, h: 1, by: 'hand' });
 
+test('only assets an item uses are loaded', async () => {
+  const doc = {
+    assets: {
+      used: { kind: 'image', file_id: 5 },
+      dead: { kind: 'image', file_id: 6 },
+      deadSticker: { kind: 'sticker', data: 'data:image/png;base64,AAAA' },
+    },
+    pages: [page([item('i1', 'used')])],
+  };
+  const urls = await fetched(() => createImages(config, () => {}).settled(doc));
+  assert.deepEqual(urls, ['/z/1/image/5']);
+});
+
 test('an asset whose file_id is not a positive integer is never fetched', async () => {
   const bad = ['0?x=1&controller=WebNotificationController&action=redirect', 0, -1, 1.5, '7', true];
   const assets = Object.fromEntries(bad.map((v, i) => [`b${i}`, { kind: 'image', file_id: v }]));

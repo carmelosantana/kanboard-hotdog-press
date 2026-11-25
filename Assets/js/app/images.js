@@ -43,9 +43,11 @@ export function createImages(config, onReady) {
     /** The decoded images, by asset id (what render.js takes). */
     get map() { return ready; },
 
-    /** Starts loading every asset of the Dog that is not loaded yet. */
+    /** Starts loading every asset an item of the Dog uses that is not loaded yet; unused assets are never fetched. */
     sync(doc) {
-      for (const [id, asset] of Object.entries(doc.assets ?? {})) {
+      for (const id of usedAssets(doc)) {
+        if (!Object.hasOwn(doc.assets ?? {}, id)) continue;
+        const asset = doc.assets[id];
         const key = isFileId(asset?.file_id) ? `file:${asset.file_id}`
           : asset?.file_id == null && typeof asset?.data === 'string' ? `data:${asset.data.length}:${asset.data.slice(-32)}`
             : null; // a file_id that is not a positive integer is never filled into the route
@@ -70,4 +72,15 @@ export function createImages(config, onReady) {
       onReady();
     },
   };
+}
+
+/** The asset ids the Dog's items name, once each. */
+function usedAssets(doc) {
+  const ids = new Set();
+  for (const page of Array.isArray(doc.pages) ? doc.pages : []) {
+    for (const item of Array.isArray(page?.items) ? page.items : []) {
+      if (typeof item?.asset === 'string') ids.add(item.asset);
+    }
+  }
+  return ids;
 }
