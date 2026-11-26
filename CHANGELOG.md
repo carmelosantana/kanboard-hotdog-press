@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.1.2 — 2026-11-26
 
 - **Ink saver** for the print PDF: white paper with no page backgrounds and dark ink, even from a dark look, for
   printers without an ink-saving setting. Photos, shapes, stickers and ink keep their colours.
+
 ## 0.1.1 — 2026-11-25
 
 ### Security

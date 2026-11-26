@@ -5,7 +5,7 @@
 // (a beacon landed first). An error a retry cannot fix (TERMINAL_STATUS, a redirect, an answer that is not JSON)
 // stops saving: the buffer keeps every edit for a reload. The browser APIs come in through `env`, so this runs under
 // Node for the tests.
-import { validateDog } from '../core/dog.js?v=0.1.1';
+import { validateDog } from '../core/dog.js?v=0.1.2';
 
 /** Debounce after the last edit. */
 export const AUTOSAVE_DELAY_MS = 2000;

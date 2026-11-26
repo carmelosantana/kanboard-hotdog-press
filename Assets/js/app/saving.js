@@ -1,8 +1,8 @@
 // Autosave in the page: the autosave client on the browser's fetch, sessionStorage, sendBeacon and timers; a small
 // save-state line; pagehide and hidden-tab flushes; and the "Someone else changed this zine" prompt (Reload / Keep
 // mine). Members only: viewers never save.
-import { h } from './dom.js?v=0.1.1';
-import { createAutosave } from './autosave.js?v=0.1.1';
+import { h } from './dom.js?v=0.1.2';
+import { createAutosave } from './autosave.js?v=0.1.2';
 
 /** window.sessionStorage, or a stand-in that keeps nothing when the browser refuses it (blocked storage). */
 export function sessionStore() {

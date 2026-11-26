@@ -1,6 +1,6 @@
 // A text item's runs as one editable text and back. Runs are spans of one paragraph, except in a list item, where
 // each run is one bullet line. The renderer and the in-place text editor both read them through here. Pure, no DOM.
-import { BULLET } from './layouts.js?v=0.1.1';
+import { BULLET } from './layouts.js?v=0.1.2';
 
 const texts = (item) => (Array.isArray(item?.runs) ? item.runs : []).map((r) => (typeof r?.text === 'string' ? r.text : ''));
 

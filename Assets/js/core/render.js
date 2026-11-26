@@ -1,14 +1,14 @@
 // The renderer: a Dog page, or the whole print sheet, drawn onto any 2D-canvas-like context. The editor preview,
 // the PDF rasteriser and the social frames all draw through here. Pure, no DOM: the caller hands in the context and
 // the decoded images; nothing here loads fonts or files.
-import { panelRect } from './impose.js?v=0.1.1';
-import { LINE_HEIGHT, linesThatFit, metricsOf, wrapText } from './textfit.js?v=0.1.1';
-import { joinRuns } from './runs.js?v=0.1.1';
-import { colorOf, grayHex, grayLevelHex, lookOf } from './looks.js?v=0.1.1';
-import { resolvePaper } from './paper.js?v=0.1.1';
-import { guideLines, PT_PER_MM } from './pdf.js?v=0.1.1';
+import { panelRect } from './impose.js?v=0.1.2';
+import { LINE_HEIGHT, linesThatFit, metricsOf, wrapText } from './textfit.js?v=0.1.2';
+import { joinRuns } from './runs.js?v=0.1.2';
+import { colorOf, grayHex, grayLevelHex, lookOf } from './looks.js?v=0.1.2';
+import { resolvePaper } from './paper.js?v=0.1.2';
+import { guideLines, PT_PER_MM } from './pdf.js?v=0.1.2';
 
-export { LOOKS, TOKENS, colorOf } from './looks.js?v=0.1.1';
+export { LOOKS, TOKENS, colorOf } from './looks.js?v=0.1.2';
 
 /** Neutral stand-in for an image that is missing, a placeholder, or not decoded. */
 const PLACEHOLDER = Object.freeze({ fill: '#E4E1DA', line: '#9A968C' });

@@ -1,15 +1,15 @@
 // The Pages view: the current page drawn large by core/render.js, an overlay canvas above it for the safe area,
 // empty text boxes, the selection and live tool strokes, and a textarea for typing into a text box in place.
 // Pointer input goes to the active tool (tools/*.js).
-import { renderPage, layoutText } from '../../core/render.js?v=0.1.1';
-import { joinRuns, splitRuns } from '../../core/runs.js?v=0.1.1';
-import { safeArea } from '../../core/impose.js?v=0.1.1';
-import { panelSize } from '../../core/paper.js?v=0.1.1';
-import { colorOf, lookOf } from '../../core/looks.js?v=0.1.1';
-import { itemBox, toPx, handlePoints, hitTest } from '../geometry.js?v=0.1.1';
-import { findItem, removeItems, updateItem } from '../edit.js?v=0.1.1';
-import { fitInto } from '../viewmath.js?v=0.1.1';
-import { h, sizeCanvas } from '../dom.js?v=0.1.1';
+import { renderPage, layoutText } from '../../core/render.js?v=0.1.2';
+import { joinRuns, splitRuns } from '../../core/runs.js?v=0.1.2';
+import { safeArea } from '../../core/impose.js?v=0.1.2';
+import { panelSize } from '../../core/paper.js?v=0.1.2';
+import { colorOf, lookOf } from '../../core/looks.js?v=0.1.2';
+import { itemBox, toPx, handlePoints, hitTest } from '../geometry.js?v=0.1.2';
+import { findItem, removeItems, updateItem } from '../edit.js?v=0.1.2';
+import { fitInto } from '../viewmath.js?v=0.1.2';
+import { h, sizeCanvas } from '../dom.js?v=0.1.2';
 
 const SELECT = '#C8322B';
 

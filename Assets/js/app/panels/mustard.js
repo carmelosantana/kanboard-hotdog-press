@@ -2,10 +2,10 @@
 // replaced (hand-made and locked items stay, applyMustard) and warnings are listed; errors are listed and nothing
 // changes. "Import Mustard file" loads a .mustard.md into the text and applies it the same way; "Download Mustard"
 // saves the zine as one. Viewers read the text and may download it.
-import { downloadBlob, h } from '../dom.js?v=0.1.1';
-import { mustardFile, readMustardFile } from '../mustard-file.js?v=0.1.1';
-import { compileMustard, exportMustard } from '../../core/mustard.js?v=0.1.1';
-import { applyMustard } from '../edit.js?v=0.1.1';
+import { downloadBlob, h } from '../dom.js?v=0.1.2';
+import { mustardFile, readMustardFile } from '../mustard-file.js?v=0.1.2';
+import { compileMustard, exportMustard } from '../../core/mustard.js?v=0.1.2';
+import { applyMustard } from '../edit.js?v=0.1.2';
 
 /** @param {any} app */
 export function createMustardPanel(app) {

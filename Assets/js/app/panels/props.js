@@ -1,9 +1,9 @@
 // The options row under the toolbar: shape kinds for the shape tool, the sticker tray, ink colours, and for a selected
 // item its colour (and font and size for text). Empty for viewers.
-import { h } from '../dom.js?v=0.1.1';
-import { addAsset, addItem, findItem, stickerItem, updateItem } from '../edit.js?v=0.1.1';
-import { colorOf } from '../../core/looks.js?v=0.1.1';
-import { STICKERS, stickerUrl } from '../stickers.js?v=0.1.1';
+import { h } from '../dom.js?v=0.1.2';
+import { addAsset, addItem, findItem, stickerItem, updateItem } from '../edit.js?v=0.1.2';
+import { colorOf } from '../../core/looks.js?v=0.1.2';
+import { STICKERS, stickerUrl } from '../stickers.js?v=0.1.2';
 
 const COLORS = ['toner', 'paper', 'mustard', 'ketchup', 'kraft', 'copy', 'relish'];
 const FONTS = ['display', 'body', 'mono'];

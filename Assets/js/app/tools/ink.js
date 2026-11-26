@@ -1,8 +1,8 @@
 // The ink tool: draw with a pen, a finger or the mouse (Pointer Events, coalesced points). On release the stroke is
 // smoothed and simplified and stored in panel units as a hand-made ink item.
-import { addItem, inkItem } from '../edit.js?v=0.1.1';
-import { finishStroke } from '../ink.js?v=0.1.1';
-import { colorOf } from '../../core/looks.js?v=0.1.1';
+import { addItem, inkItem } from '../edit.js?v=0.1.2';
+import { finishStroke } from '../ink.js?v=0.1.2';
+import { colorOf } from '../../core/looks.js?v=0.1.2';
 
 const WIDTH = 0.008;
 

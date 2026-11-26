@@ -1,5 +1,5 @@
 // The shape tool: drag out a rectangle or an ellipse (a tap drops one of the default size).
-import { addItem, shapeItem } from '../edit.js?v=0.1.1';
+import { addItem, shapeItem } from '../edit.js?v=0.1.2';
 
 const TAP_PX = 6;
 

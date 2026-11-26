@@ -1,6 +1,6 @@
 // Ink strokes: light smoothing (a 3-point moving average) and Ramer–Douglas–Peucker simplification when a stroke ends.
 // Points are [x, y] in panel units. Pure, no DOM.
-import { MAX_INK_POINTS } from '../core/dog.js?v=0.1.1';
+import { MAX_INK_POINTS } from '../core/dog.js?v=0.1.2';
 
 /** RDP tolerance in panel units (about a third of a millimetre on a page). */
 export const SIMPLIFY_EPS = 0.003;
